@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://sunxiaohang.github.io</id>
     <title>KnowledgeBase</title>
-    <updated>2020-04-06T12:28:30.345Z</updated>
+    <updated>2020-04-06T12:46:27.742Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://sunxiaohang.github.io"/>
     <link rel="self" href="https://sunxiaohang.github.io/atom.xml"/>
@@ -16,7 +16,11 @@
         <link href="https://sunxiaohang.github.io/post/unity-inaction/">
         </link>
         <updated>2020-04-06T12:09:00.000Z</updated>
-        <content type="html"><![CDATA[<h4 id="movement">Movement</h4>
+        <summary type="html"><![CDATA[<p>Untiy常用逻辑代码的实现方式，归纳总结，用于标准化代码结构，巩固加强</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>Untiy常用逻辑代码的实现方式，归纳总结，用于标准化代码结构，巩固加强</p>
+<!-- more -->
+<h4 id="movement">Movement</h4>
 <pre><code>public class FPSInput : MonoBehaviour
 {
     public float m_speed = 6.0f;
@@ -637,7 +641,11 @@ public class ThirdPersonCameraControl : MonoBehaviour{
         <link href="https://sunxiaohang.github.io/post/c/">
         </link>
         <updated>2020-04-06T11:52:42.000Z</updated>
-        <content type="html"><![CDATA[<h4 id="泛型委托">泛型委托</h4>
+        <summary type="html"><![CDATA[<p>C#关键知识点总结，主要针对一些新特性和泛型，和C#事件系统，主要针对Unity3d，非标准C#</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>C#关键知识点总结，主要针对一些新特性和泛型，和C#事件系统，主要针对Unity3d，非标准C#</p>
+<!-- more -->
+<h4 id="泛型委托">泛型委托</h4>
 <pre><code>delegate void Del&lt;T&gt;(T item);
 public static void Notify(int i) { }
 ...
@@ -700,7 +708,11 @@ System.Reflection.MethodInfo info = type.GetMethod(Type.MethodName);
         <link href="https://sunxiaohang.github.io/post/unity3d/">
         </link>
         <updated>2020-04-06T11:49:39.000Z</updated>
-        <content type="html"><![CDATA[<h4 id="unity-基础类图">Unity 基础类图</h4>
+        <summary type="html"><![CDATA[<p>Unity3D项目关键知识点汇总，方便后期复习巩固，包括关键的monobehaviour生命周期，协程，工作线程，相机相关，涉嫌投射，对象池化技术等线管笔记</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>Unity3D项目关键知识点汇总，方便后期复习巩固，包括关键的monobehaviour生命周期，协程，工作线程，相机相关，涉嫌投射，对象池化技术等线管笔记</p>
+<!-- more -->
+<h4 id="unity-基础类图">Unity 基础类图</h4>
 <figure data-type="image" tabindex="1"><img src="https://sunxiaohang.github.io/post-images/1586173848463.png" alt="" loading="lazy"></figure>
 <h4 id="unity生命周期">Unity生命周期</h4>
 <figure data-type="image" tabindex="2"><img src="https://sunxiaohang.github.io/post-images/1586173894549.png" alt="" loading="lazy"></figure>
@@ -879,7 +891,11 @@ SetActiveRecursively()控制递归子物体</p>
         <link href="https://sunxiaohang.github.io/post/ruan-jian-gong-cheng-jia-gou/">
         </link>
         <updated>2020-04-06T11:46:39.000Z</updated>
-        <content type="html"><![CDATA[<h4 id="系统架构">系统架构</h4>
+        <summary type="html"><![CDATA[<p>软件工程架构的一些想法和思路汇总，旨在从模型阶段建立一个相对完善的软件框架</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>软件工程架构的一些想法和思路汇总，旨在从模型阶段建立一个相对完善的软件框架</p>
+<!-- more -->
+<h4 id="系统架构">系统架构</h4>
 <p>系统架构衡量标准<br>
 • 承载力<br>
 • 可扩展度<br>
@@ -910,8 +926,10 @@ SetActiveRecursively()控制递归子物体</p>
         <link href="https://sunxiaohang.github.io/post/unity3d-kuo-zhan-bian-ji-qi/">
         </link>
         <updated>2020-04-06T11:44:11.000Z</updated>
-        <content type="html"><![CDATA[<h2 id="unity">Unity</h2>
-<h3 id="扩展编辑器">扩展编辑器</h3>
+        <summary type="html"><![CDATA[<p>Unity3D扩展编辑器的一些常规操作，深入浅出，属于读书笔记，参考Unity3D游戏开发</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>Unity3D扩展编辑器的一些常规操作，深入浅出，属于读书笔记，参考Unity3D游戏开发</p>
+<!-- more -->
 <h5 id="扩展右键菜单">扩展右键菜单</h5>
 <pre><code class="language-c#">//[MenuItem(&quot;Assets/Tools/Debug&quot;,isValidateFunction,priority)]
 public class Extension
@@ -1445,7 +1463,11 @@ public class DisplayerReader : MonoBehaviour{
         <link href="https://sunxiaohang.github.io/post/android/">
         </link>
         <updated>2020-04-06T11:24:25.000Z</updated>
-        <content type="html"><![CDATA[<h4 id="activity">Activity</h4>
+        <summary type="html"><![CDATA[<p>初学Android时的一些基础知识汇总，作为理解Android基本原理的实验性代码，不具有参考价值，主要参考书目为第一行代码</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>初学Android时的一些基础知识汇总，作为理解Android基本原理的实验性代码，不具有参考价值，主要参考书目为第一行代码</p>
+<!-- more -->
+<h4 id="activity">Activity</h4>
 <pre><code>    protected void onCreate(Bundle savedInstanceState) {
         Log.i(&quot;target&quot;,&quot;Activity onCreate&quot;);
     }
@@ -1995,7 +2017,11 @@ db.delete(&quot;Book&quot;, &quot;pages &gt; ?&quot;, new String[] { &quot;500&q
         <link href="https://sunxiaohang.github.io/post/spring/">
         </link>
         <updated>2020-04-06T11:23:21.000Z</updated>
-        <content type="html"><![CDATA[<h4 id="jsp">JSP</h4>
+        <summary type="html"><![CDATA[<p>主要是一些读书笔记，总结java web项目常用框架的一些实现细节和基础理论。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>主要是一些读书笔记，总结java web项目常用框架的一些实现细节和基础理论。</p>
+<!-- more -->
+<h4 id="jsp">JSP</h4>
 <h5 id="jsp内置对象">JSP内置对象</h5>
 <table>
 <thead>
@@ -2757,7 +2783,11 @@ public class Collections {
         <link href="https://sunxiaohang.github.io/post/she-ji-mo-shi/">
         </link>
         <updated>2020-04-06T11:19:42.000Z</updated>
-        <content type="html"><![CDATA[<h3 id="六大设计原则">六大设计原则</h3>
+        <summary type="html"><![CDATA[<p>仅包含设计模式的一般实现和设计思想以及设计模式的使用方向，不拘泥于具体语言。以下设计模式思想仅基于Java语言实现，旨在优化软件工程结构，完善项目的鲁棒性和健壮性，便于后期迭代和维护。</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>仅包含设计模式的一般实现和设计思想以及设计模式的使用方向，不拘泥于具体语言。以下设计模式思想仅基于Java语言实现，旨在优化软件工程结构，完善项目的鲁棒性和健壮性，便于后期迭代和维护。</p>
+<!-- more -->
+<h3 id="六大设计原则">六大设计原则</h3>
 <h5 id="单一职责原则">单一职责原则</h5>
 <blockquote>
 <p>分离业务对象和业务逻辑</p>
@@ -3431,9 +3461,13 @@ invoke.action();
         <link href="https://sunxiaohang.github.io/post/shu-ju-jie-gou-yu-suan-fa/">
         </link>
         <updated>2020-04-06T11:00:43.000Z</updated>
-        <summary type="html"><![CDATA[<p>本文包含一般数据结构的实现方式和常用算法的实现</p>
+        <summary type="html"><![CDATA[<p>本文包含一般数据结构的实现方式和常用算法的实现<br>
+包含线性结构的单、双向链表，栈，非线性结构的二叉树，搜索树等<br>
+算法包括，基础查找和排序算法，深度广度优先遍历，迷宫求解算法，优先队列，分支限界，动态规划和诸如N皇后等算法应用</p>
 ]]></summary>
-        <content type="html"><![CDATA[<p>本文包含一般数据结构的实现方式和常用算法的实现</p>
+        <content type="html"><![CDATA[<p>本文包含一般数据结构的实现方式和常用算法的实现<br>
+包含线性结构的单、双向链表，栈，非线性结构的二叉树，搜索树等<br>
+算法包括，基础查找和排序算法，深度广度优先遍历，迷宫求解算法，优先队列，分支限界，动态规划和诸如N皇后等算法应用</p>
 <!-- more -->
 <h2 id="数据结构">数据结构</h2>
 <h4 id="栈">栈</h4>
