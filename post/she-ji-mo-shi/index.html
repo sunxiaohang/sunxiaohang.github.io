@@ -1,0 +1,809 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>设计模式 | KnowledgeBase</title>
+<meta name="description" content="KnowledgeBase">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://sunxiaohang.github.io/favicon.ico?v=1586176056057">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://sunxiaohang.github.io/styles/main.css">
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://sunxiaohang.github.io">
+        <img class="avatar" src="https://sunxiaohang.github.io/images/avatar.png?v=1586176056057" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://sunxiaohang.github.io">
+        <h1 class="site-title">KnowledgeBase</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">设计模式</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2020-04-06</span>
+            
+          </div>
+          <div class="post-content">
+            <h3 id="六大设计原则">六大设计原则</h3>
+<h5 id="单一职责原则">单一职责原则</h5>
+<blockquote>
+<p>分离业务对象和业务逻辑</p>
+</blockquote>
+<h5 id="里氏替换原则">里氏替换原则</h5>
+<blockquote>
+<ul>
+<li>子类必须完全实现父类方法</li>
+<li>子类可以有自己的个性</li>
+<li>覆盖或实现父类的方法是<code>输入参数可以被放大</code></li>
+<li>覆盖或实现父类的方法是<code>输出结果可以被缩小</code></li>
+</ul>
+</blockquote>
+<h5 id="依赖倒置原则">依赖倒置原则</h5>
+<blockquote>
+<ul>
+<li>高层模块不依赖底层模块，都依赖其抽象</li>
+<li>抽象不应该依赖细节</li>
+<li>细节应该以来抽象</li>
+</ul>
+</blockquote>
+<h5 id="接口隔离原则">接口隔离原则</h5>
+<blockquote>
+<ul>
+<li>接口尽量小</li>
+<li>接口高内聚</li>
+<li>定制服务</li>
+<li>接口的设计是有限度的</li>
+</ul>
+</blockquote>
+<h5 id="迪米特法则最少知道原则">迪米特法则[最少知道原则]</h5>
+<blockquote>
+<ul>
+<li>只和朋友交流</li>
+<li>朋友之间也有<code>距离</code></li>
+<li>是自己的就是自己的</li>
+<li>谨慎使用Serializable</li>
+</ul>
+</blockquote>
+<h5 id="开闭原则">开闭原则</h5>
+<blockquote>
+<p>扩展开放，修改关闭</p>
+</blockquote>
+<h3 id="单例模式">单例模式</h3>
+<h5 id="使用场景">使用场景</h5>
+<ul>
+<li>要求生成唯一序列号的环境</li>
+<li>共享访问或共享数据</li>
+<li>对象创建资源消耗大</li>
+<li>需要定义大量的静态常量和静态方</li>
+</ul>
+<h3 id="工厂方法模式">工厂方法模式</h3>
+<p><code>Example</code></p>
+<pre><code>// Human.java
+public interface Human {
+    void getColor();
+}
+// WhiteHuman.java
+public class WhiteHuman implements Human{
+    @Override
+    public void getColor() {
+        System.out.println(&quot;white Human color!&quot;);
+    }
+}
+// AbstractHumanFactory.java
+/**
+ * 必需是Class类型
+ * 必须是Human的实现类
+ * */
+public abstract class AbstractHumanFactory {
+    public abstract &lt;T extends Human&gt; T createHuman(Class&lt;T&gt; c);
+}
+// Useage
+AbstractHumanFactory factory = new HumanFactory();
+Human whiteMan = factory.createHuman(WhiteHuman.class);
+</code></pre>
+<h5 id="简单工厂">简单工厂</h5>
+<pre><code>// HumanFactory.java
+/**
+* 直接定义静态方法，跳过抽象工厂
+*/
+public class HumanFactory {
+    public static &lt;T extends Human&gt; T createHuman(Class&lt;T&gt; c){
+        Human human = null;
+        try {
+            human = (Human) Class.forName(c.getName()).newInstance();
+        } catch (Exception e) {
+            System.out.println(&quot;specify human class error!&quot;);
+        } 
+        return (T) human;
+    }
+}
+// Usage
+HumanFactory.createHuman(White.class);
+</code></pre>
+<h5 id="工厂单例">工厂单例</h5>
+<pre><code>// SingletonFactory.java
+public class SingletonFactory {
+    private static Singleton sigleton;
+    static {
+        try {
+            Class clazz = Class.forName(Singleton.class.getName());
+            Constructor constructor = clazz.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            sigleton = (Singleton) constructor.newInstance();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } 
+    }
+    public Singleton getSigleton(){
+        return sigleton;
+    }
+}
+</code></pre>
+<h3 id="抽象工厂模式">抽象工厂模式</h3>
+<figure data-type="image" tabindex="1"><img src="https://upload-images.jianshu.io/upload_images/2480310-9c9889a239cee88c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="image.png" loading="lazy"></figure>
+<pre><code>// AbstractCreator.java
+public abstract class AbstractCreator {
+    public abstract AbstractProductA createProductA();
+    public abstract AbstractProductB createProductB();
+}
+// Creator1.java
+public class Creator1 extends AbstractCreator{
+    @Override
+    public AbstractProductA createProductA() {
+        return new ProductA1();
+    }
+    @Override
+    public AbstractProductB createProductB() {
+        return new ProductB1();
+    }
+}
+// Creator2.java
+public class Creator2 extends AbstractCreator{
+    @Override
+    public AbstractProductA createProductA() {
+        return new ProductA2();
+    }
+    @Override
+    public AbstractProductB createProductB() {
+        return new ProductB2();
+    }
+}
+</code></pre>
+<pre><code>//AbstractProductA.java
+public abstract class AbstractProductA {
+    public void shareMethod(){}
+    public abstract void doSomething();
+}
+//AbstractProductB.java
+public abstract class AbstractProductB {
+    public void shareMethod(){}
+    public abstract void doSomething();
+}
+// ProductA1.java
+public class ProductA1 extends AbstractProductA{
+    @Override
+    public void doSomething() {
+        System.out.println(&quot;product a1&quot;);
+    }
+}
+// ProductA2.java
+public class ProductA2 extends AbstractProductA{
+    @Override
+    public void doSomething() {
+        System.out.println(&quot;product a2&quot;);
+    }
+}
+</code></pre>
+<h3 id="模板方法模式">模板方法模式</h3>
+<pre><code>public abstract class HummerModel {
+     public abstract void start();
+     public abstract void stop();       
+     public abstract void alarm();
+     public abstract void engineBoom();
+     public abstract void run(){
+         this.start();
+         this.engineBoom();
+         this.alarm();
+         this.stop();   
+     }
+}
+</code></pre>
+<h5 id="使用场景-2">使用场景</h5>
+<ul>
+<li>多个子类有共有方法，并且逻辑过程基本相同</li>
+<li>重构，吧相同的代码抽取到父类中，通过<code>钩子函数约束行为</code>(实现类约束模板类行为)</li>
+</ul>
+<pre><code>public abstract class HummerModel {
+     public abstract void start();
+     public abstract void stop();       
+     public abstract void alarm();
+     public abstract void engineBoom();
+     final public void run() {          
+             this.start();              
+             this.engineBoom();         
+             if(this.isAlarm()){
+                      this.alarm();
+             }
+             this.stop();
+     } 
+//在抽象类中，isAlarm是一个实现方法，
+//其作用是模板方法根据其返回值决定是否要鸣喇叭，
+//子类可以覆写该返回值控制其行为.
+     protected  boolean isAlarm(){
+             return true;
+     }
+}
+</code></pre>
+<h3 id="建造者模式">建造者模式</h3>
+<pre><code>/** * 总结：  
+* 1.静态内部类可以有静态成员(方法，属性)，而非静态内部类则不能有静态成员(方法，属性)。 
+* 2.静态内部类只能够访问外部类的静态成员,而非静态内部类则可以访问外部类的所有成员(方法，属性)。 
+* 3.实例化一个非静态的内部类的方法： 
+*  a.先生成一个外部类对象实例 
+*  OutClassTest oc1 = new OutClassTest(); 
+*  b.通过外部类的对象实例生成内部类对象 
+*  OutClassTest.InnerClass no_static_inner = oc1.new InnerClass(); 
+*  4.实例化一个静态内部类的方法： 
+*  a.不依赖于外部类的实例,直接实例化内部类对象 
+*  OutClassTest.InnerStaticClass inner = new OutClassTest.InnerStaticClass(); 
+*  b.调用内部静态类的方法或静态变量,通过类名直接调用 
+*  OutClassTest.InnerStaticClass.static_value 
+*  OutClassTest.InnerStaticClass.getMessage() 
+*/
+public class Person {
+    private final int id;//身份证号
+    private final String name;//姓名
+    private int age;//年龄
+    private boolean sex;//性别
+    private String desc;//个人描述
+    private Person(Builder builder){
+        this.id=builder.id;
+        this.name=builder.name;
+        this.age=builder.age;
+        this.sex=builder.sex;
+        this.desc=builder.desc;
+    }
+    public static class Builder{
+        private final int id;
+        private final String name;
+        private int age;
+        private boolean sex;
+        private String desc;
+        public Builder(int id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+        public Builder age(int age){
+            //年龄合法性检查
+            if(age&lt;0)throw new IllegalArgumentException();
+            else this.age=age;
+            return this;
+        }
+        public Builder sex(boolean sex){
+            this.sex=sex;
+            return this;
+        }
+        public Builder desc(String desc){
+            this.desc=desc;
+            return this;
+        }
+        public Person build(){
+            return new Person(this);
+        }
+    }
+}
+</code></pre>
+<h3 id="代理模式">代理模式</h3>
+<p>为其他对象提供一种代理以控制对该对象的访问</p>
+<h5 id="简单静态代理">简单静态代理</h5>
+<pre><code>public class GamePlayerProxy implements IGamePlayer {
+     private IGamePlayer gamePlayer = null;     
+     public GamePlayerProxy(IGamePlayer _gamePlayer){
+             this.gamePlayer = _gamePlayer;
+     }
+     @Override
+     public void killBoss() {
+             this.gamePlayer.killBoss();
+     }
+     @Override
+     public void login(String user, String password) {
+             this.gamePlayer.login(user, password);
+     }
+     @Override
+     public void upgrade() {
+             this.gamePlayer.upgrade();
+     }
+}
+</code></pre>
+<h5 id="动态代理">动态代理</h5>
+<pre><code>//IGamePlayer.java
+public interface IGamePlayer {
+    void login(String username,String password);
+    void killBoss();
+    void upgrade();
+}
+// GamePlayer.java
+public class GamePlayer implements IGamePlayer{
+    private String username;
+    private String password;
+    public GamePlayer(String username) {
+        this.username = username;
+    }
+    @Override
+    public void login(String username, String password) {
+        this.username = username;
+        this.password = password;
+        System.out.println(username+&quot; login!&quot;);
+    }
+    @Override
+    public void killBoss() {
+        System.out.println(username+&quot; kill boss!&quot;);
+    }
+    @Override
+    public void upgrade() {
+        System.out.println(username+&quot; kill upgrade!&quot;);
+    }
+}
+// GamePlayIH.java
+public class GamePlayIH implements InvocationHandler {
+    private Object obj;
+    public GamePlayIH(Object _obj){
+        this.obj = _obj;
+    }
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        Object result = method.invoke(this.obj,args);
+        if(method.getName().equalsIgnoreCase(&quot;login&quot;))
+            System.out.println(&quot;some one login in with my account!&quot;);
+        return result;
+    }
+}
+// Usage
+IGamePlayer player = new GamePlayer(&quot;zhangsan&quot;);
+InvocationHandler handler = new GamePlayIH(player);
+ClassLoader loader = player.getClass().getClassLoader();
+IGamePlayer proxy = (IGamePlayer) Proxy.newProxyInstance(loader,new Class[]{IGamePlayer.class},handler);
+proxy.login(&quot;zhangsan&quot;,&quot;root&quot;);
+proxy.killBoss();
+proxy.upgrade();
+</code></pre>
+<h5 id="使用动态代理实现前置后置通知">使用动态代理实现前置后置通知</h5>
+<pre><code>// IAdvice.java
+public interface IAdvice {
+    void exec();
+}
+//BeforeAdvice.java
+public class BeforeAdvice implements IAdvice{
+    @Override
+    public void exec() {
+        System.out.println(&quot;this is a before advice!&quot;);
+    }
+}
+// AfterAdvice.java
+public class AfterAdvice implements IAdvice{
+    @Override
+    public void exec() {
+        System.out.println(&quot;this is a after advice!&quot;);
+    }
+}
+//MyInvocationHandler.java
+public class MyInvocationHandler implements InvocationHandler {
+    private Object obj;
+    public MyInvocationHandler(Object obj) {
+        this.obj = obj;
+    }
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        return method.invoke(obj,args);
+    }
+}
+//Subject.java
+public interface Subject {
+    void doSomething(String args);
+}
+//RealSubject.java
+public class RealSubject implements Subject{
+    @Override
+    public void doSomething(String args) {
+        System.out.println(&quot;do something!---&gt;&quot;+args);
+    }
+}
+// DynamicProxy.java
+public class DynamicProxy {
+    public static void newProxyInstance(ClassLoader loader, Class&lt;?&gt;[] interfaces, InvocationHandler handler){
+        if(true){
+            new BeforeAdvice().exec();
+        }
+        Subject subject = (Subject) Proxy.newProxyInstance(loader,interfaces,handler);
+        subject.doSomething(&quot;execute!&quot;);
+        if(true){
+            new AfterAdvice().exec();
+        }
+    }
+}
+</code></pre>
+<h3 id="观察者模式">观察者模式</h3>
+<p>定义对象间一对多的依赖关系使得每当对象状态改变，则所有依赖它的对象都会得到通知并自动更新</p>
+<pre><code>// Observer.java
+public interface Observer {
+    void update();
+}
+// ConcreteObserver.java
+public class ConcreteObserver implements Observer{
+    @Override
+    public void update() {
+        System.out.println(&quot;接受消息并进行处理！&quot;);
+    }
+}
+// Subject.java
+public abstract class Subject {
+    private Vector&lt;Observer&gt; observers = new Vector&lt;&gt;();
+    public void addObserver(Observer o){
+        observers.add(o);
+    }
+    public void deleteObserver(Observer o){
+        observers.remove(o);
+    }
+    public void notifyObserver(){
+        for (Observer o:observers) {
+            o.update();
+        }
+    }
+}
+// ConcreteSubject.java
+public class ConcreteSubject extends Subject{
+    public void doSomething(){
+        System.out.println(&quot;logic processing!&quot;);
+        super.notifyObserver();
+    }
+}
+// Usage
+ConcreteSubject subject = new ConcreteSubject();
+        Observer observer = new ConcreteObserver();
+        subject.addObserver(observer);
+        subject.doSomething();
+</code></pre>
+<h3 id="门面模式">门面模式</h3>
+<p>要求一个子系统的外部与其内部通信必须通过一个统一的对象进行，门面模式提供一个高层次的接口，使得子系统更容易使用。</p>
+<pre><code>// LoginClassFlutter.java
+public class ClassA {
+     public void doSomethingA(){
+             //业务逻辑
+     }
+}
+public class ClassB {
+     public void doSomethingB(){
+             //业务逻辑
+     }
+}
+public class ClassC {
+     public void doSomethingC(){
+             //业务逻辑
+     }
+}
+// Facade.java
+public class Facade {
+     //被委托的对象
+     private ClassA a = new ClassA();
+     private ClassB b = new ClassB();
+     private ClassC c = new ClassC();
+     //提供给外部访问的方法
+     public void methodA(){
+             this.a.doSomethingA();
+     }
+     public void methodB(){
+             this.b.doSomethingB();
+     }
+     public void methodC(){
+             this.c.doSomethingC();
+     }
+}
+</code></pre>
+<h3 id="装饰者模式">装饰者模式</h3>
+<p>动态的给以一个对象添加一些额外的职责，就增加功能来说，装饰着模式相比生成子类更加灵活</p>
+<pre><code>//Component.java
+public abstract class Component {
+    public abstract void operate();
+}
+//ConcreteComponent.java
+public class ConcreteComponent extends Component{
+    @Override
+    public void operate() {
+        System.out.println(&quot;do something operate!&quot;);
+    }
+}
+//Decorator.java (extent `Component`)
+public abstract class Decorator extends Component{
+    private Component component = null;
+    public Decorator(Component component) {
+        this.component = component;
+    }
+    @Override
+    public void operate() {
+        this.component.operate();
+    }
+}
+//ConcreteDecorator1.java
+public class ConcreteDecorator1 extends Decorator{
+    public ConcreteDecorator1(Component component) {
+        super(component);
+    }
+    private void method1(){
+        System.out.println(&quot;method1 operate!&quot;);
+    }
+    @Override
+    public void operate() {
+        this.method1();
+        super.operate();
+    }
+}
+// Usage
+Component component = new ConcreteComponent();
+component = new ConcreteDecorator1(component);
+component = new ConcreteDecorator2(component);
+component.operate();
+</code></pre>
+<h5 id="应用场景">应用场景</h5>
+<ul>
+<li>需要扩展一个类的功能</li>
+<li>需要动态地给一个对象增加功能，也可动态撤销</li>
+<li>需要为一批兄弟类怎行改装或加装功能</li>
+</ul>
+<h3 id="责任链模式">责任链模式</h3>
+<p>使多个对象都有机会处理请求，从而避免了请求的发送者和接收者之间的耦合关系，将这些对象连接成一条链，并沿着这条链传递该请求，直到有对象处理该请求为止。</p>
+<pre><code>class Level{}
+class Request{
+    public Level getRequestLevel(){
+        return null;
+    }
+}
+class Response{}
+// Handler.java(abstract interface)
+public abstract class Handler {
+    private Handler nextHandler;
+    public final Response handleMessage(Request request){
+        Response response = null;
+        if(this.getHandlerLevel().equals(request.getRequestLevel())){
+            response = this.echo(request);
+        }else {
+            if(this.nextHandler != null){
+                response = this.nextHandler.handleMessage(request);
+            }else {
+                System.out.println(&quot; no handler exception&quot;);
+                return null;
+            }
+        }
+        return response;
+    }
+    public void setNext(Handler _handler){
+        this.nextHandler = _handler;
+    }
+    protected abstract Level getHandlerLevel();
+    protected abstract Response echo(Request request);
+}
+// ConcreteHandler1.java
+//ConcreteHandler2.java 同
+//ConcreteHandler3.java 同
+public class ConcreteHandler1 extends Handler{
+    @Override
+    protected Level getHandlerLevel() {
+        //设置自己的处理级别
+        return null;
+    }
+    @Override
+    protected Response echo(Request request) {
+        //完成处理逻辑
+        return null;
+    }
+}
+// Usage
+Handler handler1 = new ConcreteHandler1();
+Handler handler2 = new ConcreteHandler2();
+Handler handler3 = new ConcreteHandler3();
+handler1.setNext(handler2);
+handler2.setNext(handler3);
+Response response = handler1.handleMessage(new Request());
+</code></pre>
+<h3 id="访问者模式">访问者模式</h3>
+<p>封装一些作用与某种数据结构的中的各种元素操作，它可以在不改变数据结构的前提下定义作用于这些元素的新操作</p>
+<pre><code>// Element.java
+public abstract class Element {
+    public abstract void doSomething();
+    public abstract void accept(IVisitor visitor);
+}
+// ConcreteElement1.java
+// ConcreteElement2.java 同
+public class ConcreteElement1 extends Element{
+    @Override
+    public void doSomething() {
+        System.out.println(&quot;processing... 1&quot;);
+    }
+    @Override
+    public void accept(IVisitor visitor) {
+        visitor.visit(this);
+    }
+}
+// IVisitor.java
+public interface IVisitor {
+    public void visit(ConcreteElement1 element1);
+    public void visit(ConcreteElement2 element2);
+}
+//Visitor.java
+public class Visitor implements IVisitor{
+    @Override
+    public void visit(ConcreteElement1 element1) {
+        element1.doSomething();
+    }
+    @Override
+    public void visit(ConcreteElement2 element2) {
+        element2.doSomething();
+    }
+}
+// Usage
+Element element = createElement();
+element.accept(new Visitor());
+</code></pre>
+<h3 id="命令模式">命令模式</h3>
+<p>将一个请求封装成一个对象，从而让你使用不同的请求把客户端参数化，对请求排队或者记录请求日志，可以提供命令的撤销和恢复功能</p>
+<pre><code>// Receiver.java
+public abstract class Receiver {
+    public abstract void doSomething();
+}
+// ConcreteReceiver1.java
+// ConcreteReceiver2.java 同
+public class ConcreteReceiver1 extends Receiver {
+    @Override
+    public void doSomething() {
+        System.out.println(&quot;receiver 1&quot;);
+    }
+}
+//Command.java
+public abstract class Command {
+    public abstract void execute();
+}
+// ConcreteCommand1.java
+// ConcreteCommand2.java
+public class ConcreteCommand1 extends Command {
+    private Receiver receiver;
+    public ConcreteCommand1(Receiver receiver) {
+        this.receiver = receiver;
+    }
+    @Override
+    public void execute() {
+        this.receiver.doSomething();
+    }
+}
+//Invoke.java
+public class Invoke {
+    private Command command;
+    public void setCommand(Command command) {
+        this.command = command;
+    }
+    public void action(){
+        this.command.execute();
+    }
+}
+//Usage
+Invoke invoke = new Invoke();
+Receiver receiver = new ConcreteReceiver1();
+Command command = new ConcreteCommand1(receiver);
+invoke.setCommand(command);
+invoke.action();
+</code></pre>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://sunxiaohang.github.io/post/shu-ju-jie-gou-yu-suan-fa/">
+              <h3 class="post-title">
+                下一篇：数据结构与算法
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+
+      <div class="site-footer">
+  <div class="slogan">KnowledgeBase</div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  Powered by <a href="mailto:cssunhang@outlook.com" target="_blank">hangsun</a> | <a class="rss" href="https://sunxiaohang.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+  </body>
+</html>

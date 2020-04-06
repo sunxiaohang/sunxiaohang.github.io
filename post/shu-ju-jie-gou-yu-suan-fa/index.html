@@ -1,0 +1,1234 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>数据结构与算法 | KnowledgeBase</title>
+<meta name="description" content="KnowledgeBase">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://sunxiaohang.github.io/favicon.ico?v=1586176056057">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://sunxiaohang.github.io/styles/main.css">
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://sunxiaohang.github.io">
+        <img class="avatar" src="https://sunxiaohang.github.io/images/avatar.png?v=1586176056057" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://sunxiaohang.github.io">
+        <h1 class="site-title">KnowledgeBase</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">数据结构与算法</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2020-04-06</span>
+            
+          </div>
+          <div class="post-content">
+            <p>本文包含一般数据结构的实现方式和常用算法的实现</p>
+<!-- more -->
+<h2 id="数据结构">数据结构</h2>
+<h4 id="栈">栈</h4>
+<pre><code>//-----------------------------------------------------
+//----------------------顺序存储----------------------
+//-----------------------------------------------------
+
+typedef struct{
+    int Data[MAXSIZE];
+    int Top;
+}Stack;
+void Push(Stack *stack,int value){
+    if(stack-&gt;Top==MAXSIZE-1){//数组有界
+        printf(&quot;堆栈满&quot;);
+    }else{
+        stack-&gt;Data[++(stack-&gt;Top)]=value;
+        return;
+    }
+}
+int Pop(Stack *stack){
+    if(stack-&gt;Top==-1){//为空检查
+        printf(&quot;堆栈为空&quot;);
+        return ERROR;
+    } else
+    return stack-&gt;Data[stack-&gt;Top--];
+}
+
+//-----------------------------------------------------
+//----------------------链式存储----------------------
+//-----------------------------------------------------
+
+/*用单向链表表示栈时候，栈Top结点一定是链头结点
+ * */
+typedef struct Node{
+    int value;
+    struct Node *next;
+}LinkedStack;
+LinkedStack * CreateLinkedStack(){
+    LinkedStack *stack;
+    stack=(LinkedStack *)malloc(sizeof(LinkedStack));
+    stack-&gt;next=NULL;
+    return stack;
+};
+int isEmpty(LinkedStack *stack){//注意Top结点没有值，只有一个单链表的头指针
+    return (stack-&gt;next==NULL);
+}
+void Push(LinkedStack *stack,int value){
+    LinkedStack *insertElement;
+    insertElement=malloc(sizeof(LinkedStack));//分配内存空间
+    insertElement-&gt;value=value;//插入的值赋值给结点
+    insertElement-&gt;next=stack-&gt;next;//将已存在链表链接到插入的结点
+    stack-&gt;next=insertElement;//改变Top结点
+}
+int Pop(LinkedStack *stack){
+    int result;
+    LinkedStack *popElement;
+    if(isEmpty(stack)){
+        printf(&quot;链表为空&quot;);
+        return ERROR;
+    }else{
+        popElement=stack-&gt;next;
+        result=popElement-&gt;value;
+        stack-&gt;next=popElement-&gt;next;
+        free(popElement);//记得释放无用内存空间
+        return result;
+    }
+}
+</code></pre>
+<h4 id="队列">队列</h4>
+<pre><code>//-----------------------------------------------------
+//----------------------顺序存储----------------------
+//-----------------------------------------------------
+
+#define MAXSIZE 50
+typedef struct {
+    int value[MAXSIZE];
+    int rear;
+    int front;
+}Queue;
+Queue *CreateQueue(){
+    Queue *queue;
+    queue=(Queue *)malloc(sizeof(Queue));
+    queue-&gt;front=0;
+    queue-&gt;rear=0;
+    return queue;
+}
+void AddQueue(Queue *queue,int value){
+    if((queue-&gt;rear+1)%MAXSIZE==queue-&gt;front){
+        printf(&quot;queue is full&quot;);
+        return;
+    }else {
+        queue-&gt;rear=(queue-&gt;rear+1)%MAXSIZE;
+        queue-&gt;value[queue-&gt;rear] = value;
+    }
+}
+int IsEmpty(Queue *queue){
+    if(queue-&gt;rear==queue-&gt;front)return 1;
+    else return 0;
+}
+void OutQueue(Queue* queue,int *value){
+    if(IsEmpty(queue)){
+        printf(&quot;Queue is empty&quot;);
+        return;
+    }else{
+        queue-&gt;front=(queue-&gt;front+1)%MAXSIZE;
+        *value=queue-&gt;value[queue-&gt;front];
+    }
+}
+
+//-----------------------------------------------------
+//----------------------链式存储----------------------
+//-----------------------------------------------------
+
+typedef struct Node {
+    int value;
+    struct Node *next;
+} QNode;
+typedef struct {
+    QNode *rear;
+    QNode *front;
+} Queue;
+
+void InitQueue(Queue **queue) {
+    QNode *p;
+    p = (QNode *) malloc(sizeof(QNode));
+    p-&gt;next = NULL;
+    (*queue)-&gt;front = p;
+    (*queue)-&gt;rear = p;
+}
+
+void InQueue(Queue *queue, int value) {
+    QNode *InElement;
+    InElement = (QNode *) malloc(sizeof(QNode));
+    InElement-&gt;value = value;
+    InElement-&gt;next = NULL;
+    queue-&gt;rear-&gt;next = InElement;
+    queue-&gt;rear = InElement;
+}
+
+int IsEmpty(Queue *queue) {
+    if (queue-&gt;rear = queue-&gt;front)return 1;
+    else return 0;
+}
+
+void OutQueue(Queue *queue, int *value) {
+    QNode *OutElement;
+    if (IsEmpty(queue)) {
+        printf(&quot;queue is empty&quot;);
+        return;
+    } else {
+        OutElement = queue-&gt;front-&gt;next;
+        queue-&gt;front-&gt;next=OutElement-&gt;next;//指针头结点指向下一个结点(pspspspsps)
+        *value=OutElement-&gt;value;
+        free(OutElement);
+        if(IsEmpty(queue)){//出队列后如果队列为空则置为空队列
+            queue-&gt;front=queue-&gt;rear;
+        }
+    }
+}
+</code></pre>
+<h5 id="判定树">判定树</h5>
+<p>每个结点需要查找的次数刚好为该结点所在的层数，查找成功时查找次数不会超过判定树的深度，n个结点的判定树的深度为[LgN]+1</p>
+<p><strong>平均查找长度ASL（Average Search Length）</strong><br>
+ASL=sum(层数*个数)/各层总个数n(n&gt;=0)个结点构成的有限集合当n=0时称为空树</p>
+<p>对于任何一棵非空树（n&gt;0），它具备以下性质</p>
+<ul>
+<li>树中会有一个root特殊结点用r表示</li>
+<li>其余结点可分为m(m&gt;0)个互不相交的有限集，其中每个集合本身又是一棵树，称为原来树的子树</li>
+</ul>
+<p><strong>树的特点：</strong></p>
+<ul>
+<li>子树是不相交的</li>
+<li>出了根节点外，每隔结点有且仅有一个父结点</li>
+<li>一棵N个结点的树有N-1条边（树是保证结点连通的最少边链接方式）</li>
+</ul>
+<p>树的一些基本术语：</p>
+<ul>
+<li>
+<p>结点的度：结点的子树个数（满二叉树单个结点的度为2）</p>
+</li>
+<li>
+<p>树的度：树的所有结点中最大的度数</p>
+</li>
+<li>
+<p>叶结点：结点度为0的结点</p>
+</li>
+<li>
+<p>父节点，子节点，兄弟结点</p>
+</li>
+<li>
+<p>路径和路径长度</p>
+</li>
+<li>
+<p>祖先节点：沿树根到某一结点路径上的所有节点都是这个结点的祖先结点<br>
+子孙结点通；</p>
+</li>
+<li>
+<p>结点的层次：规定根结点在一层，其他层次随子节点+1</p>
+</li>
+<li>
+<p>树的深度：树中结点的最大层次就是这棵树的深度</p>
+<p>儿子兄弟表示法可以将所有的树转化为二叉树<br>
+<strong>特殊二叉树：</strong></p>
+</li>
+<li>
+<p>斜二叉树：只有左儿子或只有右结点</p>
+</li>
+<li>
+<p>完美二叉树：满二叉树</p>
+</li>
+<li>
+<p>完全二叉树：结点编号与满二叉树结点编号相同（编号不间断）<br>
+<strong>二叉树的特点</strong></p>
+</li>
+<li>
+<p>一个二叉树第i层的最大节点数为：2(i-1),i&gt;=1</p>
+</li>
+<li>
+<p>深度为k的二叉树有最大节点总数为2k-1,k&gt;=1;</p>
+</li>
+<li>
+<p>对于任何非空二叉树T，若N0表示叶子结点的个数，N2是度为2的非叶结点个数，那么两者满足关系：N0=N2+1;(即叶子结点个数-1=度数为2的结点个数)</p>
+</li>
+</ul>
+<p><strong>二叉树的抽象数据类型定义</strong><br>
+数据对象集：一个有穷的结点集合<br>
+若不为空，则由根节点和其左、右二叉树组成<br>
+操作集：判断树是否为空，遍历，创建二叉树</p>
+<p><strong>常用的遍历方法有：</strong><br>
+先序遍历（根左右），<br>
+中序遍历（左根右），<br>
+后序遍历（左右根），<br>
+层次遍历（从上到下，从左到右）</p>
+<p>在二叉树中，我们知道叶结点总数n0与有两个儿子的结点总数n2之间的关系是：n0=n2+1.<br>
+那么类似关系是否可以推广到m叉树中？也就是，如果在m叉树中，叶结点总数是n0，<br>
+有一个儿子的结点总数是n1，有2个儿子的结点总数是n2，有3个儿子的结点总数是n3，<br>
+那么，ni之间存在什么关系？</p>
+<ul>
+<li>完全二叉树，非根节点的父节点序号是[i/2]</li>
+<li>结点的左孩子结点序号是2i，若2i&lt;=n，否则没有左孩子结点</li>
+<li>结点的右孩子结点序号是2i+1，（若2i+1&lt;=n,否则没有右孩子）</li>
+</ul>
+<pre><code> typedef struct BT{
+     int value;
+     struct BT *leftchild;
+     struct BT *rightchild;
+ }BinTree;
+ //二叉树的每个结点遍历都会遇到三次，第一次遇到就打印的为先序遍历，第二次遇到就打印的为中序遍历，第三次遇到就打印的为后序遍历
+ //先序遍历(递归遍历)
+ void PreOrderTraversal(BinTree *BT){
+     if(BT){
+     if(!BT-&gt;leftchild&amp;&amp;!BT-&gt;rightchild)
+         printf(&quot;%d\n&quot;,BT-&gt;value);
+         PreOrderTraversal(BT-&gt;leftchild);
+         PreOrderTraversal(BT-&gt;rightchild);
+     }
+ }
+ //中序遍历(递归遍历)
+ void InOrderTraversal(BinTree *BT){
+     if(BT){
+     if(!BT-&gt;leftchild&amp;&amp;!BT-&gt;rightchild)
+         InOrderTraversal(BT-&gt;leftchild);
+         printf(&quot;%d\n&quot;,BT-&gt;value);
+         InOrderTraversal(BT-&gt;rightchild);
+     }
+ }
+ //后序遍历(递归遍历)
+ void PostOrderTraversal(BinTree *BT){
+     if(BT){
+     if(!BT-&gt;leftchild&amp;&amp;!BT-&gt;rightchild)
+         PostOrderTraversal(BT-&gt;leftchild);
+         PostOrderTraversal(BT-&gt;rightchild);
+         printf(&quot;%d\n&quot;,BT-&gt;value);
+     }
+ }
+ //二叉树遍历的本质是将二维序列转换为一维序列
+ //使用队列进行二叉树的层级访问（遍历根节点，将左右儿子节点入队列）
+ void LevelOrderTraversal(BinTree BT){
+     Queue *queue;
+     BinTree *T;
+     queue=CreateQueue();
+     AddQueue(queue,BT);
+     while(!IsEmptyQueue(queue)){
+         T=DeleteQueue(queue);
+         printf(&quot;%d\n&quot;,T-&gt;value);
+         if(T-&gt;leftchild)AddQueue(queue,T-&gt;leftchild);
+         if(T-&gt;rightchild)AddQueue(queue,T-&gt;rightchild);
+     }
+ }
+ //给定前中序遍历结果或中后序遍历结果可以唯一确定一棵二叉树，给定前后序遍历结果不能唯一确定二叉树
+ //非递归实现（中序遍历）
+ void InOrderTraversal(BinTree *BT){
+     BinTree *T=BT;
+     LinkedStack *stack=CreateLinkedStack();//创建并初始化堆栈
+     while(T||!isEmpty(stack)){
+         while(T){//一直向左将沿途结点压入堆栈
+             Push(stack,T);
+             T=T-&gt;leftchild;//转向左子树
+         }
+         if(!isEmpty(stack)){
+             T=Pop(stack);//结点弹出堆栈
+             printf(&quot;%5d&quot;,T-&gt;value);//打印结点
+             T=T-&gt;rightchild;//转向右子树
+         }
+     }
+ }
+ //非递归实现（先序遍历）
+ void PreOrderTraversal(BinTree *BT){
+     BinTree *T=BT;
+     LinkedStack *stack=CreateLinkedStack();//创建并初始化堆栈
+     while(T||!isEmpty(stack)){
+         while(T){//一直向左将沿途结点压入堆栈
+             printf(&quot;%5d&quot;,T-&gt;value);//打印结点
+             Push(stack,T);
+             T=T-&gt;leftchild;//转向左子树
+         }
+         if(!isEmpty(stack)){
+             T=Pop(stack);//结点弹出堆栈
+             T=T-&gt;rightchild;//转向右子树
+         }
+     }
+ }
+</code></pre>
+<h5 id="二叉搜索树bstbinary-search-tree">二叉搜索树：BST(binary search tree)</h5>
+<p>也称二叉排序树或二叉查找树<br>
+二叉搜索树条件<br>
+1.非空左子树的所有键值小于其根节点的键值<br>
+2.非空右子树的所有键值大于其根节点的键值<br>
+3.左，右子树都是二叉搜索树</p>
+<pre><code>//递归方式实现
+Position Find(BinTree *binTree,int result){
+    if(!binTree)return NULL;
+    if(result&gt;binTree-&gt;value)return Find(binTree-&gt;rightchild,result);
+    else if(result&lt;binTree-&gt;value)return Find(binTree,result);
+    else return binTree;//查找成功，返回结点地址(return尾递归)
+}
+//非递归方式实现
+Position IterFind(BinTree *binTree,int value){
+    while(binTree){
+        if(result&gt;binTree-&gt;value)
+            binTree=binTree-&gt;rightchild;
+        else if(result&lt;binTree-&gt;value)
+            binTree=binTree-&gt;leftchild;
+        else 
+            return binTree;
+    }
+    return NULL;
+}
+//寻找最小值
+Position FindMin(BinTree *binTree){
+    if(!binTree)return NULL;
+    else if(!binTree-&gt;leftchild)
+        return binTree;
+    else
+        return FindMin(binTree-&gt;leftchild);
+}
+//寻找最大值
+Position FindMax(BinTree *binTree){
+    if(binTree){
+        while(binTree-&gt;rightchild)
+            binTree=binTree-&gt;rightchild;
+    }
+    return binTree;
+}
+//结点插入
+BinTree * Insert(BinTree *binTree, int value) {
+    if(!binTree){
+        binTree=malloc(sizeof(BinTree));
+        binTree-&gt;value=value;
+        binTree-&gt;leftchild=binTree-&gt;rightchild=NULL;
+    }else{
+        if(value&lt;binTree-&gt;value)
+            binTree-&gt;leftchild=Insert(binTree-&gt;leftchild,value);
+        else if(value&gt;binTree-&gt;value)
+            binTree-&gt;rightchild=Insert(binTree-&gt;rightchild,value);
+    }
+    return binTree;
+}
+//删除结点
+BinTree *Delete(BinTree *binTree,int value){
+    (Position)BinTree *Temp;
+    if(!binTree)printf(&quot;要删除的元素未找到&quot;);
+        //左子树递归删除
+    else if(value&lt;binTree-&gt;value)binTree-&gt;leftchild=Delete(binTree,value);
+        //右子树递归删除
+    else if(value&gt;binTree-&gt;value)binTree-&gt;rightchild=Delete(binTree-&gt;rightchild,value);
+    else //找到要删除的结点
+        if(binTree-&gt;leftchild&amp;&amp;binTree-&gt;rightchild){//被删除结点有左右量子子节点
+            Temp=FindMin(binTree-&gt;rightchild);//在右子树中招最小的元素填充删除结点
+            binTree-&gt;value=Temp-&gt;value;
+            binTree-&gt;rightchild=Delete(binTree-&gt;rightchild,binTree-&gt;value);
+        }else{//被删除的结点有一个或无子结点
+            Temp=binTree;
+            if(!binTree-&gt;leftchild)binTree=binTree-&gt;rightchild;
+            else if(!binTree-&gt;rightchild)binTree=binTree-&gt;leftchild;
+            free(Temp);
+        }
+    return binTree;
+}
+</code></pre>
+<h5 id="平衡二叉树balanced-binary-tree">平衡二叉树(Balanced Binary Tree)</h5>
+<p><strong>(AVL树)(AVL是提出平衡树的学者名字首字母)</strong></p>
+<ul>
+<li>空树或任一结点左右子树高度差不超不过1|BF(T)|&lt;=1</li>
+<li>平衡因子(Balance Factor 简称BF：BF(T)=Hl-Hr)</li>
+<li>其中hl和hr分别为T的左右子树高度</li>
+<li>高度=层数-1</li>
+<li>完全二叉树高度为log2N(平衡二叉树)</li>
+<li>Nh是高度为h的平衡二叉树的最小结点树</li>
+<li>Nh=F(h+2)-1</li>
+</ul>
+<pre><code> #define MaxData 10000
+ typedef struct HeapStruct{
+     int *value;//存储对元素的数组
+     int length;//堆的当前元素个数
+     int capacity;//堆的最大容量
+ }Heap;
+</code></pre>
+<h5 id="优先队列priorityqueue">优先队列（PriorityQueue）</h5>
+<p>取出元素的先后顺序是按照元素的优先权（关键字）大小，而不是元素进入队列的先后顺序<br>
+最大堆和最小堆都必须满足完全二叉树（切根节点最大或最小）最大堆的建立</p>
+<p>建立最大堆：将已经存在的N个元素按最大堆的要求存放在要给一维数组中</p>
+<ul>
+<li>方法一：通过插入操作，将N个元素一个个相继插入到一个初始为空的堆中去，其时间代价最大为O（NlogN）</li>
+<li>方法二：在线性时间复杂度下建立最大堆</li>
+<li>(1)将N个元素按输入顺序存入，先满足完全二叉树的结构特性</li>
+<li>(2)调整各结点位置以满足最大堆的有序特性<br>
+建堆时，最坏的情况下需要挪动的元素次数等于树中各节点的高度和</li>
+</ul>
+<p><strong>对由同样n个整数构成的二叉搜索树（查找树）和最小堆：有以下结论</strong></p>
+<ul>
+<li>二叉搜索树高度大于等于最小堆高度</li>
+<li>对该二叉搜索树进行中序遍历可得到从小到大的序列</li>
+<li>从最小堆根节点到起任何叶结点的路径上的结点值构成从小到大的序列</li>
+</ul>
+<pre><code> Heap * Create(int MaxSize){
+     Heap *heap=malloc(sizeof(Heap));
+     heap-&gt;value=malloc((MaxSize+1)*sizeof(int));
+     heap-&gt;length=0;
+     heap-&gt;capacity=MaxSize;
+     heap-&gt;value[0]=MaxData;//定义哨兵，便于操作
+     return heap;
+ }
+ void Insert(Heap *heap,int value){
+     int i;
+     if(IsFull(heap)){
+         printf(&quot;最大堆已经满了&quot;);
+         return;
+     }
+     i=++heap-&gt;length;
+     for(;heap-&gt;value[i/2]&lt;value;i/=2)
+         heap-&gt;value[i]=heap-&gt;value[i/2];
+     heap-&gt;value[i]=value;
+ }
+ int DeleteMax(Heap *heap){
+     int parent,child;
+     int maxValue,temp;
+     if(IsEmpty(heap)){
+         printf(&quot;最大堆已空&quot;);
+         return 0;
+     }
+     maxValue=heap-&gt;value[1];
+     //用最大堆中最后一个元素从根节点开始过滤下层结点
+     temp=heap-&gt;value[heap-&gt;length--];
+     for(parent=1;parent*2&lt;=heap-&gt;length;parent=child){
+         child=parent*2;
+         //左儿子和右儿子节点比较取较大者
+         if((child!=heap-&gt;length)&amp;&amp;(heap-&gt;value[child]&lt;heap-&gt;value[child+1]))
+             child++;
+         if(temp&gt;=heap-&gt;value[child])break;
+         else
+             heap-&gt;value[parent]=heap-&gt;value[child];
+     }
+     heap-&gt;value[parent]=temp;
+     return maxValue;
+ }
+ int IsEmpty(Heap *heap){
+     return heap-&gt;length==0;
+ }
+ int IsFull(Heap *heap){
+     return heap-&gt;length==heap-&gt;capacity;
+ }
+ 
+ typedef struct TreeNode{
+     int weight;
+     struct TreeNode *left,*right;
+ }HuffmanTree;
+</code></pre>
+<h5 id="哈夫曼树huffmantree">哈夫曼树（HuffmanTree）</h5>
+<p>查找效率，查找次数乘查找概率<br>
+<strong>带权路径长度（WPL）</strong>：设二叉树有n个叶子结点，每隔叶子结点带有权值Wk，从根节点到每隔叶子结点的长度是Lk，则每隔叶子结点的带全路径长度之和WPL=（nEk=1）WkLk<br>
+<strong>最优二叉树或哈夫曼树</strong>：WPL最小的二叉树<br>
+<strong>哈夫曼树的特点</strong></p>
+<ul>
+<li>没有度为1的结点</li>
+<li>n个叶子结点的HuffmanTree有2n-1个结点</li>
+<li>HuffmanTree的任意非叶结点的左右子树交换后仍是HuffmanTree<br>
+对于一组权值，可能有不同构的两棵HuffmanTree</li>
+</ul>
+<pre><code>HuffmanTree *Huffman(Heap *heap){
+    //假设heap-&gt;length权值已经存在heap-&gt;value[]-&gt;weight里面
+    int i;HuffmanTree *huffmanTree;
+    BuildHeap(heap);//将heap-&gt;value[]按权值调整为最小堆
+    for(i=1;i&lt;heap-&gt;length;i++){
+        huffmanTree=malloc(sizeof(HuffmanTree));//建立新结点
+        huffmanTree-&gt;left=DeleteMin(heap);//从最小堆中删除一个结点，作为新huffmanTree的左子结点
+        huffmanTree-&gt;right=DeleteMin(heap);//从最小堆中删除一个结点，作为新huffmanTree的右子结点
+        huffmanTree-&gt;weight=huffmanTree-&gt;weight+huffmanTree-&gt;right-&gt;weight;//计算新// 权值
+        Insert(heap,huffmanTree);
+    }
+    huffmanTree=DeleteMin(heap);
+    return huffmanTree;
+}
+/*二叉树用于编码
+ * 当被编码字母全部在二叉树的叶子结点的时候（即，编码字母不会出现在有子节点的结点中）便可以保证字符编码没有二义性
+ * */
+</code></pre>
+<h4 id="双向链表">双向链表</h4>
+<pre><code>public class DoubleLinkedList&lt;E&gt; {
+    private Node first;//指向第一个元素
+    private Node last;//指向最后一个元素
+    private int length=0;//链表长度
+    class Node {
+        private Node previous;
+        private Node next;
+        private E e;
+
+        public Node(Node previous, Node next, E e) {
+            this.previous = previous;
+            this.next = next;
+            this.e = e;
+        }
+    }
+    /***
+     * 向头节点添加元素，节点结构对外应该是不可见的，所以这里只传递一个泛型的值e
+     */
+    public void addFirst(E e) {
+        if (first == null) {//链表为空判断
+            Node node = new Node(null, null, e);//创建一个新的节点，前驱和后继都为空
+            this.first = node;
+            this.last=node;//将first和last指针指向链表的第一个元素
+            length++;//链表长度自增一，下同
+        }else{
+            Node node=new Node(null,first,e);//链表不为空创建一个前驱为空，后继为当前first节点的节点，值为传入的参数e
+            this.first.previous=node;//当前first的前驱设置为node
+            this.first=node;//将first指针指向新节点
+            length++;
+        }
+    }
+/***
+*addLast同addFirst
+*/
+    public void addLast(E e) {
+        if (last == null) {
+            Node node = new Node(null, null, e);
+            this.first = node;
+            this.last=node;
+            length++;
+        }else{
+            Node node=new Node(last,null,e);
+            this.last.next=node;
+            this.last=node;
+            length++;
+        }
+    }
+    public void insertPrevious(E baseElement,E value){
+        Node index=this.first;
+        while(index!=null){
+            if(index.e==baseElement)break;
+            index=index.next;
+        }
+        Node insertValue=new Node(index.previous,index,value);
+        index.previous.next=insertValue;
+        index.previous=insertValue;
+        length++;
+    }
+    public void insertNext(E baseElement,E value){
+        Node index=this.first;
+        while(index!=null){
+            if(index.e==baseElement)break;
+            index=index.next;
+        }
+        Node insertValue=new Node(index,index.next,value);
+        index.next.previous=insertValue;
+        index.next=insertValue;
+        length++;
+    }
+    public void removeElement(E value){
+        Node index=this.first;
+        while(index!=null){
+            if(index.e==value)break;
+            index=index.next;
+        }
+        index.previous.next=index.next;
+        index.next.previous=index.previous;
+        length--;
+    }
+    public int getLength(){
+        return length;
+    }
+    @Override
+    public String toString() {
+        StringBuffer sb=new StringBuffer();
+        Node current=this.first;
+        while(current!=null){
+            sb.append(current.e+&quot;-&gt;&quot;);
+            current=current.next;
+        }
+        return sb.toString();
+    }
+    public static void main(String[] args) {
+        DoubleLinkedList&lt;String&gt; list=new DoubleLinkedList&lt;&gt;();
+        list.addLast(&quot;value1&quot;);
+        list.addLast(&quot;value2&quot;);
+        list.addLast(&quot;value3&quot;);
+        list.addLast(&quot;value4&quot;);
+        list.addFirst(&quot;value0&quot;);
+        list.insertPrevious(&quot;value3&quot;,&quot;insertValue&quot;);
+        list.insertNext(&quot;value3&quot;,&quot;insertValue2&quot;);
+        System.out.println(list.toString());
+        System.out.println(&quot;链表的长度是&quot;+list.getLength());
+        list.removeElement(&quot;value3&quot;);
+        System.out.println(list.toString());
+        System.out.println(&quot;链表的长度是&quot;+list.getLength());
+    }
+}
+</code></pre>
+<h2 id="算法">算法</h2>
+<h4 id="广度优先的迷宫求解算法">广度优先的迷宫求解算法</h4>
+<pre><code>class Position {
+    private int px;
+    private int py;
+    public Position(int px, int py) {
+        this.px = px;
+        this.py = py;
+    }
+    public int getPx() {
+        return px;
+    }
+    public void setPx(int px) {
+        this.px = px;
+    }
+    public int getPy() {
+        return py;
+    }
+    public void setPy(int py) {
+        this.py = py;
+    }
+}
+public class Maze {
+    private final Position start;//迷宫的起点final
+    private final Position end;//迷宫的终点final
+    private ArrayList&lt;String&gt; footPrint;//足迹
+    private ArrayList&lt;Position&gt; test;
+    private MyStack&lt;Position&gt; stacks;//自定义栈（也可以用java.util中的Stack栈）若想了解MyStack的实现，可以参考我的另一篇博客
+    private Position currentPosition;//定义当前位置
+    public Maze() {//集合，栈的初始化工作
+        start = new Position(1, 1);
+        end = new Position(8, 8);
+        currentPosition = start;
+        stacks = new MyStack&lt;&gt;();
+        test = new ArrayList&lt;&gt;();
+    }
+    public static final int map[][] = //定义地图10*10的方格
+            {{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 0, 0, 1, 0, 0, 0, 1, 0, 1},
+            {1, 0, 0, 1, 0, 0, 0, 1, 0, 1},
+            {1, 0, 0, 0, 0, 1, 1, 0, 0, 1},
+            {1, 0, 1, 1, 1, 0, 0, 0, 0, 1},
+            {1, 0, 0, 0, 1, 0, 0, 0, 0, 1},
+            {1, 0, 1, 0, 0, 0, 1, 0, 0, 1},
+            {1, 0, 1, 1, 1, 0, 1, 1, 0, 1},
+            {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
+    public static void printMap() {//打印地图
+        for (int i = 0; i &lt; 10; i++) {
+            for (int j = 0; j &lt; 10; j++) {
+                if (map[i][j] == 1) System.out.print(&quot; ■&quot;);
+                else System.out.print(&quot;  &quot;);
+            }
+            System.out.println();
+        }
+    }
+    public boolean moveTop() {//上移
+        String s = currentPosition.getPx() + &quot;&quot; + (currentPosition.getPy() - 1);
+        if ((map[currentPosition.getPx()][currentPosition.getPy() - 1] != 1) &amp; !isArrived(s)) {
+            footPrint.add(s);
+            return true;
+        }
+        return false;
+    }
+    public boolean moveRight() {//右移
+        String s = (currentPosition.getPx() + 1) + &quot;&quot; + currentPosition.getPy();
+        if (map[currentPosition.getPx() + 1][currentPosition.getPy()] != 1 &amp; !isArrived(s)) {
+            footPrint.add(s);
+            return true;
+        }
+        return false;
+    }
+    public boolean moveBottom() {//下移
+        String s = currentPosition.getPx() + &quot;&quot; + (currentPosition.getPy() + 1);
+        if ((map[currentPosition.getPx()][currentPosition.getPy() + 1] != 1) &amp; !isArrived(s)) {
+            footPrint.add(s);
+            return true;
+        }
+        return false;
+    }
+    public boolean moveLeft() {//左移
+        String s = (currentPosition.getPx() - 1) + &quot;&quot; + currentPosition.getPy();
+        if ((map[currentPosition.getPx() - 1][currentPosition.getPy()] != 1) &amp; !isArrived(s)) {
+            footPrint.add(s);
+            return true;
+        }
+        return false;
+    }
+    public boolean isArrived(String position) {//判断当前位置是否已经到打过
+        return footPrint.contains(position);
+    }
+    public void move() {//move函数分别向四个方向移动，然后将可行的path入栈
+        if (moveRight()) {
+            Position temp = new Position(currentPosition.getPx() + 1, currentPosition.getPy());
+            test.add(temp);
+            stacks.push(temp);
+        } else if (moveBottom()) {
+            Position temp = new Position(currentPosition.getPx(), currentPosition.getPy() + 1);
+            test.add(temp);
+            stacks.push(temp);
+        } else if (moveTop()) {
+            Position temp = new Position(currentPosition.getPx(), currentPosition.getPy() - 1);
+            test.add(temp);
+            stacks.push(temp);
+        } else if (moveLeft()) {
+            Position temp = new Position(currentPosition.getPx() - 1, currentPosition.getPy());
+            test.add(temp);
+            stacks.push(temp);
+        } else {
+            currentPosition = stacks.pop();//若当前位置四个方向都走不通，则将当前位置出栈，继续遍历上一节点
+        }
+    }
+    public static void main(String[] args) {
+        Maze m = new Maze();
+        m.footPrint = new ArrayList&lt;&gt;();
+        m.footPrint.add(&quot;11&quot;);
+        m.stacks.push(m.start);
+        while (m.currentPosition.getPx() != 8 || m.currentPosition.getPy() != 8) {
+            m.move();
+        }
+        printMap();
+        System.out.println(&quot;下面是足迹,长度是：&quot; + m.footPrint.size());
+        m.printFootPrint();
+    }
+    public void printFootPrint() {
+        for (int i = 0; i &lt; footPrint.size(); i++) {
+            System.out.print(footPrint.get(i) + &quot;,&quot;);
+        }
+        System.out.println();
+    }
+}
+</code></pre>
+<h4 id="二叉树">二叉树</h4>
+<pre><code>public class BinaryTree {
+    private Node parent;
+    private Node currentPoint;
+    private StringBuffer sb;
+    private int length=0;
+
+    class Node {
+        private int value;
+        private Node leftChild;
+        private Node rightChild;
+
+        public Node(int value, Node leftChild, Node rightChild) {
+            this.value = value;
+            this.leftChild = leftChild;
+            this.rightChild = rightChild;
+        }
+    }
+    public Node getParent(){
+        return parent;
+    }
+
+    public BinaryTree() {
+        sb=new StringBuffer();
+    }
+
+    public void insert(int value) {
+        if (parent == null) {
+            Node node = new Node(value, null, null);
+            parent = node;
+            length++;
+        } else {
+            currentPoint = parent;
+            while(true){
+                if(currentPoint.value&gt;value){
+                    if(currentPoint.leftChild!=null){
+                        currentPoint=currentPoint.leftChild;
+                    }else{
+                        currentPoint.leftChild=new Node(value,null,null);
+                        length++;
+                        break;
+                    }
+                }else{
+                    if(currentPoint.rightChild!=null){
+                        currentPoint=currentPoint.rightChild;
+                    }else{
+                        currentPoint.rightChild=new Node(value,null,null);
+                        length++;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    public String visit(Node node) {
+        sb.append(node.value+&quot;(&quot;);
+        if (node.leftChild != null) visit(node.leftChild);
+        if (node.rightChild != null) visit(node.rightChild);
+        sb.append(&quot;)&quot;);
+        return sb.toString();
+    }
+    public int getLength(){
+        return length;
+    }
+
+    @Override
+    public String toString() {
+        return visit(parent);
+    }
+}
+</code></pre>
+<h4 id="二分查找">二分查找</h4>
+<pre><code>int binary_search(int arrays[],int result,int length){
+    int begin=0,end=length-1;
+    int mid=0;
+    while(begin&lt;=end){
+        mid=(begin+end)/2;
+        if(arrays[mid]==result)break;
+        else if(arrays[mid]&lt;result)begin=mid+1;
+        else if(arrays[mid]&gt;result)end=mid-1;
+    }
+    return mid;
+}
+</code></pre>
+<h4 id="共享数组原地逆置">共享数组原地逆置</h4>
+<pre><code>public class Main {
+    public static char array[]={'A','B','C','D','E','F','G','H','1','2','3','4'};
+    public static void main(String[] args) {
+        reverse(0,7);//逆置字母序列结果为：HGFEDCBA1234
+        reverse(8,11);//逆置数字序列结果为：HGFEDCBA4321
+        reverse(0,11);//整体逆置结果为：1234ABCDEFG
+        print(array);
+    }
+    public static void reverse(int start,int end){//逆置函数
+        char temp;
+        while(start&lt;end) {
+            temp = array[start];
+            array[start++] = array[end];
+            array[end--] = temp;
+        }
+    }
+    private static void print(char[] array) {
+        for (int i = 0; i &lt;array.length; i++)
+            System.out.print(array[i]);
+        System.out.println();
+    }
+}
+</code></pre>
+<h4 id="n-皇后问题">N 皇后问题</h4>
+<pre><code>/**
+ * n queens problem
+ *
+ * */
+public class EightQueen {
+    private int QUEEN_COUNT = 0;//represent the queen count
+    private int[][] queenCount;//chess box matrix
+    private int resultCount = 0;//solution number
+    private int[] queenPlace;//mark the queen placed position
+    /**
+     * construct a EightQueen with a argument represent the number of queen
+     * initial a empty chess box
+     * 0 represent empty
+     * 1 represent the area has been taken
+     * recurse to call the putQueen method
+     * the queenPlace array to mark the queen's taken area which uses to print
+     *
+     * */
+    public EightQueen(int n) {
+        this.QUEEN_COUNT = n;
+        this.resultCount = 0;
+        this.queenCount = new int[QUEEN_COUNT][QUEEN_COUNT];
+        queenPlace = new int[QUEEN_COUNT];
+        putQueen(0);
+    }
+    /**
+     * implement the putQueen function to recursion
+     * use column index in outer loop and row index in inner loop with step increase
+     * */
+    private void putQueen(int row) {
+        for (int column = 0; column &lt; QUEEN_COUNT; column++) {//loop for QUEEN_COUNT times
+            if (queenCount[row][column] == 0) {//judge the condition
+                /**
+                 * each row has one queen
+                 * mark the column and diagonal back diagonal(row has been scatter)
+                 *
+                 * */
+                for (int nextRow = row + 1; nextRow &lt; QUEEN_COUNT; nextRow++) {
+                    queenCount[nextRow][column]++;
+                    if (column - nextRow + row &gt;= 0) {
+                        queenCount[nextRow][column - nextRow + row]++;
+                    }
+                    if (column + nextRow - row &lt; QUEEN_COUNT) {
+                        queenCount[nextRow][column + nextRow - row]++;
+                    }
+                }
+                queenPlace[row] = column;//place the queen with only column information
+                if (row == QUEEN_COUNT - 1) printQueen(++resultCount);//recursion has completed
+                else putQueen(row + 1);//recurse to call the putQueen function
+                /**
+                 *
+                 * unmarked the column and diagonal back diagonal(row has been scatter)
+                 *
+                 * */
+                for (int rows = row + 1; rows &lt; QUEEN_COUNT; rows++) {
+                    queenCount[rows][column]--;
+                    if (column - rows + row &gt;= 0) {
+                        queenCount[rows][column - rows + row]--;
+                    }
+                    if (column + rows - row &lt; QUEEN_COUNT) {
+                        queenCount[rows][column + rows - row]--;
+                    }
+                }
+            }
+        }
+        if (row == 0) System.out.println(QUEEN_COUNT + &quot; queens has totally &quot; + resultCount + &quot;result.&quot;);
+    }
+
+    private void printQueen(int size)
+    {
+        System.out.println(&quot;********** &quot;+size+&quot; **********\n&quot;);
+        for (int i = 0; i &lt; QUEEN_COUNT; i++) {
+            for (int j = 0; j &lt; QUEEN_COUNT; j++) {
+                System.out.print(queenPlace[i] == j ? &quot; # &quot; : &quot; - &quot;);
+            }
+            System.out.println();
+        }
+    }
+}
+
+</code></pre>
+<h4 id="最大子序和问题">最大子序和问题</h4>
+<pre><code>int MaxSubSeqSum(int arrays[], int left, int right) {
+    int sum = 0;
+    if (left == right) {
+        if (arrays[left] &gt; 0)return arrays[left];
+        else sum = 0;
+    } else {
+        int middle = (left + right) / 2;
+        int leftSum = MaxSubSeqSum(arrays, left, middle);
+        int rightSum = MaxSubSeqSum(arrays, middle + 1, right);
+        int finalLeftSum = 0, thisLeftSum = 0;
+        for (int i = left; i &lt;=middle; i++) {
+            thisLeftSum += arrays[i];
+            if (thisLeftSum &gt; finalLeftSum)finalLeftSum = thisLeftSum;
+        }
+        int finalRightSum = 0, thisRightSum = 0;
+        for (int j = middle + 1; j &lt; right; j++) {
+            thisRightSum += arrays[j];
+            if (thisRightSum &gt; finalRightSum)finalRightSum = thisRightSum;
+        }
+        sum = finalLeftSum + finalRightSum;
+        printf(&quot;left sum is %d,right sum is %d\n&quot;,finalLeftSum,finalRightSum);
+        if (sum &lt; leftSum)sum = leftSum;
+        if (sum &lt; rightSum)sum = rightSum;
+    }
+    return sum;
+}
+</code></pre>
+<h4 id="优先队列">优先队列</h4>
+<pre><code>/**
+ * use maximum-top heap to implement priority queue
+ * define a MAX_SIZE_OF_PRIORITY_QUEUE to limit the max length of priority queue
+ * use a integer array to store element
+ * hypothesis i is the root node and then use 2*i to mark left child and 2*i+1 to mark right child
+ * use initialArray[0] to store the length of heap
+ * */
+public class PriorityQueue{
+    private static final int MAX_SIZE_OF_PRIORITY_QUEUE=100;
+    private int[] initialArray;
+    /**
+     * initial priority queue with a exist array which can't be null
+     * */
+    public PriorityQueue(int[] initialElement) {
+        if(initialElement==null)return;
+        if(initialElement.length==0)return;
+        initialArray=new int[MAX_SIZE_OF_PRIORITY_QUEUE];
+        initialArray[0]=initialElement.length;
+        for(int i=0;i&lt;initialElement.length;i++)initialArray[i+1]=initialElement[i];
+        System.out.println(initialArray[0]);
+        for (int i = initialArray[0]; i &gt;0 ; i--)reBuildHeap(i);
+    }
+    /**
+     * rebuild array according to the value of each node
+     * maximum-top heap
+     * index represents the index of a node which should be rebuild(include it's children node)
+     *
+     * simple:
+     *         1
+     *      2     3
+     *   4   5  6   7
+     *
+     * */
+    private void reBuildHeap(int index){
+        System.out.println(&quot;execute rebuild function to rebuild a maximum-top heap with one loop&quot;);
+        int leftChildIndex=index*2;
+        int rightChildIndex=leftChildIndex+1;
+        int length=initialArray[0];
+        int biggerValueIndex=-1;
+        if(leftChildIndex&gt;length&amp;&amp;rightChildIndex&gt;length){
+            System.out.println(&quot;no left child&quot;);
+            return;
+        }
+        if(leftChildIndex&lt;=length&amp;&amp;rightChildIndex&gt;length){
+            System.out.println(&quot;only left child&quot;);
+            biggerValueIndex=leftChildIndex;
+        }
+        if(leftChildIndex&gt;length&amp;&amp;rightChildIndex&lt;=length){
+            System.out.println(&quot;only right child&quot;);
+            biggerValueIndex=rightChildIndex;
+        }
+        if(leftChildIndex&lt;=length&amp;&amp;rightChildIndex&lt;=length){
+            System.out.println(&quot;both children&quot;);
+            biggerValueIndex=initialArray[leftChildIndex]&gt;initialArray[rightChildIndex]?leftChildIndex:rightChildIndex;
+        }
+        if(initialArray[index]&gt;initialArray[biggerValueIndex]){
+            System.out.println(&quot;unnecessary to swap!&quot;);
+            return;
+        }else{
+            int temp=initialArray[index];
+            initialArray[index]=initialArray[biggerValueIndex];
+            initialArray[biggerValueIndex]=temp;
+            this.reBuildHeap(biggerValueIndex);
+        }
+    }
+    public int getLength() {
+        return initialArray[0];
+    }
+    /**
+     * get top priority value of heap
+     * the first element of array
+     * */
+    public int priority(){
+        return initialArray[1];
+    }
+    /**
+     * length++
+     * add element to the tail of array
+     * rebuild the heap to regular priority heap
+     * */
+    public void insert(int element){
+        initialArray[0]++;
+        initialArray[initialArray[0]]=element;
+        for(int i=initialArray[0];i&gt;=1;i=i/2){
+            reBuildHeap(i);
+        }
+    }
+    /**
+     * length--
+     * swap the first element and last element
+     * delete last value
+     * rebuild the heap
+     * */
+    public int deletePriority(){
+        if(initialArray[0]&lt;=0)return -1;
+        int maxValue=initialArray[1];
+        initialArray[1]=initialArray[initialArray[0]];
+        initialArray[0]--;
+        for(int i=initialArray[0];i&gt;=1;i=i/2){
+            reBuildHeap(i);
+        }
+        return maxValue;
+    }
+    /**
+     * print the structure of priority heap
+     * */
+    @Override
+    public String toString() {
+        StringBuilder builder=new StringBuilder(&quot;{&quot;);
+        for (int i = 1; i &lt;= initialArray[0]; i++) {
+            if(i!=1)builder.append(&quot;,&quot;);
+            builder.append(initialArray[i]);
+        }
+        builder.append(&quot;}&quot;);
+        return builder.toString();
+    }
+}
+
+</code></pre>
+
+          </div>
+        </div>
+
+        
+      </div>
+
+      
+
+      <div class="site-footer">
+  <div class="slogan">KnowledgeBase</div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  Powered by <a href="mailto:cssunhang@outlook.com" target="_blank">hangsun</a> | <a class="rss" href="https://sunxiaohang.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+  </body>
+</html>

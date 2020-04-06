@@ -1,0 +1,756 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>Unity InAction | KnowledgeBase</title>
+<meta name="description" content="KnowledgeBase">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://sunxiaohang.github.io/favicon.ico?v=1586176056057">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://sunxiaohang.github.io/styles/main.css">
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://sunxiaohang.github.io">
+        <img class="avatar" src="https://sunxiaohang.github.io/images/avatar.png?v=1586176056057" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://sunxiaohang.github.io">
+        <h1 class="site-title">KnowledgeBase</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">Unity InAction</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2020-04-06</span>
+            
+          </div>
+          <div class="post-content">
+            <h4 id="movement">Movement</h4>
+<pre><code>public class FPSInput : MonoBehaviour
+{
+    public float m_speed = 6.0f;
+    private CharacterController m_CharacterController;
+    public float gravity = -9.8f;
+
+    private void Start()
+    {
+        m_CharacterController = GetComponent&lt;CharacterController&gt;();
+    }
+
+    private void Update()
+    {
+        //移动的代码依赖于游戏的帧率，frame rate dependence
+        float deltaX = Input.GetAxis(&quot;Horizontal&quot;) * m_speed;
+        float deltaZ = Input.GetAxis(&quot;Vertical&quot;) * m_speed;
+        Vector3 movement = new Vector3(deltaX,0,deltaZ);
+        movement = Vector3.ClampMagnitude(movement, m_speed) * Time.deltaTime;//使对角移动的速度和沿轴移动的速度一样
+        movement = transform.TransformDirection(movement);//把movement向量丛本地坐标变换为全局坐标
+        movement.y = gravity;
+        m_CharacterController.Move(movement);
+    }
+}
+</code></pre>
+<h4 id="rotation">Rotation</h4>
+<pre><code>public class MouseLook : MonoBehaviour
+{
+    public enum RotationAxes
+    {
+        MouseXAndY,
+        MouseX,
+        MouseY
+    }
+
+    public RotationAxes axes = RotationAxes.MouseXAndY;
+    public float sensitivityHor = 9.0f;
+    public float sensitivityVert = 9.0f;
+    public float miniMumVert = -45.0f;
+    public float maxiMumVert = 45.0f;
+    private float _rotationX = 0;
+    private Rigidbody m_Rigidbody;
+
+    private void Start()
+    {
+        m_Rigidbody = GetComponent&lt;Rigidbody&gt;();
+        if(m_Rigidbody!=null)m_Rigidbody.freezeRotation = true;
+    }
+
+    private void Update()
+    {
+        if (axes == RotationAxes.MouseX)
+        {
+            transform.Rotate(0,Input.GetAxisRaw(&quot;Mouse X&quot;)*sensitivityHor,0);
+        }
+        else if (axes == RotationAxes.MouseY)
+        {
+            _rotationX -= Input.GetAxis(&quot;Mouse Y&quot;) * sensitivityVert;
+            _rotationX = Mathf.Clamp(_rotationX,miniMumVert,maxiMumVert);
+            float rotationY = transform.localEulerAngles.y;//获取当前y轴的欧拉角
+            transform.localEulerAngles = new Vector3(_rotationX,rotationY,0);
+        }
+        else if (axes == RotationAxes.MouseXAndY)
+        {
+            _rotationX -= Input.GetAxis(&quot;Mouse Y&quot;) * sensitivityHor;
+            _rotationX = Mathf.Clamp(_rotationX, miniMumVert, maxiMumVert);
+            float rotationY = Input.GetAxis(&quot;Mouse X&quot;) * sensitivityVert+transform.localEulerAngles.y;
+            transform.localEulerAngles = new Vector3(_rotationX,rotationY,0);
+        }
+    }
+}
+</code></pre>
+<h4 id="messenger">Messenger</h4>
+<pre><code>using System;
+using System.Collections.Generic;
+using System.Linq;
+ 
+public enum MessengerMode {
+    DONT_REQUIRE_LISTENER,
+    REQUIRE_LISTENER,
+}
+ 
+static internal class MessengerInternal {
+    readonly public static Dictionary&lt;string, Delegate&gt; eventTable = new Dictionary&lt;string, Delegate&gt;();
+    static public MessengerMode DEFAULT_MODE = MessengerMode.REQUIRE_LISTENER;
+ 
+    static public void AddListener(string eventType, Delegate callback) {
+        MessengerInternal.OnListenerAdding(eventType, callback);
+        eventTable[eventType] = Delegate.Combine(eventTable[eventType], callback);
+    }
+ 
+    static public void RemoveListener(string eventType, Delegate handler) {
+        MessengerInternal.OnListenerRemoving(eventType, handler);   
+        eventTable[eventType] = Delegate.Remove(eventTable[eventType], handler);
+        MessengerInternal.OnListenerRemoved(eventType);
+    }
+ 
+    static public T[] GetInvocationList&lt;T&gt;(string eventType) {
+        Delegate d;
+        if(eventTable.TryGetValue(eventType, out d)) {
+            try {
+                return d.GetInvocationList().Cast&lt;T&gt;().ToArray();
+            } catch {
+                throw MessengerInternal.CreateBroadcastSignatureException(eventType);
+            }
+        }
+        return new T[0];
+    }
+ 
+    static public void OnListenerAdding(string eventType, Delegate listenerBeingAdded) {
+        if (!eventTable.ContainsKey(eventType)) {
+            eventTable.Add(eventType, null);
+        }
+ 
+        var d = eventTable[eventType];
+        if (d != null &amp;&amp; d.GetType() != listenerBeingAdded.GetType()) {
+            throw new ListenerException(string.Format(&quot;Attempting to add listener with inconsistent signature for event type {0}. Current listeners have type {1} and listener being added has type {2}&quot;, eventType, d.GetType().Name, listenerBeingAdded.GetType().Name));
+        }
+    }
+ 
+    static public void OnListenerRemoving(string eventType, Delegate listenerBeingRemoved) {
+        if (eventTable.ContainsKey(eventType)) {
+            var d = eventTable[eventType];
+ 
+            if (d == null) {
+                throw new ListenerException(string.Format(&quot;Attempting to remove listener with for event type {0} but current listener is null.&quot;, eventType));
+            } else if (d.GetType() != listenerBeingRemoved.GetType()) {
+                throw new ListenerException(string.Format(&quot;Attempting to remove listener with inconsistent signature for event type {0}. Current listeners have type {1} and listener being removed has type {2}&quot;, eventType, d.GetType().Name, listenerBeingRemoved.GetType().Name));
+            }
+        } else {
+            throw new ListenerException(string.Format(&quot;Attempting to remove listener for type {0} but Messenger doesn't know about this event type.&quot;, eventType));
+        }
+    }
+ 
+    static public void OnListenerRemoved(string eventType) {
+        if (eventTable[eventType] == null) {
+            eventTable.Remove(eventType);
+        }
+    }
+ 
+    static public void OnBroadcasting(string eventType, MessengerMode mode) {
+        if (mode == MessengerMode.REQUIRE_LISTENER &amp;&amp; !eventTable.ContainsKey(eventType)) {
+            throw new MessengerInternal.BroadcastException(string.Format(&quot;Broadcasting message {0} but no listener found.&quot;, eventType));
+        }
+    }
+ 
+    static public BroadcastException CreateBroadcastSignatureException(string eventType) {
+        return new BroadcastException(string.Format(&quot;Broadcasting message {0} but listeners have a different signature than the broadcaster.&quot;, eventType));
+    }
+ 
+    public class BroadcastException : Exception {
+        public BroadcastException(string msg)
+            : base(msg) {
+        }
+    }
+ 
+    public class ListenerException : Exception {
+        public ListenerException(string msg)
+            : base(msg) {
+        }
+    }
+}
+ 
+// No parameters
+static public class Messenger { 
+    static public void AddListener(string eventType, Action handler) {
+        MessengerInternal.AddListener(eventType, handler);
+    }
+ 
+    static public void AddListener&lt;TReturn&gt;(string eventType, Func&lt;TReturn&gt; handler) {
+        MessengerInternal.AddListener(eventType, handler);
+    }
+ 
+    static public void RemoveListener(string eventType, Action handler) {
+        MessengerInternal.RemoveListener(eventType, handler);
+    }
+ 
+    static public void RemoveListener&lt;TReturn&gt;(string eventType, Func&lt;TReturn&gt; handler) {
+        MessengerInternal.RemoveListener(eventType, handler);
+    }
+ 
+    static public void Broadcast(string eventType) {
+        Broadcast(eventType, MessengerInternal.DEFAULT_MODE);
+    }
+ 
+    static public void Broadcast&lt;TReturn&gt;(string eventType, Action&lt;TReturn&gt; returnCall) {
+        Broadcast(eventType, returnCall, MessengerInternal.DEFAULT_MODE);
+    }
+ 
+    static public void Broadcast(string eventType, MessengerMode mode) {
+        MessengerInternal.OnBroadcasting(eventType, mode);
+        var invocationList = MessengerInternal.GetInvocationList&lt;Action&gt;(eventType);
+ 
+        foreach(var callback in invocationList)
+            callback.Invoke();
+    }
+ 
+    static public void Broadcast&lt;TReturn&gt;(string eventType, Action&lt;TReturn&gt; returnCall, MessengerMode mode) {
+        MessengerInternal.OnBroadcasting(eventType, mode);
+        var invocationList = MessengerInternal.GetInvocationList&lt;Func&lt;TReturn&gt;&gt;(eventType);
+ 
+        foreach(var result in invocationList.Select(del =&gt; del.Invoke()).Cast&lt;TReturn&gt;()) {
+            returnCall.Invoke(result);
+        }
+    }
+}
+ 
+// One parameter
+static public class Messenger&lt;T&gt; {
+    static public void AddListener(string eventType, Action&lt;T&gt; handler) {
+        MessengerInternal.AddListener(eventType, handler);
+    }
+ 
+    static public void AddListener&lt;TReturn&gt;(string eventType, Func&lt;T, TReturn&gt; handler) {
+        MessengerInternal.AddListener(eventType, handler);
+    }
+ 
+    static public void RemoveListener(string eventType, Action&lt;T&gt; handler) {
+        MessengerInternal.RemoveListener(eventType, handler);
+    }
+ 
+    static public void RemoveListener&lt;TReturn&gt;(string eventType, Func&lt;T, TReturn&gt; handler) {
+        MessengerInternal.RemoveListener(eventType, handler);
+    }
+ 
+    static public void Broadcast(string eventType, T arg1) {
+        Broadcast(eventType, arg1, MessengerInternal.DEFAULT_MODE);
+    }
+ 
+    static public void Broadcast&lt;TReturn&gt;(string eventType, T arg1, Action&lt;TReturn&gt; returnCall) {
+        Broadcast(eventType, arg1, returnCall, MessengerInternal.DEFAULT_MODE);
+    }
+ 
+    static public void Broadcast(string eventType, T arg1, MessengerMode mode) {
+        MessengerInternal.OnBroadcasting(eventType, mode);
+        var invocationList = MessengerInternal.GetInvocationList&lt;Action&lt;T&gt;&gt;(eventType);
+ 
+        foreach(var callback in invocationList)
+            callback.Invoke(arg1);
+    }
+ 
+    static public void Broadcast&lt;TReturn&gt;(string eventType, T arg1, Action&lt;TReturn&gt; returnCall, MessengerMode mode) {
+        MessengerInternal.OnBroadcasting(eventType, mode);
+        var invocationList = MessengerInternal.GetInvocationList&lt;Func&lt;T, TReturn&gt;&gt;(eventType);
+ 
+        foreach(var result in invocationList.Select(del =&gt; del.Invoke(arg1)).Cast&lt;TReturn&gt;()) {
+            returnCall.Invoke(result);
+        }
+    }
+}
+ 
+ 
+// Two parameters
+static public class Messenger&lt;T, U&gt; { 
+    static public void AddListener(string eventType, Action&lt;T, U&gt; handler) {
+        MessengerInternal.AddListener(eventType, handler);
+    }
+ 
+    static public void AddListener&lt;TReturn&gt;(string eventType, Func&lt;T, U, TReturn&gt; handler) {
+        MessengerInternal.AddListener(eventType, handler);
+    }
+ 
+    static public void RemoveListener(string eventType, Action&lt;T, U&gt; handler) {
+        MessengerInternal.RemoveListener(eventType, handler);
+    }
+ 
+    static public void RemoveListener&lt;TReturn&gt;(string eventType, Func&lt;T, U, TReturn&gt; handler) {
+        MessengerInternal.RemoveListener(eventType, handler);
+    }
+ 
+    static public void Broadcast(string eventType, T arg1, U arg2) {
+        Broadcast(eventType, arg1, arg2, MessengerInternal.DEFAULT_MODE);
+    }
+ 
+    static public void Broadcast&lt;TReturn&gt;(string eventType, T arg1, U arg2, Action&lt;TReturn&gt; returnCall) {
+        Broadcast(eventType, arg1, arg2, returnCall, MessengerInternal.DEFAULT_MODE);
+    }
+ 
+    static public void Broadcast(string eventType, T arg1, U arg2, MessengerMode mode) {
+        MessengerInternal.OnBroadcasting(eventType, mode);
+        var invocationList = MessengerInternal.GetInvocationList&lt;Action&lt;T, U&gt;&gt;(eventType);
+ 
+        foreach(var callback in invocationList)
+            callback.Invoke(arg1, arg2);
+    }
+ 
+    static public void Broadcast&lt;TReturn&gt;(string eventType, T arg1, U arg2, Action&lt;TReturn&gt; returnCall, MessengerMode mode) {
+        MessengerInternal.OnBroadcasting(eventType, mode);
+        var invocationList = MessengerInternal.GetInvocationList&lt;Func&lt;T, U, TReturn&gt;&gt;(eventType);
+ 
+        foreach(var result in invocationList.Select(del =&gt; del.Invoke(arg1, arg2)).Cast&lt;TReturn&gt;()) {
+            returnCall.Invoke(result);
+        }
+    }
+}
+ 
+ 
+// Three parameters
+static public class Messenger&lt;T, U, V&gt; { 
+    static public void AddListener(string eventType, Action&lt;T, U, V&gt; handler) {
+        MessengerInternal.AddListener(eventType, handler);
+    }
+ 
+    static public void AddListener&lt;TReturn&gt;(string eventType, Func&lt;T, U, V, TReturn&gt; handler) {
+        MessengerInternal.AddListener(eventType, handler);
+    }
+ 
+    static public void RemoveListener(string eventType, Action&lt;T, U, V&gt; handler) {
+        MessengerInternal.RemoveListener(eventType, handler);
+    }
+ 
+    static public void RemoveListener&lt;TReturn&gt;(string eventType, Func&lt;T, U, V, TReturn&gt; handler) {
+        MessengerInternal.RemoveListener(eventType, handler);
+    }
+ 
+    static public void Broadcast(string eventType, T arg1, U arg2, V arg3) {
+        Broadcast(eventType, arg1, arg2, arg3, MessengerInternal.DEFAULT_MODE);
+    }
+ 
+    static public void Broadcast&lt;TReturn&gt;(string eventType, T arg1, U arg2, V arg3, Action&lt;TReturn&gt; returnCall) {
+        Broadcast(eventType, arg1, arg2, arg3, returnCall, MessengerInternal.DEFAULT_MODE);
+    }
+ 
+    static public void Broadcast(string eventType, T arg1, U arg2, V arg3, MessengerMode mode) {
+        MessengerInternal.OnBroadcasting(eventType, mode);
+        var invocationList = MessengerInternal.GetInvocationList&lt;Action&lt;T, U, V&gt;&gt;(eventType);
+ 
+        foreach(var callback in invocationList)
+            callback.Invoke(arg1, arg2, arg3);
+    }
+ 
+    static public void Broadcast&lt;TReturn&gt;(string eventType, T arg1, U arg2, V arg3, Action&lt;TReturn&gt; returnCall, MessengerMode mode) {
+        MessengerInternal.OnBroadcasting(eventType, mode);
+        var invocationList = MessengerInternal.GetInvocationList&lt;Func&lt;T, U, V, TReturn&gt;&gt;(eventType);
+ 
+        foreach(var result in invocationList.Select(del =&gt; del.Invoke(arg1, arg2, arg3)).Cast&lt;TReturn&gt;()) {
+            returnCall.Invoke(result);
+        }
+    }
+}
+</code></pre>
+<h4 id="playable">Playable</h4>
+<pre><code>//---------------------------------------------------
+//-----------------------播放动画-------------------
+public class PlayAnimation : MonoBehaviour
+{
+    public AnimationClip AnimationClip1;
+    public AnimationClip AnimationClip2;
+
+    private PlayableGraph m_PlayableGraph;
+    private void OnGUI()
+    {
+        if (GUILayout.Button(&quot;&lt;size=80&gt;play clips1&lt;/size&gt;&quot;))
+        {
+            AnimationPlayableUtilities.PlayClip(GetComponent&lt;Animator&gt;(),AnimationClip1,out m_PlayableGraph);
+        }
+        if (GUILayout.Button(&quot;&lt;size=80&gt;play clips2&lt;/size&gt;&quot;))
+        {
+            AnimationPlayableUtilities.PlayClip(GetComponent&lt;Animator&gt;(),AnimationClip2,out m_PlayableGraph);
+        }
+    }
+
+    private void OnDisable()
+    {
+        m_PlayableGraph.Destroy();
+    }
+}
+//---------------------------------------------------
+//---------------------PlayableAssets--------------
+//自定义timeline assets
+[Serializable]
+public class CustomPlayableAssets : PlayableAsset
+{
+    public ExposedReference&lt;GameObject&gt; ExposedReference;
+    public override Playable CreatePlayable(PlayableGraph graph, GameObject owner)
+    {
+        CustomPlayableBehaviour behaviour = new CustomPlayableBehaviour();
+        behaviour.eposedObjectValue = ExposedReference.Resolve(graph.GetResolver());
+        return ScriptPlayable&lt;CustomPlayableBehaviour&gt;.Create(graph, behaviour);
+    }
+}
+
+//自定义timeline behaviour
+public class CustomPlayableBehaviour : PlayableBehaviour
+{
+    //graphStart&gt;&gt;BehaviourPause&gt;&gt;BehaviourStart&gt;&gt;BehaviourPause&gt;&gt;graphStop
+    //接收序列化对象
+    public GameObject eposedObjectValue;
+
+    //graph开始运行时调用
+    public override void OnGraphStart(Playable playable)
+    {
+        base.OnGraphStart(playable);
+    }
+    //graph结束时调用
+    public override void OnGraphStop(Playable playable)
+    {
+        base.OnGraphStop(playable);
+    }
+    //playable播放时调用
+    public override void OnBehaviourPlay(Playable playable, FrameData info)
+    {
+        base.OnBehaviourPlay(playable, info);
+    }
+    //playable暂停时调用
+    public override void OnBehaviourPause(Playable playable, FrameData info)
+    {
+        base.OnBehaviourPause(playable, info);
+    }
+    //每帧调用
+    public override void PrepareFrame(Playable playable, FrameData info)
+    {
+        //可能此时还没绑定对象，所以需要判空
+        if (eposedObjectValue != null)
+        {
+            PlayableDirector director = playable.GetGraph&lt;Playable&gt;().GetResolver() as PlayableDirector;
+            Debug.LogFormat(&quot;PlayableDirector:{0},eposedObjectValue:{1}&quot;,director.gameObject.name,eposedObjectValue.name);
+        }
+    }
+}
+//---------------------------------------------------
+//-----------------------自定义track----------------
+[TrackColor(1f,0f,0f)]
+[TrackClipType(typeof(CustomPlayableAssets))]
+[TrackBindingType(typeof(CustomTrack))]
+public class CustomTrack : TrackAsset
+{
+    protected override Playable CreatePlayable(PlayableGraph graph, GameObject gameObject, TimelineClip clip)
+    {
+        return base.CreatePlayable(graph, gameObject, clip);
+    }
+
+    public override Playable CreateTrackMixer(PlayableGraph graph, GameObject go, int inputCount)
+    {
+        return base.CreateTrackMixer(graph, go, inputCount);
+    }
+}
+
+//---------------------------------------------------
+//-----------------------动画融合-------------------
+public class CustomPlayMixer : MonoBehaviour
+{
+    public AnimationClip AnimationClip1;
+    public AnimationClip AnimationClip2;
+    public float weight;
+    private PlayableGraph m_PlayableGraph;
+    private AnimationMixerPlayable m_AnimationMixerPlayable;
+    private void Start()
+    {
+        m_AnimationMixerPlayable =
+            AnimationPlayableUtilities.PlayMixer(GetComponent&lt;Animator&gt;(), 2, out m_PlayableGraph);
+        AnimationClipPlayable clipPlayable1 = AnimationClipPlayable.Create(m_PlayableGraph,AnimationClip1);
+        AnimationClipPlayable clipPlayable2 = AnimationClipPlayable.Create(m_PlayableGraph,AnimationClip2);
+        m_PlayableGraph.Connect(clipPlayable1, 0, m_AnimationMixerPlayable, 0);
+        m_PlayableGraph.Connect(clipPlayable2, 0, m_AnimationMixerPlayable, 1);
+        AnimationPlayableOutput output = AnimationPlayableOutput.Create(m_PlayableGraph,&quot;AnimationOutput&quot;,GetComponent&lt;Animator&gt;());
+        output.SetSourcePlayable(m_AnimationMixerPlayable);
+        m_AnimationMixerPlayable.Play();
+    }
+    private void Update()
+    {
+        weight = Mathf.Clamp01(weight);
+        m_AnimationMixerPlayable.SetInputWeight(0,1-weight);
+        m_AnimationMixerPlayable.SetInputWeight(1,weight);
+    }
+    private void OnDestroy()
+    {
+        m_PlayableGraph.Destroy();
+    }
+}
+//---------------------------------------------------
+//-------------------------音频融合-----------------
+public class AudioMixer : MonoBehaviour
+{
+    public AudioClip m_AudioClip1;
+    public AudioClip m_AudioClip2;
+    public float weight;
+    private PlayableGraph m_PlayableGraph;
+    public AudioMixerPlayable m_AudioMixerPlayable;
+    private void Start()
+    {
+        m_PlayableGraph = PlayableGraph.Create();
+        m_AudioMixerPlayable = AudioMixerPlayable.Create(m_PlayableGraph,2);
+        var audioClipPlayable1 = AudioClipPlayable.Create(m_PlayableGraph, m_AudioClip1, true);
+        var audioClipPlayable2 = AudioClipPlayable.Create(m_PlayableGraph, m_AudioClip2, true);
+        m_PlayableGraph.Connect(audioClipPlayable1,0,m_AudioMixerPlayable,0);
+        m_PlayableGraph.Connect(audioClipPlayable2,0,m_AudioMixerPlayable,1);
+        var audioPlayableOutput = AudioPlayableOutput.Create(m_PlayableGraph, &quot;Audio&quot;, GetComponent&lt;AudioSource&gt;());
+        audioPlayableOutput.SetSourcePlayable(m_AudioMixerPlayable);
+        m_AudioMixerPlayable.Play();
+    }
+    private void Update()
+    {
+        weight = Mathf.Clamp01(weight);
+        m_AudioMixerPlayable.SetInputWeight(0,1-weight);
+        m_AudioMixerPlayable.SetInputWeight(1,weight);
+    }
+
+    private void OnDisable()
+    {
+        m_PlayableGraph.Destroy();
+    }
+}
+//---------------------------------------------------
+//-------------------------速度控制-----------------
+public class MovingSphere : MonoBehaviour
+{
+    // Update is called once per frame
+    [SerializeField, Range(0f, 100f)] private float max_Speed = 10f;
+    [SerializeField, Range(0f, 100f)] private float max_Acceleration = 10f;
+    [SerializeField]Rect allowedArea = new Rect(-5,-5,10,10);
+    private float boundFactor = 0.7f;
+    private Vector3 velocity;
+    void Update()
+    {
+        Vector2 playerInput;
+        playerInput.x = Input.GetAxis(&quot;Horizontal&quot;);
+        playerInput.y = Input.GetAxis(&quot;Vertical&quot;);
+        playerInput = Vector2.ClampMagnitude(playerInput, 1f);
+        
+        Vector3 desiredVelocity = new Vector3(playerInput.x,0f,playerInput.y)*max_Speed;
+        float maxSpeedChange = max_Acceleration * Time.deltaTime;
+        
+        velocity.x = Mathf.MoveTowards(velocity.x, desiredVelocity.x, maxSpeedChange);
+        velocity.z = Mathf.MoveTowards(velocity.z, desiredVelocity.z, maxSpeedChange);
+        
+        Vector3 displacement = velocity * Time.deltaTime;
+        Vector3 targetPosition = transform.localPosition + displacement;
+        if (targetPosition.x &lt; allowedArea.xMin)
+        {
+            targetPosition.x = allowedArea.xMin;
+            velocity.x = -velocity.x*boundFactor;
+        }else if (targetPosition.x &gt; allowedArea.xMax)
+        {
+            targetPosition.x = allowedArea.xMax;
+            velocity.x = -velocity.x*boundFactor;
+        }        
+        if (targetPosition.z &lt; allowedArea.yMin)
+        {
+            targetPosition.z = allowedArea.yMin;
+            velocity.z = -velocity.z*boundFactor;
+        }else if (targetPosition.z &gt; allowedArea.yMax)
+        {
+            targetPosition.z = allowedArea.yMax;
+            velocity.z = -velocity.z*boundFactor;
+        }
+
+        transform.localPosition = targetPosition;
+    }
+}
+//---------------------------------------------------
+//--------------------------TPS---------------------
+//ThirdPersonCharacterControl
+public class ThirdPersonCharacterControl : MonoBehaviour
+{
+    public float Speed;
+    void Update (){
+        PlayerMovement();
+    }
+    void PlayerMovement(){
+        float hor = Input.GetAxis(&quot;Horizontal&quot;);
+        float ver = Input.GetAxis(&quot;Vertical&quot;);
+        Vector3 playerMovement = new Vector3(hor, 0f, ver) * Speed * Time.deltaTime;
+        transform.Translate(playerMovement, Space.Self);
+    }
+}
+//ThirdPersonCameraControl
+public class ThirdPersonCameraControl : MonoBehaviour{
+    float rotationSpeed = 1;
+    public Transform Target, Player;
+    float mouseX, mouseY;
+    public Transform Obstruction;
+    float zoomSpeed = 2f;
+    void Start(){
+        Obstruction = Target;
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+    }
+    private void LateUpdate(){
+        CamControl();
+        ViewObstructed();
+    }
+    void CamControl(){
+        mouseX += Input.GetAxis(&quot;Mouse X&quot;) * rotationSpeed;
+        mouseY -= Input.GetAxis(&quot;Mouse Y&quot;) * rotationSpeed;
+        mouseY = Mathf.Clamp(mouseY, -35, 60);
+        transform.LookAt(Target);
+        if (Input.GetKey(KeyCode.LeftShift)){
+            Target.rotation = Quaternion.Euler(mouseY, mouseX, 0);
+        }
+        else{
+            Target.rotation = Quaternion.Euler(mouseY, mouseX, 0);
+            Player.rotation = Quaternion.Euler(0, mouseX, 0);
+        }
+    }
+    void ViewObstructed(){
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, Target.position - transform.position, out hit, 4.5f)){
+            if (hit.collider.gameObject.tag != &quot;Player&quot;){
+                Obstruction = hit.transform;
+                Obstruction.gameObject.GetComponent&lt;MeshRenderer&gt;().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+                if(Vector3.Distance(Obstruction.position, transform.position) &gt;= 3f &amp;&amp; Vector3.Distance(transform.position, Target.position) &gt;= 1.5f)
+                    transform.Translate(Vector3.forward * zoomSpeed * Time.deltaTime);
+            }
+            else{
+                Obstruction.gameObject.GetComponent&lt;MeshRenderer&gt;().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                if (Vector3.Distance(transform.position, Target.position) &lt; 4.5f)
+                    transform.Translate(Vector3.back * zoomSpeed * Time.deltaTime);
+            }
+        }
+    }
+}
+</code></pre>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://sunxiaohang.github.io/post/c/">
+              <h3 class="post-title">
+                下一篇：C#
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+
+      <div class="site-footer">
+  <div class="slogan">KnowledgeBase</div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  Powered by <a href="mailto:cssunhang@outlook.com" target="_blank">hangsun</a> | <a class="rss" href="https://sunxiaohang.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+  </body>
+</html>
