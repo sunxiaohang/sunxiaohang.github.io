@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://sunxiaohang.github.io</id>
     <title>KnowledgeBase</title>
-    <updated>2020-04-09T03:41:48.384Z</updated>
+    <updated>2020-04-09T03:52:26.853Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://sunxiaohang.github.io"/>
     <link rel="self" href="https://sunxiaohang.github.io/atom.xml"/>
@@ -11,581 +11,723 @@
     <icon>https://sunxiaohang.github.io/favicon.ico</icon>
     <rights>All rights reserved 2020, KnowledgeBase</rights>
     <entry>
-        <title type="html"><![CDATA[算法]]></title>
-        <id>https://sunxiaohang.github.io/post/suan-fa/</id>
-        <link href="https://sunxiaohang.github.io/post/suan-fa/">
+        <title type="html"><![CDATA[Unity3D]]></title>
+        <id>https://sunxiaohang.github.io/post/unity3d/</id>
+        <link href="https://sunxiaohang.github.io/post/unity3d/">
         </link>
-        <updated>2020-04-09T03:37:58.000Z</updated>
-        <summary type="html"><![CDATA[<p>算法包括，基础查找和排序算法，深度广度优先遍历，迷宫求解算法，优先队列，分支限界，动态规划和诸如N皇后等算法应用</p>
+        <updated>2020-04-06T11:49:39.000Z</updated>
+        <summary type="html"><![CDATA[<p>Unity3D项目关键知识点汇总，方便后期复习巩固，包括关键的monobehaviour生命周期，协程，工作线程，相机相关，涉嫌投射，对象池化技术等线管笔记</p>
 ]]></summary>
-        <content type="html"><![CDATA[<p>算法包括，基础查找和排序算法，深度广度优先遍历，迷宫求解算法，优先队列，分支限界，动态规划和诸如N皇后等算法应用</p>
+        <content type="html"><![CDATA[<p>Unity3D项目关键知识点汇总，方便后期复习巩固，包括关键的monobehaviour生命周期，协程，工作线程，相机相关，涉嫌投射，对象池化技术等线管笔记</p>
 <!-- more -->
-<h4 id="广度优先的迷宫求解算法">广度优先的迷宫求解算法</h4>
-<pre><code>class Position {
-    private int px;
-    private int py;
-    public Position(int px, int py) {
-        this.px = px;
-        this.py = py;
-    }
-    public int getPx() {
-        return px;
-    }
-    public void setPx(int px) {
-        this.px = px;
-    }
-    public int getPy() {
-        return py;
-    }
-    public void setPy(int py) {
-        this.py = py;
+<h4 id="unity-基础类图">Unity 基础类图</h4>
+<figure data-type="image" tabindex="1"><img src="https://sunxiaohang.github.io/post-images/1586173848463.png" alt="" loading="lazy"></figure>
+<h4 id="unity生命周期">Unity生命周期</h4>
+<figure data-type="image" tabindex="2"><img src="https://sunxiaohang.github.io/post-images/1586173894549.png" alt="" loading="lazy"></figure>
+<h4 id="camera">Camera</h4>
+<pre><code>//-----------------------------------------------------
+//-------------------通过相机的切换来实现场景的切换
+/////渲染画中画(多相机){如：赛车游戏的后视镜，小地图}
+/////高depth相机的画面会覆盖低depth相机画面
+/////推拉变焦是摄像机同时向目标对象移动并将其缩小的视觉效果(对象大小看起来大致相同，从而达到改变其他对象视角的目的)
+void Start(){
+    distance = Vector3.Distance(transform.position,target.position);
+    heightAtDistance = FrustumHeightAtDistance(distance);
+    EnabledE();
+}
+void Update(){
+    var distance = Vector3.Distance(transform.position,target.position);
+    Camera.fieldOfView = FovForHeightAtDistance(initialDistance,CurrentDistance);
+}
+//----------------------------------------------------------
+//------------------------射线投射-------------------------
+void Start(){
+    RayCastHit hit;
+    //Camera.ViewPortPointToRay(0..1)坐标[0表示左下，1表示右上]
+    Ray ray = Camera.ScreenPointToRay(Input.mousePosition);
+    if(Physics.RayCast(ray,out hit)){
+        Transform objectHit =hit.transform;
+        //命中 to do
     }
 }
-public class Maze {
-    private final Position start;//迷宫的起点final
-    private final Position end;//迷宫的终点final
-    private ArrayList&lt;String&gt; footPrint;//足迹
-    private ArrayList&lt;Position&gt; test;
-    private MyStack&lt;Position&gt; stacks;//自定义栈（也可以用java.util中的Stack栈）若想了解MyStack的实现，可以参考我的另一篇博客
-    private Position currentPosition;//定义当前位置
-    public Maze() {//集合，栈的初始化工作
-        start = new Position(1, 1);
-        end = new Position(8, 8);
-        currentPosition = start;
-        stacks = new MyStack&lt;&gt;();
-        test = new ArrayList&lt;&gt;();
-    }
-    public static final int map[][] = //定义地图10*10的方格
-            {{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-            {1, 0, 0, 1, 0, 0, 0, 1, 0, 1},
-            {1, 0, 0, 1, 0, 0, 0, 1, 0, 1},
-            {1, 0, 0, 0, 0, 1, 1, 0, 0, 1},
-            {1, 0, 1, 1, 1, 0, 0, 0, 0, 1},
-            {1, 0, 0, 0, 1, 0, 0, 0, 0, 1},
-            {1, 0, 1, 0, 0, 0, 1, 0, 0, 1},
-            {1, 0, 1, 1, 1, 0, 1, 1, 0, 1},
-            {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
-    public static void printMap() {//打印地图
-        for (int i = 0; i &lt; 10; i++) {
-            for (int j = 0; j &lt; 10; j++) {
-                if (map[i][j] == 1) System.out.print(&quot; ■&quot;);
-                else System.out.print(&quot;  &quot;);
-            }
-            System.out.println();
-        }
-    }
-    public boolean moveTop() {//上移
-        String s = currentPosition.getPx() + &quot;&quot; + (currentPosition.getPy() - 1);
-        if ((map[currentPosition.getPx()][currentPosition.getPy() - 1] != 1) &amp; !isArrived(s)) {
-            footPrint.add(s);
-            return true;
-        }
-        return false;
-    }
-    public boolean moveRight() {//右移
-        String s = (currentPosition.getPx() + 1) + &quot;&quot; + currentPosition.getPy();
-        if (map[currentPosition.getPx() + 1][currentPosition.getPy()] != 1 &amp; !isArrived(s)) {
-            footPrint.add(s);
-            return true;
-        }
-        return false;
-    }
-    public boolean moveBottom() {//下移
-        String s = currentPosition.getPx() + &quot;&quot; + (currentPosition.getPy() + 1);
-        if ((map[currentPosition.getPx()][currentPosition.getPy() + 1] != 1) &amp; !isArrived(s)) {
-            footPrint.add(s);
-            return true;
-        }
-        return false;
-    }
-    public boolean moveLeft() {//左移
-        String s = (currentPosition.getPx() - 1) + &quot;&quot; + currentPosition.getPy();
-        if ((map[currentPosition.getPx() - 1][currentPosition.getPy()] != 1) &amp; !isArrived(s)) {
-            footPrint.add(s);
-            return true;
-        }
-        return false;
-    }
-    public boolean isArrived(String position) {//判断当前位置是否已经到打过
-        return footPrint.contains(position);
-    }
-    public void move() {//move函数分别向四个方向移动，然后将可行的path入栈
-        if (moveRight()) {
-            Position temp = new Position(currentPosition.getPx() + 1, currentPosition.getPy());
-            test.add(temp);
-            stacks.push(temp);
-        } else if (moveBottom()) {
-            Position temp = new Position(currentPosition.getPx(), currentPosition.getPy() + 1);
-            test.add(temp);
-            stacks.push(temp);
-        } else if (moveTop()) {
-            Position temp = new Position(currentPosition.getPx(), currentPosition.getPy() - 1);
-            test.add(temp);
-            stacks.push(temp);
-        } else if (moveLeft()) {
-            Position temp = new Position(currentPosition.getPx() - 1, currentPosition.getPy());
-            test.add(temp);
-            stacks.push(temp);
-        } else {
-            currentPosition = stacks.pop();//若当前位置四个方向都走不通，则将当前位置出栈，继续遍历上一节点
-        }
-    }
-    public static void main(String[] args) {
-        Maze m = new Maze();
-        m.footPrint = new ArrayList&lt;&gt;();
-        m.footPrint.add(&quot;11&quot;);
-        m.stacks.push(m.start);
-        while (m.currentPosition.getPx() != 8 || m.currentPosition.getPy() != 8) {
-            m.move();
-        }
-        printMap();
-        System.out.println(&quot;下面是足迹,长度是：&quot; + m.footPrint.size());
-        m.printFootPrint();
-    }
-    public void printFootPrint() {
-        for (int i = 0; i &lt; footPrint.size(); i++) {
-            System.out.print(footPrint.get(i) + &quot;,&quot;);
-        }
-        System.out.println();
-    }
+//----------------------------------------------------------
+//--------------------沿射线移动相机(缩放)----------------
+void Update(){
+    Ray ray = camera.ScreenPointToRay(Input.mousePOsition);
+    float zoomDistance = zoomSpeed*Input.GetAxis(&quot;Vertical&quot;)*Time.deltaTime;
+    Camera.tranform.Translate(ray.direction*zoomDistance,Space.world);
+}
+//----------------------------------------------------------
+//---------------------修改斜视锥体pivot------------------
+Matrix4*4 mat = Camera.main.projectionMatrix;
+mat[0,2] = horizontalObl;//float(horizontal) 水平倾斜量 &lt;&quot;+&quot;&gt;向上
+mat[1,2] = VerticalObl;//float(vertical) 垂直倾斜量 &lt;&quot;-&quot;&gt;向下
+Camera.main.projectionMatrix = mat;
+</code></pre>
+<h4 id="pool">Pool</h4>
+<pre><code>//----------------------------------------------------------
+//---------------------game object pool------------------
+public class ObjectPool : MonoBehaviour
+{
+   public static ObjectPool instance;
+   public GameObject[] objectPrefabs;
+   public List&lt;GameObject&gt;[] pooledObjects;
+   public int[] amountToBuffer;
+   public int defaultBufferAmount = 3;
+   protected GameObject containerObject;
+   void Awake (){instance = this;}
+   void Start (){
+       containerObject = new GameObject(&quot;ObjectPool&quot;);
+       pooledObjects = new List&lt;GameObject&gt;[objectPrefabs.Length];
+       int i = 0;
+       foreach ( GameObject objectPrefab in objectPrefabs ){
+           pooledObjects[i] = new List&lt;GameObject&gt;();  
+           int bufferAmount;
+           if(i &lt; amountToBuffer.Length) bufferAmount = amountToBuffer[i];
+           else bufferAmount = defaultBufferAmount;
+           for ( int n=0; n&lt;bufferAmount; n++){
+               GameObject newObj = Instantiate(objectPrefab) as GameObject;
+               newObj.name = objectPrefab.name;
+               PoolObject(newObj);
+           }
+           i++;
+       }
+   }
+   public GameObject GetObjectForType ( string objectType , bool onlyPooled ){
+       for(int i=0; i&lt;objectPrefabs.Length; i++){
+           GameObject prefab = objectPrefabs[i];
+           if(prefab.name == objectType){
+               if(pooledObjects[i].Count &gt; 0){
+                   GameObject pooledObject = pooledObjects[i][0];
+                   pooledObjects[i].RemoveAt(0);
+                   pooledObject.transform.parent = null;
+                   pooledObject.SetActiveRecursively(true);
+                   return pooledObject;
+               } else if(!onlyPooled) {
+                   return Instantiate(objectPrefabs[i]) as GameObject;
+               }
+               break;
+           }
+       }
+       return null;
+   }
+   public void PoolObject ( GameObject obj ){
+       for ( int i=0; i&lt;objectPrefabs.Length; i++){
+           if(objectPrefabs[i].name == obj.name){
+               obj.SetActiveRecursively(false);
+               obj.transform.parent = containerObject.transform;
+               pooledObjects[i].Add(obj);
+               return;
+           }
+       }
+   }
+}
+//----------------------------------------------------------
+//--------------------------effect pool--------------------
+public class Effect : MonoBehaviour{
+   public ParticleEmitter[] emitters;
+   public float effectLength = 1f;
+   public bool poolAfterComplete = true;
+   public virtual void ResetEffect (){
+       if(poolAfterComplete){
+           ObjectPool.instance.PoolObject(gameObject);
+       } else {
+           Destroy(gameObject);
+       }
+   }
+   public virtual void StartEffect (){
+       foreach ( ParticleEmitter emitter in emitters ){
+           emitter.Emit();
+       }
+       StartCoroutine(WaitForCompletion());
+   }
+   public IEnumerator WaitForCompletion (){
+       yield return new WaitForSeconds(effectLength);
+       ResetEffect();  
+   }
+}
+//----------------------------------------------------------
+//--------------------------sound pool--------------------
+public class SoundEffect : MonoBehaviour{
+   public AudioSource soundSource;
+   public AudioClip[] soundClips;
+   public float effectLength = 1f;
+   public bool poolAfterComplete = true;
+   public virtual void ResetEffect (){
+       if(poolAfterComplete){
+           ObjectPool.instance.PoolObject(gameObject);
+       } else {
+           Destroy(gameObject);
+       }
+   }
+   public virtual void StartEffect (){
+       soundSource.PlayOneShot(soundClips[Random.Range(0,soundClips.Length)]);
+       StartCoroutine(WaitForCompletion());
+   }
+   public IEnumerator WaitForCompletion (){
+       yield return new WaitForSeconds(effectLength);
+       ResetEffect();
+   }
 }
 </code></pre>
-<h4 id="二叉树">二叉树</h4>
-<pre><code>public class BinaryTree {
-    private Node parent;
-    private Node currentPoint;
-    private StringBuffer sb;
-    private int length=0;
-
-    class Node {
-        private int value;
-        private Node leftChild;
-        private Node rightChild;
-
-        public Node(int value, Node leftChild, Node rightChild) {
-            this.value = value;
-            this.leftChild = leftChild;
-            this.rightChild = rightChild;
-        }
-    }
-    public Node getParent(){
-        return parent;
-    }
-
-    public BinaryTree() {
-        sb=new StringBuffer();
-    }
-
-    public void insert(int value) {
-        if (parent == null) {
-            Node node = new Node(value, null, null);
-            parent = node;
-            length++;
-        } else {
-            currentPoint = parent;
-            while(true){
-                if(currentPoint.value&gt;value){
-                    if(currentPoint.leftChild!=null){
-                        currentPoint=currentPoint.leftChild;
-                    }else{
-                        currentPoint.leftChild=new Node(value,null,null);
-                        length++;
-                        break;
-                    }
-                }else{
-                    if(currentPoint.rightChild!=null){
-                        currentPoint=currentPoint.rightChild;
-                    }else{
-                        currentPoint.rightChild=new Node(value,null,null);
-                        length++;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    public String visit(Node node) {
-        sb.append(node.value+&quot;(&quot;);
-        if (node.leftChild != null) visit(node.leftChild);
-        if (node.rightChild != null) visit(node.rightChild);
-        sb.append(&quot;)&quot;);
-        return sb.toString();
-    }
-    public int getLength(){
-        return length;
-    }
-
-    @Override
-    public String toString() {
-        return visit(parent);
-    }
-}
-</code></pre>
-<h4 id="二分查找">二分查找</h4>
-<pre><code>int binary_search(int arrays[],int result,int length){
-    int begin=0,end=length-1;
-    int mid=0;
-    while(begin&lt;=end){
-        mid=(begin+end)/2;
-        if(arrays[mid]==result)break;
-        else if(arrays[mid]&lt;result)begin=mid+1;
-        else if(arrays[mid]&gt;result)end=mid-1;
-    }
-    return mid;
-}
-</code></pre>
-<h4 id="共享数组原地逆置">共享数组原地逆置</h4>
-<pre><code>public class Main {
-    public static char array[]={'A','B','C','D','E','F','G','H','1','2','3','4'};
-    public static void main(String[] args) {
-        reverse(0,7);//逆置字母序列结果为：HGFEDCBA1234
-        reverse(8,11);//逆置数字序列结果为：HGFEDCBA4321
-        reverse(0,11);//整体逆置结果为：1234ABCDEFG
-        print(array);
-    }
-    public static void reverse(int start,int end){//逆置函数
-        char temp;
-        while(start&lt;end) {
-            temp = array[start];
-            array[start++] = array[end];
-            array[end--] = temp;
-        }
-    }
-    private static void print(char[] array) {
-        for (int i = 0; i &lt;array.length; i++)
-            System.out.print(array[i]);
-        System.out.println();
-    }
-}
-</code></pre>
-<h4 id="n-皇后问题">N 皇后问题</h4>
-<pre><code>/**
- * n queens problem
- *
- * */
-public class EightQueen {
-    private int QUEEN_COUNT = 0;//represent the queen count
-    private int[][] queenCount;//chess box matrix
-    private int resultCount = 0;//solution number
-    private int[] queenPlace;//mark the queen placed position
-    /**
-     * construct a EightQueen with a argument represent the number of queen
-     * initial a empty chess box
-     * 0 represent empty
-     * 1 represent the area has been taken
-     * recurse to call the putQueen method
-     * the queenPlace array to mark the queen's taken area which uses to print
-     *
-     * */
-    public EightQueen(int n) {
-        this.QUEEN_COUNT = n;
-        this.resultCount = 0;
-        this.queenCount = new int[QUEEN_COUNT][QUEEN_COUNT];
-        queenPlace = new int[QUEEN_COUNT];
-        putQueen(0);
-    }
-    /**
-     * implement the putQueen function to recursion
-     * use column index in outer loop and row index in inner loop with step increase
-     * */
-    private void putQueen(int row) {
-        for (int column = 0; column &lt; QUEEN_COUNT; column++) {//loop for QUEEN_COUNT times
-            if (queenCount[row][column] == 0) {//judge the condition
-                /**
-                 * each row has one queen
-                 * mark the column and diagonal back diagonal(row has been scatter)
-                 *
-                 * */
-                for (int nextRow = row + 1; nextRow &lt; QUEEN_COUNT; nextRow++) {
-                    queenCount[nextRow][column]++;
-                    if (column - nextRow + row &gt;= 0) {
-                        queenCount[nextRow][column - nextRow + row]++;
-                    }
-                    if (column + nextRow - row &lt; QUEEN_COUNT) {
-                        queenCount[nextRow][column + nextRow - row]++;
-                    }
-                }
-                queenPlace[row] = column;//place the queen with only column information
-                if (row == QUEEN_COUNT - 1) printQueen(++resultCount);//recursion has completed
-                else putQueen(row + 1);//recurse to call the putQueen function
-                /**
-                 *
-                 * unmarked the column and diagonal back diagonal(row has been scatter)
-                 *
-                 * */
-                for (int rows = row + 1; rows &lt; QUEEN_COUNT; rows++) {
-                    queenCount[rows][column]--;
-                    if (column - rows + row &gt;= 0) {
-                        queenCount[rows][column - rows + row]--;
-                    }
-                    if (column + rows - row &lt; QUEEN_COUNT) {
-                        queenCount[rows][column + rows - row]--;
-                    }
-                }
-            }
-        }
-        if (row == 0) System.out.println(QUEEN_COUNT + &quot; queens has totally &quot; + resultCount + &quot;result.&quot;);
-    }
-
-    private void printQueen(int size)
-    {
-        System.out.println(&quot;********** &quot;+size+&quot; **********\n&quot;);
-        for (int i = 0; i &lt; QUEEN_COUNT; i++) {
-            for (int j = 0; j &lt; QUEEN_COUNT; j++) {
-                System.out.print(queenPlace[i] == j ? &quot; # &quot; : &quot; - &quot;);
-            }
-            System.out.println();
-        }
-    }
-}
-
-</code></pre>
-<h4 id="最大子序和问题">最大子序和问题</h4>
-<pre><code>int MaxSubSeqSum(int arrays[], int left, int right) {
-    int sum = 0;
-    if (left == right) {
-        if (arrays[left] &gt; 0)return arrays[left];
-        else sum = 0;
-    } else {
-        int middle = (left + right) / 2;
-        int leftSum = MaxSubSeqSum(arrays, left, middle);
-        int rightSum = MaxSubSeqSum(arrays, middle + 1, right);
-        int finalLeftSum = 0, thisLeftSum = 0;
-        for (int i = left; i &lt;=middle; i++) {
-            thisLeftSum += arrays[i];
-            if (thisLeftSum &gt; finalLeftSum)finalLeftSum = thisLeftSum;
-        }
-        int finalRightSum = 0, thisRightSum = 0;
-        for (int j = middle + 1; j &lt; right; j++) {
-            thisRightSum += arrays[j];
-            if (thisRightSum &gt; finalRightSum)finalRightSum = thisRightSum;
-        }
-        sum = finalLeftSum + finalRightSum;
-        printf(&quot;left sum is %d,right sum is %d\n&quot;,finalLeftSum,finalRightSum);
-        if (sum &lt; leftSum)sum = leftSum;
-        if (sum &lt; rightSum)sum = rightSum;
-    }
-    return sum;
-}
-</code></pre>
-<h4 id="优先队列">优先队列</h4>
-<pre><code>/**
- * use maximum-top heap to implement priority queue
- * define a MAX_SIZE_OF_PRIORITY_QUEUE to limit the max length of priority queue
- * use a integer array to store element
- * hypothesis i is the root node and then use 2*i to mark left child and 2*i+1 to mark right child
- * use initialArray[0] to store the length of heap
- * */
-public class PriorityQueue{
-    private static final int MAX_SIZE_OF_PRIORITY_QUEUE=100;
-    private int[] initialArray;
-    /**
-     * initial priority queue with a exist array which can't be null
-     * */
-    public PriorityQueue(int[] initialElement) {
-        if(initialElement==null)return;
-        if(initialElement.length==0)return;
-        initialArray=new int[MAX_SIZE_OF_PRIORITY_QUEUE];
-        initialArray[0]=initialElement.length;
-        for(int i=0;i&lt;initialElement.length;i++)initialArray[i+1]=initialElement[i];
-        System.out.println(initialArray[0]);
-        for (int i = initialArray[0]; i &gt;0 ; i--)reBuildHeap(i);
-    }
-    /**
-     * rebuild array according to the value of each node
-     * maximum-top heap
-     * index represents the index of a node which should be rebuild(include it's children node)
-     *
-     * simple:
-     *         1
-     *      2     3
-     *   4   5  6   7
-     *
-     * */
-    private void reBuildHeap(int index){
-        System.out.println(&quot;execute rebuild function to rebuild a maximum-top heap with one loop&quot;);
-        int leftChildIndex=index*2;
-        int rightChildIndex=leftChildIndex+1;
-        int length=initialArray[0];
-        int biggerValueIndex=-1;
-        if(leftChildIndex&gt;length&amp;&amp;rightChildIndex&gt;length){
-            System.out.println(&quot;no left child&quot;);
-            return;
-        }
-        if(leftChildIndex&lt;=length&amp;&amp;rightChildIndex&gt;length){
-            System.out.println(&quot;only left child&quot;);
-            biggerValueIndex=leftChildIndex;
-        }
-        if(leftChildIndex&gt;length&amp;&amp;rightChildIndex&lt;=length){
-            System.out.println(&quot;only right child&quot;);
-            biggerValueIndex=rightChildIndex;
-        }
-        if(leftChildIndex&lt;=length&amp;&amp;rightChildIndex&lt;=length){
-            System.out.println(&quot;both children&quot;);
-            biggerValueIndex=initialArray[leftChildIndex]&gt;initialArray[rightChildIndex]?leftChildIndex:rightChildIndex;
-        }
-        if(initialArray[index]&gt;initialArray[biggerValueIndex]){
-            System.out.println(&quot;unnecessary to swap!&quot;);
-            return;
-        }else{
-            int temp=initialArray[index];
-            initialArray[index]=initialArray[biggerValueIndex];
-            initialArray[biggerValueIndex]=temp;
-            this.reBuildHeap(biggerValueIndex);
-        }
-    }
-    public int getLength() {
-        return initialArray[0];
-    }
-    /**
-     * get top priority value of heap
-     * the first element of array
-     * */
-    public int priority(){
-        return initialArray[1];
-    }
-    /**
-     * length++
-     * add element to the tail of array
-     * rebuild the heap to regular priority heap
-     * */
-    public void insert(int element){
-        initialArray[0]++;
-        initialArray[initialArray[0]]=element;
-        for(int i=initialArray[0];i&gt;=1;i=i/2){
-            reBuildHeap(i);
-        }
-    }
-    /**
-     * length--
-     * swap the first element and last element
-     * delete last value
-     * rebuild the heap
-     * */
-    public int deletePriority(){
-        if(initialArray[0]&lt;=0)return -1;
-        int maxValue=initialArray[1];
-        initialArray[1]=initialArray[initialArray[0]];
-        initialArray[0]--;
-        for(int i=initialArray[0];i&gt;=1;i=i/2){
-            reBuildHeap(i);
-        }
-        return maxValue;
-    }
-    /**
-     * print the structure of priority heap
-     * */
-    @Override
-    public String toString() {
-        StringBuilder builder=new StringBuilder(&quot;{&quot;);
-        for (int i = 1; i &lt;= initialArray[0]; i++) {
-            if(i!=1)builder.append(&quot;,&quot;);
-            builder.append(initialArray[i]);
-        }
-        builder.append(&quot;}&quot;);
-        return builder.toString();
-    }
-}
-
-</code></pre>
+<h4 id="点积magnitude">点积（Magnitude）</h4>
+<p>Dot Product = Ax<em>Bx+Ay</em>By+Az*Bz<br>
+点积可以用于判断一个多边形是面向摄像机还是背向摄像机,(或模拟飞机飞行，通过判断飞机飞行方向与垂直地面方向的夹角判断飞机是上升还是下降)在U，V非零前提下<br>
+• 点积为负=&gt;(U,V&gt;90)<br>
+• 点积为正=&gt;(U,V&lt;90)<br>
+• 点积为零=&gt;(U,V=90)</p>
+<h4 id="差积左手定则中指为result方向结果矢量垂直与ab矢量">差积[左手定则]{中指为result方向}(结果矢量垂直与ab矢量)</h4>
+<p>Vector2：A<em>B=X1</em>Y2+X2*Y1<br>
+Vector3:(yz,zx,xy)<br>
+Cx = AyBz-AzBy<br>
+Cy = AzBx-AxBz<br>
+Cz = AxBy-AyBx<br>
+result = (Cx,Cy,Cz)<br>
+角动量（当前指向的方向向量a，目标方向的方向向量b）求[叉积]=旋转轴</p>
+<h4 id="enable-and-disable-component">Enable and Disable Component</h4>
+<p>Component.enable = true|false<br>
+控制一个物体是否在屏幕上渲染或显示</p>
+<h4 id="active-and-deactivate-component">Active and Deactivate Component</h4>
+<p>component.SetActive(false);<br>
+控制是否在场景中使用该物体，findObject是否能找到<br>
+SetActiveRecursively()控制递归子物体</p>
 ]]></content>
     </entry>
     <entry>
-        <title type="html"><![CDATA[about]]></title>
-        <id>https://sunxiaohang.github.io/post/about/</id>
-        <link href="https://sunxiaohang.github.io/post/about/">
+        <title type="html"><![CDATA[Unity3d扩展编辑器]]></title>
+        <id>https://sunxiaohang.github.io/post/unity3d-kuo-zhan-bian-ji-qi/</id>
+        <link href="https://sunxiaohang.github.io/post/unity3d-kuo-zhan-bian-ji-qi/">
         </link>
-        <updated>2020-04-06T12:47:48.000Z</updated>
-        <content type="html"><![CDATA[<h4 id="孙航">孙航</h4>
-<p>132 0880 3520 | cssunhang@outlook.com | sunxiaohang.github.io</p>
-<h4 id="个人经历">个人经历</h4>
-<h5 id="20199至今">2019/9—至今</h5>
-<p>腾讯计算机系统有限公司 <strong>|</strong> 游戏开发</p>
-<p>工作描述：负责游戏项目的开发和维护工作</p>
-<h5 id="20171220189">2017/12—2018/9</h5>
-<p>北京华亿创新信息科技 | 前端 /QT嵌入式</p>
-<p>工作描述：全面负责开发跳水比赛后台管理系统/球类计时记分控制系统</p>
-<h5 id="2016620177">2016/6—2017/7</h5>
-<p>云南青才信息科技 | Android 开发</p>
-<p>工作描述：负责平安社区产品监控视频流采集及解码</p>
-<h5 id="20189至今">2018/9—至今</h5>
-<p>西安电子科技大学 | 软件工程 | 硕士</p>
-<h5 id="2013920176">2013/9—2017/6</h5>
-<p>西南林业大学 | 电子信息工程 | 本科</p>
-<h3 id="在校经历">在校经历</h3>
-<blockquote>
-<p>计算机设计大赛 | 省级 | 一等奖</p>
-<p>计算机设计大赛 | 国家级 | 二等奖</p>
-<p>西电腾讯俱乐部|学业奖学金|创新创业奖</p>
-</blockquote>
-<h4 id="专业技能">专业技能</h4>
-<h5 id="java">Java</h5>
-<ul>
-<li>Java 基础 <strong>|</strong> Java多线程 <strong>|</strong> Java并发 <strong>|</strong> Java锁</li>
-<li>Java设计模式 <strong>|</strong> Java虚拟机</li>
-<li>Spring <strong>|</strong> Spring MVC</li>
-<li>Spring boot <strong>|</strong> thymeleaf <strong>|</strong> dubbo RPC</li>
-</ul>
-<h5 id="android">Android</h5>
-<ul>
-<li>Android 应用框架 <strong>|</strong> Android设计模式</li>
-<li>View绘制 <strong>|</strong> 自定义ViewGroup</li>
-<li>Android 网络编程</li>
-<li>Android IPC</li>
-</ul>
-<h5 id="unity3d">Unity3D</h5>
-<ul>
-<li>UGUI <strong>|</strong> FairyGUI</li>
-<li>Unity3D基础 <strong>|</strong> 动画系统 <strong>|</strong> 对话口型</li>
-<li>Shader</li>
-</ul>
-<h4 id="博客主要分享">博客主要分享</h4>
-<ul>
-<li>Java <strong>|</strong> Android <strong>|</strong> Unity3D</li>
-<li>数据结构 <strong>|</strong> 算法 <strong>|</strong> 设计模式</li>
-</ul>
-<h4 id="项目经验">项目经验</h4>
-<h5 id="20199至今-腾讯计算机系统有限公司-游戏开发">2019/9—至今 | 腾讯计算机系统有限公司 |游戏开发</h5>
-<blockquote>
-<p>项目简介：MMO游戏项目的开发与维护</p>
-<p>功能：MMO游戏UI|事件系统|Unity3D引擎|动画表现组</p>
-<p>职责：项目开发 | 代码维护 | 文档的撰写</p>
-</blockquote>
-<h5 id="2019420195-个人项目-ctimes">2019/4—2019/5 | 个人项目 | CTimes</h5>
-<blockquote>
-<p>项目简:新闻影音图书客户端</p>
-<p>功能:  最新新闻|豆瓣图书|豆瓣电影|音视频</p>
-<p>职责:  项目UI设计 | 架构设计 | 代码实现 | 数据调试|文档撰写</p>
-</blockquote>
-<h5 id="2019120192-个人项目-停车场仿真系统">2019/1—2019/2 | 个人项目 | 停车场仿真系统</h5>
-<blockquote>
-<p>项目简介:停车场管理仿真系统</p>
-<p>功能:  停车场模拟|用户管理|数据持久化</p>
-<p>职责:  项目UI设计 | 架构设计 | 代码实现 | 数据库调试 | 文档撰写</p>
-</blockquote>
-<h5 id="20171220189-北京华亿创新-跳水比赛后台管理系统">2017/12—2018/9 | 北京华亿创新 | 跳水比赛后台管理系统</h5>
-<blockquote>
-<p>项目简介：管理跳水比赛项目的人员编排，赛程安排，打分系统等</p>
-<p>职责：系统的设计与实现 | 代码编写、调试 | 帮助文档的撰写</p>
-</blockquote>
-<h5 id="2018320184-北京华亿创新-球类计时记分系统">2018/3—2018/4 | 北京华亿创新 | 球类计时记分系统</h5>
-<blockquote>
-<p>项目简介：球类计时、记分，球权控制，离场，犯规等</p>
-<p>职责：系统设计与实现 | 代码的编写、调试 | 文档的撰写</p>
-</blockquote>
-<h5 id="20161020175-云南青才信息-平安社区">2016/10—2017/5 | 云南青才信息 | 平安社区</h5>
-<blockquote>
-<p>项目简介：社区维护，管理，报备系统</p>
-<p>职责：沟通对接 | 视频流解码</p>
-</blockquote>
-<h5 id="20168201610-比赛项目-intelligent-car">2016/8—2016/10 | 比赛项目 | Intelligent Car</h5>
-<blockquote>
-<p>项目简介:  语音控制的智能小车</p>
-<p>功能:  语音识别 | 人脸识别 | 视频流传输 | 语音助手</p>
-<p>职责:  项目UI设计 | 机械控制程序编写 | Android控制程序编写 | 通信服务器实现 | 文档撰写</p>
-</blockquote>
+        <updated>2020-02-11T11:44:11.000Z</updated>
+        <summary type="html"><![CDATA[<p>Unity3D扩展编辑器的一些常规操作，深入浅出，属于读书笔记，参考Unity3D游戏开发</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>Unity3D扩展编辑器的一些常规操作，深入浅出，属于读书笔记，参考Unity3D游戏开发</p>
+<!-- more -->
+<h5 id="扩展右键菜单">扩展右键菜单</h5>
+<pre><code class="language-c#">//[MenuItem(&quot;Assets/Tools/Debug&quot;,isValidateFunction,priority)]
+public class Extension
+{
+    [MenuItem(&quot;Assets/CustomTools/Debug&quot;,false,2)]
+    static void DebugFunction()
+    {
+        Debug.Log(Selection.activeObject.name);
+    }
+}
+</code></pre>
+<h5 id="创建菜单">创建菜单</h5>
+<pre><code class="language-c#">//[MenuItem(&quot;Assets/Create/ObjectName&quot;,isValidateFunction,priority)]
+public class Extension
+{
+    [MenuItem(&quot;Assets/Create/Debug&quot;,false,2)]
+    static void CreateObjectName()
+    {
+        GameObject.CreatePrimitive(PrimitiveType.Sphere);
+    }
+}
+</code></pre>
+<h5 id="扩展布局">扩展布局</h5>
+<pre><code class="language-c#">public class Extension
+{
+    //表示此方法会在C#代码每次编译完成后首先调用
+    [InitializeOnLoadMethod]
+    static void Function()
+    {
+        //监听EditorApplication.projectWindowItemOnGUI委托，即可使用GUI方法来绘制自定义UI元素
+        EditorApplication.projectWindowItemOnGUI = delegate(string guid, Rect rect) { 
+            //在project视图中选择一个资源
+            if (Selection.activeObject &amp;&amp;guid == AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(Selection.activeObject)))
+            {
+                //设置拓展按钮区域
+                float width = 50f;
+                rect.x += rect.width - width;
+                rect.y += 2f;
+                rect.width = width;
+                GUI.color = Color.red;
+                //点击事件处理的简单写法
+                if(GUI.Button(rect,&quot;click&quot;)){
+                    Debug.LogFormat(&quot;click:{0}&quot;,Selection.activeObject.name); 
+                };
+                GUI.color= Color.white;
+            }
+        };
+    }
+}
+</code></pre>
+<h5 id="监听事件">监听事件</h5>
+<pre><code class="language-C#">//事件监听需要继承父类UnityEditor.AssetModificationProcessor
+public class Extension:UnityEditor.AssetModificationProcessor{
+    //全局监听Project视图下的资源是否发生变化
+    [InitializeOnLoadMethod]
+    static void Function(){
+    	EditorApplication.projectChanged += delegate(){Debug.Log(&quot;change&quot;);};
+    }
+    //监听双击鼠标左键，打开资源事件
+    public static bool IsOpenForEdit(string assetPath, out string message){
+        return true;//true 表示该资源可以打开，false表示不允许在unity中打开该资源
+    }
+    //监听资源即将被创建
+    private static void OnWillCreateAsset(string assetName){ 
+    	Debug.LogFormat(&quot;path:{0}&quot;,assetName);
+    }
+    //监听资源即将被保存
+    private static string[] OnWillSaveAssets(string[] paths){
+        if (paths != null)Debug.LogFormat(&quot;path:{0}&quot;,string.Join(&quot;,&quot;,paths));
+        return paths;
+    }
+    //监听资源即将被移动
+    private static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath){
+        Debug.LogFormat(&quot;from:{0} to {1}&quot;,sourcePath,destinationPath);
+        return AssetMoveResult.DidMove;//AssetMoveResult.DidMove表示资源可以移动
+    }
+    //监听资源即将被删除
+    private static AssetDeleteResult OnWillDeleteAsset(string assetPath, RemoveAssetOptions options){
+        Debug.LogFormat(&quot;delete:{0}&quot;,assetPath);
+        return AssetDeleteResult.DidNotDelete;//表示该资源可以被删除
+    }
+}
+</code></pre>
+<h4 id="拓展hierarchy视图">拓展Hierarchy视图</h4>
+<h5 id="拓展菜单">拓展菜单</h5>
+<pre><code class="language-c#">public class Extension{
+    [MenuItem(&quot;GameObject/CustomCreate/Cube&quot;, false, 1)]
+    static void CreateCube()
+    {
+        GameObject.CreatePrimitive(PrimitiveType.Cube);
+    }
+}
+</code></pre>
+<h5 id="拓展布局">拓展布局</h5>
+<pre><code class="language-C#">public class Extension
+{
+    [InitializeOnLoadMethod]
+    static void InitializeOnLoad()
+    {
+        EditorApplication.hierarchyWindowItemOnGUI = delegate(int id, Rect rect) {  
+            //在hierarchy视图中选择一个资源
+            if (Selection.activeObject &amp;&amp; id == Selection.activeObject.GetInstanceID())
+            {
+                float width = 50f;
+                float height = 20f;
+                rect.x = rect.width - width;
+                rect.width = width;
+                rect.height = height;
+                if (GUI.Button(rect, AssetDatabase.LoadAssetAtPath&lt;Texture&gt;(&quot;Assets/Unity.png&quot;)))
+                {
+                    Debug.LogFormat(&quot;click:{0}&quot;,Selection.activeObject.name);
+                }
+            }
+        };
+    }
+}
+</code></pre>
+<h5 id="重写菜单">重写菜单</h5>
+<pre><code class="language-c#">public class Extension
+{
+    [InitializeOnLoadMethod]
+    static void StartInitializeOnLoadMethod() {
+        EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyGUI;
+    }
+    static void OnHierarchyGUI(int instanceId, Rect selectionRect) {
+        if (Event.current != null 
+            &amp;&amp; selectionRect.Contains(Event.current.mousePosition)
+            &amp;&amp;Event.current.button==1&amp;&amp;Event.current.type&lt;=EventType.MouseUp) {
+            GameObject selectedGameObject = EditorUtility.InstanceIDToObject(instanceId) as GameObject;
+            if (selectedGameObject) {
+                Vector2 mousePosition = Event.current.mousePosition;
+                EditorUtility.DisplayPopupMenu(new Rect(mousePosition.x,mousePosition.y,0,0),&quot;Window/Test&quot;,null );
+                Event.current.Use();
+            }
+        }
+    }
+    [MenuItem(&quot;Window/Test/tools1&quot;)]
+    static void Test() {}
+    [MenuItem(&quot;Window/Test/tools2&quot;)]
+    static void Test1() { }
+    [MenuItem(&quot;Window/Test/tools3&quot;)]
+    static void Test2() { }
+}
+</code></pre>
+<h4 id="拓展inspector视图">拓展Inspector视图</h4>
+<h5 id="拓展原生组件">拓展原生组件</h5>
+<pre><code class="language-c#">[CustomEditor(typeof(Camera))]
+public class Extension:Editor{
+    public override void OnInspectorGUI(){
+        if (GUILayout.Button(&quot;extensionButton&quot;)) {/*function*/ }
+        base.OnInspectorGUI();
+    }
+}
+</code></pre>
+<h5 id="拓展继承组件">拓展继承组件</h5>
+<p>Unity将大量的Editor绘制方法封装在内部DLL文件里，开发者无法调用它的方法，只能通过反射的方式调用内部未公开的方法。</p>
+<pre><code class="language-C#">[CustomEditor(typeof(Transform))]
+public class Extension:Editor{
+    private Editor m_Editor;
+    private void OnEnable(){
+        m_Editor = Editor.CreateEditor(target,     Assembly.GetAssembly(typeof(Editor)).GetType(&quot;UnityEditor.TransformInspector&quot;, true));
+    }
+    public override void OnInspectorGUI(){
+        if (GUILayout.Button(&quot;extensionButton&quot;)) { }
+        GUI.enabled = false;//------------开始禁止
+        m_Editor.OnInspectorGUI();//调用系统绘制方法
+        GUI.enabled = true;//------------结束禁止
+        if (GUILayout.Button(&quot;extensionButton2&quot;)) { }
+    }
+}
+</code></pre>
+<h5 id="组件不可编辑">组件不可编辑</h5>
+<p>HideFlag可以使用按位或(|)同时保持多个属性</p>
+<pre><code class="language-c#">GUI.enabled = false;//------------开始禁止
+////m_Editor.OnInspectorGUI();//调用系统绘制方法
+GUI.enabled = true;//------------结束禁止
+
+//全局锁定与解锁修改
+public class Extension{
+    [MenuItem(&quot;GameObject/3D Object/Lock/Lock&quot;)]
+    static void Lock(){
+        if (Selection.gameObjects != null){
+            foreach (var gameObject in Selection.gameObjects)       			                       gameObject.hideFlags = HideFlags.NotEditable;
+        }
+    }
+    [MenuItem(&quot;GameObject/3D Object/Lock/Unlock&quot;)]
+    static void Unlock(){
+        if (Selection.gameObjects != null){
+            foreach (var gameObject in Selection.gameObjects) {
+                gameObject.hideFlags = HideFlags.None;
+            }
+        }
+    }
+}
+</code></pre>
+<h5 id="context菜单">Context菜单</h5>
+<p>Inspector中的组件右键菜单，如果想给所有组件都添加上该菜单<code>Transform</code>&gt;&gt;&gt;<code>Component</code></p>
+<pre><code class="language-c#">public class Extension {
+    [MenuItem(&quot;CONTEXT/Transform/NewContext1&quot;)]
+    static void NewContext1(MenuCommand command) {
+        Debug.Log(command.context.name);
+    }
+}
+</code></pre>
+<p>该设置也可以用在自己写的脚本中,用于读取和写入组件属性</p>
+<pre><code class="language-c#">using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+public class Extension:MonoBehaviour{
+    public string contextName;
+    #if UNITY_EDITOR
+    [MenuItem(&quot;CONTEXT/Extension/NewContext1&quot;)]
+    static void NewContext1(MenuCommand command) {
+        Extension extension = command.context as Extension;
+        if(extension!=null)extension.contextName = &quot;HelloWorld&quot;;
+    }
+    #endif
+}
+//#if UNITY_EDITOR     #endif只会在Editor模式下执行，发布后会被剔除
+</code></pre>
+<p>如果自定义菜单和系统菜单项目重名，还可以覆盖</p>
+<pre><code class="language-c#">[ContextMenu(&quot;Remove Component&quot;)]
+void RemoveComponent(){
+    Debug.Log(&quot;RemoveComponent&quot;);
+    //等一会在删除自己
+    UnityEditor.EditorApplication.delayCall = delegate(){DestoryImmediate(this);};
+}
+</code></pre>
+<h4 id="拓展scene视图">拓展Scene视图</h4>
+<h5 id="辅助元素该类不在editor目录下">辅助元素（该类不在Editor目录下）</h5>
+<pre><code class="language-c#">public class Extension:MonoBehaviour{
+    private void OnDrawGizmosSelected(){
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(transform.position,Vector3.zero);
+        Gizmos.DrawCube(Vector3.zero, Vector3.one);
+        //其他Gizmos.function()
+    }
+    //辅助元素不依赖选择对象出现(始终显示zaiScene视图中)
+    private void OnDrawGizmos(){
+        Gizmos.DrawSphere(transform.position,1);
+    }
+}
+</code></pre>
+<h5 id="辅助ui">辅助UI</h5>
+<p>在Scene中我们可以添加EditorGUI，方便在视图中处理一些操作。EditorGUI的代码需要在**Handles.BeginGUI()<strong>和</strong>Handles.EndGUI()**中间绘制完成。</p>
+<pre><code class="language-c#">[CustomEditor(typeof(Camera))]
+public class Extension:Editor{
+    private void OnSceneGUI(){
+        Camera camera = target as Camera;
+        if (camera != null){
+            Handles.color = Color.red;
+         Handles.Label(camera.transform.position,camera.transform.position.ToString());
+            Handles.BeginGUI();
+            GUI.backgroundColor = Color.red;
+            if (GUILayout.Button(&quot;click&quot;, GUILayout.Width(200f))){
+                Debug.LogFormat(&quot;click={0}&quot;,camera.name);
+            }
+            GUILayout.Label(&quot;Label&quot;);
+            Handles.EndGUI();
+        }
+    }
+}
+</code></pre>
+<h5 id="常驻辅助ui">常驻辅助UI</h5>
+<pre><code class="language-c#">public class Extension{
+    [InitializeOnLoadMethod]
+    static void InitializeOnLoadMethod(){
+        SceneView.duringSceneGui += delegate(SceneView sceneView){
+            Handles.BeginGUI();
+            GUI.Label(new Rect(0,0,50,15),&quot;title&quot; );
+            GUI.Button(new Rect(0, 20, 50, 50)
+                , AssetDatabase.GetBuiltinExtraResource&lt;Texture&gt;(&quot;Assets/unity.png&quot;));
+            Handles.EndGUI();
+        };
+    }
+}
+</code></pre>
+<h5 id="禁用选中对象">禁用选中对象</h5>
+<pre><code class="language-c#">public class Extension{
+    [InitializeOnLoadMethod]
+    static void InitializeOnLoadMethod(){
+        SceneView.duringSceneGui += delegate(SceneView sceneView){
+            Event e = Event.current;
+            if (e != null){
+                //获取它的controllID后，即可禁止将点击事件穿透下去
+                //表示禁止接收控制焦点
+                int controlID = GUIUtility.GetControlID(FocusType.Passive);
+                if (e.type == EventType.Layout){
+                    HandleUtility.AddDefaultControl(controlID);
+                }
+            }
+        };
+    }
+}
+</code></pre>
+<h4 id="拓展game视图">拓展Game视图</h4>
+<p>Game视图拓展分**1.<strong>运行模式</strong>2.**非运行模式</p>
+<pre><code class="language-C#">#if UNITY_EDITOR
+[ExecuteInEditMode]//非运行模式下也会执行代码的生命周期
+public class Extension:MonoBehaviour{
+    void OnGUI(){
+        if(GUILayout.Button(&quot;Click&quot;)){
+            Debug.Log(&quot;Click!&quot;);
+        }
+        GUILayout.Label(&quot;HelloWorld&quot;);
+    }
+}
+#endif
+</code></pre>
+<h4 id="menuitem菜单">MenuItem菜单</h4>
+<h5 id="覆盖系统菜单">覆盖系统菜单</h5>
+<pre><code class="language-c#">[MenuItem(&quot;GameObject/UI/Text&quot;)]
+static void CreateNewText(){
+    //todo
+}
+</code></pre>
+<h5 id="自定义菜单">自定义菜单</h5>
+<pre><code class="language-c#">[MenuItem(&quot;Root/TestCheck&quot;,false,1)]
+static void checkFunction() {
+    var menuPath = &quot;Root/TestCheck&quot;;
+    bool m_Checked = Menu.GetChecked(menuPath);
+    Menu.SetChecked(menuPath,!m_Checked);
+}
+[MenuItem(&quot;Root/TestGray&quot;)]
+static void grayFunction() { }
+[MenuItem(&quot;Root/TestGray&quot;,true,20)]
+static bool grayFunctionValidate() {
+    return false;//false表示置灰，不可点击
+}
+</code></pre>
+<h4 id="面板拓展">面板拓展</h4>
+<h5 id="inspector面板">Inspector面板</h5>
+<pre><code class="language-C#">#if UNITY_EDITOR
+using UnityEditor;
+#endif
+using UnityEditor.Experimental.TerrainAPI;
+using UnityEngine;
+
+#if UNITY_EDITOR
+[CustomEditor(typeof(PoJo))]
+public class Extension:Editor
+{
+    private bool m_EnableToogle;
+    public override void OnInspectorGUI()
+    {
+        PoJo poJo = target as PoJo;
+        poJo.scrollPos = EditorGUILayout.BeginScrollView(poJo.scrollPos, false, true);
+        poJo.myName = EditorGUILayout.TextField(&quot;text&quot;, poJo.myName);
+        poJo.myId = EditorGUILayout.IntField(&quot;int&quot;, poJo.myId);
+
+        poJo.prefab = EditorGUILayout.ObjectField(&quot;GameObject&quot;, poJo.prefab,typeof(GameObject),true)as GameObject;
+        //绘制按钮
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.Button(&quot;1&quot;);
+        GUILayout.Button(&quot;2&quot;);
+        poJo.myEnum = (PoJo.MyEnum) EditorGUILayout.EnumPopup(&quot;MyEnum:&quot;, poJo.myEnum);
+        EditorGUILayout.EndHorizontal();
+        
+        //toogle component
+        m_EnableToogle = EditorGUILayout.BeginToggleGroup(&quot;EnableToogle&quot;, m_EnableToogle);
+        poJo.toogle1 = EditorGUILayout.Toggle(&quot;toogle1&quot;, poJo.toogle1);
+        poJo.toogle2 = EditorGUILayout.Toggle(&quot;toogle2&quot;, poJo.toogle2);
+        EditorGUILayout.EndToggleGroup();
+        EditorGUILayout.EndScrollView();
+    }
+}
+#endif
+</code></pre>
+<h5 id="编辑器窗口editor-window">编辑器窗口Editor Window</h5>
+<pre><code class="language-c#">public class CustomWindow:EditorWindow,IHasCustomMenu
+{
+    [MenuItem(&quot;Window/CustomWindow&quot;)]
+    static void Init(){
+        CustomWindow window = (CustomWindow) EditorWindow.GetWindow(typeof(CustomWindow));
+        window.Show();
+    }
+    private Texture m_MyTexture = null;
+    private float m_MyFloat = 0.5f;
+    private void Awake(){
+        Debug.LogFormat(&quot;窗口初始化调用&quot;);
+        m_MyTexture = AssetDatabase.LoadAssetAtPath&lt;Texture&gt;(&quot;Assets/unity.png&quot;);
+    }
+    private void OnGUI(){
+        GUILayout.Label(&quot;HelloWorld&quot;,EditorStyles.boldLabel);
+        m_MyFloat = EditorGUILayout.Slider(&quot;Slide&quot;, m_MyFloat, -5, 5);
+        GUI.DrawTexture(new Rect(0,30,100,100),m_MyTexture);
+    }
+    private void OnDestroy(){/*销毁时调用*/}
+    private void OnFocus(){/*拥有焦点时调用*/}
+    private void OnHierarchyChange(){/*hierarchy视图发生变化时调用*/}
+    private void OnInspectorUpdate(){/*Inspector每帧更新*/}
+    private void OnLostFocus(){ /*失去焦点时调用*/}
+    private void OnProjectChange(){/*Project视图发生变化时调用*/}
+    private void OnSelectionChange(){/*在hierarchy或project视图中选择一个对象时调用*/}
+    private void Update(){/*每帧调用*/}
+    public void AddItemsToMenu(GenericMenu menu){
+        menu.AddDisabledItem(new GUIContent(&quot;Disable&quot;));
+        menu.AddItem(new GUIContent(&quot;Test1&quot;),true, () =&gt;{/*todo*/});
+        menu.AddSeparator(&quot;Test/&quot;);
+        menu.AddItem(new GUIContent(&quot;Test/Test3&quot;),true, () =&gt; { });
+    }
+}
+</code></pre>
+<h4 id="自定义导入类型">自定义导入类型</h4>
+<pre><code class="language-c#">[ScriptedImporter(1,&quot;custom&quot;)]
+public class ImportListener : ScriptedImporter{
+    public override void OnImportAsset(AssetImportContext ctx){
+        var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var position = JsonUtility.FromJson&lt;Vector3&gt;(File.ReadAllText(ctx.assetPath));
+        cube.transform.position = position;
+        cube.transform.localScale = Vector3.one;
+        ctx.AddObjectToAsset(&quot;obj&quot;,cube);
+        ctx.SetMainObject(cube);
+        //添加材质
+        var material = new Material(Shader.Find(&quot;Standard&quot;));
+        material.color = Color.red;
+        ctx.AddObjectToAsset(&quot;material&quot;,material);
+        var tempMesh = new Mesh();
+        DestroyImmediate(tempMesh);
+    }
+}
+</code></pre>
+<h3 id="游戏脚本">游戏脚本</h3>
+<h5 id="脚本序列化">脚本序列化</h5>
+<pre><code class="language-c#">#if UNITY_EDITOR
+[CustomEditor(typeof(SerializedClass))]
+public class ScriptInspector : Editor{
+    public override void OnInspectorGUI(){
+        serializedObject.Update();//更新最新数据
+        EditorGUI.BeginChangeCheck();//标记检查
+        SerializedProperty property = serializedObject.FindProperty(&quot;id&quot;);//获取数据信息
+        property.intValue = EditorGUILayout.IntField(&quot;主键&quot;, property.intValue);//保存数据
+        property = serializedObject.FindProperty(&quot;name&quot;);
+        property.stringValue = EditorGUILayout.TextField(&quot;姓名&quot;, property.stringValue);
+        property = serializedObject.FindProperty(&quot;prefab&quot;);
+        property.objectReferenceValue = EditorGUILayout.ObjectField(&quot;游戏对象&quot;,property.objectReferenceValue,typeof(GameObject),true);
+        EditorGUILayout.PropertyField(serializedObject.FindProperty(&quot;targets&quot;), true);
+        //标记检查发生变化
+        if (EditorGUI.EndChangeCheck());//标记检查发生变化
+        if (GUI.changed);//判断面板元素变化
+        //保存全部数据
+        serializedObject.ApplyModifiedProperties();
+    }
+}
+#endif
+</code></pre>
+<h5 id="序列化反序列化">序列化反序列化</h5>
+<pre><code class="language-c#">public class SerializedClass:MonoBehaviour,ISerializationCallbackReceiver{
+    [SerializeField] private List&lt;Sprite&gt; m_Values = new List&lt;Sprite&gt;();
+    [SerializeField]private List&lt;string&gt; m_Keys = new List&lt;string&gt;();
+    public Dictionary&lt;string, Sprite&gt; m_SpriteDic = new Dictionary&lt;string, Sprite&gt;();
+    public void OnBeforeSerialize(){
+        m_Keys.Clear();
+        m_Values.Clear();
+        foreach (KeyValuePair&lt;string,Sprite&gt; pair in m_SpriteDic){
+            m_Keys.Add(pair.Key);
+            m_Values.Add(pair.Value);
+        }
+    }
+    public void OnAfterDeserialize(){
+        m_SpriteDic.Clear();
+        for (int i = 0; i &lt; m_Keys.Count; i++){
+            m_SpriteDic[m_Keys[i]] = m_Values[i];
+        }
+    }
+}
+
+#if UNITY_EDITOR
+[CustomEditor(typeof(SerializedClass))]
+public class Extension:Editor{
+    public override void OnInspectorGUI(){
+        serializedObject.Update();
+        SerializedProperty propertyKey = serializedObject.FindProperty(&quot;m_Keys&quot;);
+        SerializedProperty propertyValue = serializedObject.FindProperty(&quot;m_Values&quot;);
+        GUILayout.BeginVertical();
+        for (int i = 0; i &lt; propertyKey.arraySize; i++){
+            GUILayout.BeginHorizontal();
+            SerializedProperty key = propertyKey.GetArrayElementAtIndex(i);
+            SerializedProperty value = propertyValue.GetArrayElementAtIndex(i);
+            key.stringValue = EditorGUILayout.TextField(&quot;Key&quot;, key.stringValue);
+            value.objectReferenceValue =
+                EditorGUILayout.ObjectField(&quot;Value&quot;, value.objectReferenceValue, typeof(Sprite),false);
+            GUILayout.EndHorizontal();
+        }
+        GUILayout.EndVertical();
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button(&quot;+&quot;)){
+            (target as SerializedClass).m_SpriteDic[propertyKey.arraySize.ToString()] = null;
+        }
+        GUILayout.EndHorizontal();
+        serializedObject.ApplyModifiedProperties();
+    }
+}
+#endif
+</code></pre>
+<h5 id="scriptable-object">Scriptable Object</h5>
+<pre><code class="language-C#">//菜单点击生成
+[CreateAssetMenu]
+public class Displayer : ScriptableObject{
+    [SerializeField] public List&lt;DisplayerInfo&gt; m_DisplayerInfo;
+    [Serializable]public class DisplayerInfo{
+        public int id;
+        public string name;
+    }
+}
+public class DisplayerReader : MonoBehaviour{
+    private void Start(){
+        Displayer display = Resources.Load&lt;Displayer&gt;(&quot;Path&quot;);//读取
+    }
+}
+</code></pre>
+<pre><code class="language-c#">public class Extension{
+    [MenuItem(&quot;Assets/Create ScriptableObject&quot;)]
+    static void CreateScriptableObject(){
+        Displayer displayer = ScriptableObject.CreateInstance&lt;Displayer&gt;();
+        displayer.m_DisplayerInfo = new List&lt;Displayer.DisplayerInfo&gt;();
+        displayer.m_DisplayerInfo.Add(new Displayer.DisplayerInfo() {id = 100, name = &quot;test&quot;});
+        //将资源保存到本地
+        AssetDatabase.CreateAsset(displayer,&quot;Assets/Resources/displayer.asset&quot;);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+    }
+}
+</code></pre>
 ]]></content>
     </entry>
     <entry>
@@ -593,7 +735,7 @@ public class PriorityQueue{
         <id>https://sunxiaohang.github.io/post/unity-inaction/</id>
         <link href="https://sunxiaohang.github.io/post/unity-inaction/">
         </link>
-        <updated>2020-04-06T12:09:00.000Z</updated>
+        <updated>2020-02-06T12:09:00.000Z</updated>
         <summary type="html"><![CDATA[<p>Untiy常用逻辑代码的实现方式，归纳总结，用于标准化代码结构，巩固加强</p>
 ]]></summary>
         <content type="html"><![CDATA[<p>Untiy常用逻辑代码的实现方式，归纳总结，用于标准化代码结构，巩固加强</p>
@@ -1218,7 +1360,7 @@ public class ThirdPersonCameraControl : MonoBehaviour{
         <id>https://sunxiaohang.github.io/post/c/</id>
         <link href="https://sunxiaohang.github.io/post/c/">
         </link>
-        <updated>2020-04-06T11:52:42.000Z</updated>
+        <updated>2019-10-17T11:52:42.000Z</updated>
         <summary type="html"><![CDATA[<p>C#关键知识点总结，主要针对一些新特性和泛型，和C#事件系统，主要针对Unity3d，非标准C#</p>
 ]]></summary>
         <content type="html"><![CDATA[<p>C#关键知识点总结，主要针对一些新特性和泛型，和C#事件系统，主要针对Unity3d，非标准C#</p>
@@ -1281,194 +1423,11 @@ System.Reflection.MethodInfo info = type.GetMethod(Type.MethodName);
 ]]></content>
     </entry>
     <entry>
-        <title type="html"><![CDATA[Unity3D]]></title>
-        <id>https://sunxiaohang.github.io/post/unity3d/</id>
-        <link href="https://sunxiaohang.github.io/post/unity3d/">
-        </link>
-        <updated>2020-04-06T11:49:39.000Z</updated>
-        <summary type="html"><![CDATA[<p>Unity3D项目关键知识点汇总，方便后期复习巩固，包括关键的monobehaviour生命周期，协程，工作线程，相机相关，涉嫌投射，对象池化技术等线管笔记</p>
-]]></summary>
-        <content type="html"><![CDATA[<p>Unity3D项目关键知识点汇总，方便后期复习巩固，包括关键的monobehaviour生命周期，协程，工作线程，相机相关，涉嫌投射，对象池化技术等线管笔记</p>
-<!-- more -->
-<h4 id="unity-基础类图">Unity 基础类图</h4>
-<figure data-type="image" tabindex="1"><img src="https://sunxiaohang.github.io/post-images/1586173848463.png" alt="" loading="lazy"></figure>
-<h4 id="unity生命周期">Unity生命周期</h4>
-<figure data-type="image" tabindex="2"><img src="https://sunxiaohang.github.io/post-images/1586173894549.png" alt="" loading="lazy"></figure>
-<h4 id="camera">Camera</h4>
-<pre><code>//-----------------------------------------------------
-//-------------------通过相机的切换来实现场景的切换
-/////渲染画中画(多相机){如：赛车游戏的后视镜，小地图}
-/////高depth相机的画面会覆盖低depth相机画面
-/////推拉变焦是摄像机同时向目标对象移动并将其缩小的视觉效果(对象大小看起来大致相同，从而达到改变其他对象视角的目的)
-void Start(){
-    distance = Vector3.Distance(transform.position,target.position);
-    heightAtDistance = FrustumHeightAtDistance(distance);
-    EnabledE();
-}
-void Update(){
-    var distance = Vector3.Distance(transform.position,target.position);
-    Camera.fieldOfView = FovForHeightAtDistance(initialDistance,CurrentDistance);
-}
-//----------------------------------------------------------
-//------------------------射线投射-------------------------
-void Start(){
-    RayCastHit hit;
-    //Camera.ViewPortPointToRay(0..1)坐标[0表示左下，1表示右上]
-    Ray ray = Camera.ScreenPointToRay(Input.mousePosition);
-    if(Physics.RayCast(ray,out hit)){
-        Transform objectHit =hit.transform;
-        //命中 to do
-    }
-}
-//----------------------------------------------------------
-//--------------------沿射线移动相机(缩放)----------------
-void Update(){
-    Ray ray = camera.ScreenPointToRay(Input.mousePOsition);
-    float zoomDistance = zoomSpeed*Input.GetAxis(&quot;Vertical&quot;)*Time.deltaTime;
-    Camera.tranform.Translate(ray.direction*zoomDistance,Space.world);
-}
-//----------------------------------------------------------
-//---------------------修改斜视锥体pivot------------------
-Matrix4*4 mat = Camera.main.projectionMatrix;
-mat[0,2] = horizontalObl;//float(horizontal) 水平倾斜量 &lt;&quot;+&quot;&gt;向上
-mat[1,2] = VerticalObl;//float(vertical) 垂直倾斜量 &lt;&quot;-&quot;&gt;向下
-Camera.main.projectionMatrix = mat;
-</code></pre>
-<h4 id="pool">Pool</h4>
-<pre><code>//----------------------------------------------------------
-//---------------------game object pool------------------
-public class ObjectPool : MonoBehaviour
-{
-   public static ObjectPool instance;
-   public GameObject[] objectPrefabs;
-   public List&lt;GameObject&gt;[] pooledObjects;
-   public int[] amountToBuffer;
-   public int defaultBufferAmount = 3;
-   protected GameObject containerObject;
-   void Awake (){instance = this;}
-   void Start (){
-       containerObject = new GameObject(&quot;ObjectPool&quot;);
-       pooledObjects = new List&lt;GameObject&gt;[objectPrefabs.Length];
-       int i = 0;
-       foreach ( GameObject objectPrefab in objectPrefabs ){
-           pooledObjects[i] = new List&lt;GameObject&gt;();  
-           int bufferAmount;
-           if(i &lt; amountToBuffer.Length) bufferAmount = amountToBuffer[i];
-           else bufferAmount = defaultBufferAmount;
-           for ( int n=0; n&lt;bufferAmount; n++){
-               GameObject newObj = Instantiate(objectPrefab) as GameObject;
-               newObj.name = objectPrefab.name;
-               PoolObject(newObj);
-           }
-           i++;
-       }
-   }
-   public GameObject GetObjectForType ( string objectType , bool onlyPooled ){
-       for(int i=0; i&lt;objectPrefabs.Length; i++){
-           GameObject prefab = objectPrefabs[i];
-           if(prefab.name == objectType){
-               if(pooledObjects[i].Count &gt; 0){
-                   GameObject pooledObject = pooledObjects[i][0];
-                   pooledObjects[i].RemoveAt(0);
-                   pooledObject.transform.parent = null;
-                   pooledObject.SetActiveRecursively(true);
-                   return pooledObject;
-               } else if(!onlyPooled) {
-                   return Instantiate(objectPrefabs[i]) as GameObject;
-               }
-               break;
-           }
-       }
-       return null;
-   }
-   public void PoolObject ( GameObject obj ){
-       for ( int i=0; i&lt;objectPrefabs.Length; i++){
-           if(objectPrefabs[i].name == obj.name){
-               obj.SetActiveRecursively(false);
-               obj.transform.parent = containerObject.transform;
-               pooledObjects[i].Add(obj);
-               return;
-           }
-       }
-   }
-}
-//----------------------------------------------------------
-//--------------------------effect pool--------------------
-public class Effect : MonoBehaviour{
-   public ParticleEmitter[] emitters;
-   public float effectLength = 1f;
-   public bool poolAfterComplete = true;
-   public virtual void ResetEffect (){
-       if(poolAfterComplete){
-           ObjectPool.instance.PoolObject(gameObject);
-       } else {
-           Destroy(gameObject);
-       }
-   }
-   public virtual void StartEffect (){
-       foreach ( ParticleEmitter emitter in emitters ){
-           emitter.Emit();
-       }
-       StartCoroutine(WaitForCompletion());
-   }
-   public IEnumerator WaitForCompletion (){
-       yield return new WaitForSeconds(effectLength);
-       ResetEffect();  
-   }
-}
-//----------------------------------------------------------
-//--------------------------sound pool--------------------
-public class SoundEffect : MonoBehaviour{
-   public AudioSource soundSource;
-   public AudioClip[] soundClips;
-   public float effectLength = 1f;
-   public bool poolAfterComplete = true;
-   public virtual void ResetEffect (){
-       if(poolAfterComplete){
-           ObjectPool.instance.PoolObject(gameObject);
-       } else {
-           Destroy(gameObject);
-       }
-   }
-   public virtual void StartEffect (){
-       soundSource.PlayOneShot(soundClips[Random.Range(0,soundClips.Length)]);
-       StartCoroutine(WaitForCompletion());
-   }
-   public IEnumerator WaitForCompletion (){
-       yield return new WaitForSeconds(effectLength);
-       ResetEffect();
-   }
-}
-</code></pre>
-<h4 id="点积magnitude">点积（Magnitude）</h4>
-<p>Dot Product = Ax<em>Bx+Ay</em>By+Az*Bz<br>
-点积可以用于判断一个多边形是面向摄像机还是背向摄像机,(或模拟飞机飞行，通过判断飞机飞行方向与垂直地面方向的夹角判断飞机是上升还是下降)在U，V非零前提下<br>
-• 点积为负=&gt;(U,V&gt;90)<br>
-• 点积为正=&gt;(U,V&lt;90)<br>
-• 点积为零=&gt;(U,V=90)</p>
-<h4 id="差积左手定则中指为result方向结果矢量垂直与ab矢量">差积[左手定则]{中指为result方向}(结果矢量垂直与ab矢量)</h4>
-<p>Vector2：A<em>B=X1</em>Y2+X2*Y1<br>
-Vector3:(yz,zx,xy)<br>
-Cx = AyBz-AzBy<br>
-Cy = AzBx-AxBz<br>
-Cz = AxBy-AyBx<br>
-result = (Cx,Cy,Cz)<br>
-角动量（当前指向的方向向量a，目标方向的方向向量b）求[叉积]=旋转轴</p>
-<h4 id="enable-and-disable-component">Enable and Disable Component</h4>
-<p>Component.enable = true|false<br>
-控制一个物体是否在屏幕上渲染或显示</p>
-<h4 id="active-and-deactivate-component">Active and Deactivate Component</h4>
-<p>component.SetActive(false);<br>
-控制是否在场景中使用该物体，findObject是否能找到<br>
-SetActiveRecursively()控制递归子物体</p>
-]]></content>
-    </entry>
-    <entry>
         <title type="html"><![CDATA[软件工程架构]]></title>
         <id>https://sunxiaohang.github.io/post/ruan-jian-gong-cheng-jia-gou/</id>
         <link href="https://sunxiaohang.github.io/post/ruan-jian-gong-cheng-jia-gou/">
         </link>
-        <updated>2020-04-06T11:46:39.000Z</updated>
+        <updated>2019-09-11T11:46:39.000Z</updated>
         <summary type="html"><![CDATA[<p>软件工程架构的一些想法和思路汇总，旨在从模型阶段建立一个相对完善的软件框架</p>
 ]]></summary>
         <content type="html"><![CDATA[<p>软件工程架构的一些想法和思路汇总，旨在从模型阶段建立一个相对完善的软件框架</p>
@@ -1499,1102 +1458,11 @@ SetActiveRecursively()控制递归子物体</p>
 ]]></content>
     </entry>
     <entry>
-        <title type="html"><![CDATA[Unity3d扩展编辑器]]></title>
-        <id>https://sunxiaohang.github.io/post/unity3d-kuo-zhan-bian-ji-qi/</id>
-        <link href="https://sunxiaohang.github.io/post/unity3d-kuo-zhan-bian-ji-qi/">
-        </link>
-        <updated>2020-04-06T11:44:11.000Z</updated>
-        <summary type="html"><![CDATA[<p>Unity3D扩展编辑器的一些常规操作，深入浅出，属于读书笔记，参考Unity3D游戏开发</p>
-]]></summary>
-        <content type="html"><![CDATA[<p>Unity3D扩展编辑器的一些常规操作，深入浅出，属于读书笔记，参考Unity3D游戏开发</p>
-<!-- more -->
-<h5 id="扩展右键菜单">扩展右键菜单</h5>
-<pre><code class="language-c#">//[MenuItem(&quot;Assets/Tools/Debug&quot;,isValidateFunction,priority)]
-public class Extension
-{
-    [MenuItem(&quot;Assets/CustomTools/Debug&quot;,false,2)]
-    static void DebugFunction()
-    {
-        Debug.Log(Selection.activeObject.name);
-    }
-}
-</code></pre>
-<h5 id="创建菜单">创建菜单</h5>
-<pre><code class="language-c#">//[MenuItem(&quot;Assets/Create/ObjectName&quot;,isValidateFunction,priority)]
-public class Extension
-{
-    [MenuItem(&quot;Assets/Create/Debug&quot;,false,2)]
-    static void CreateObjectName()
-    {
-        GameObject.CreatePrimitive(PrimitiveType.Sphere);
-    }
-}
-</code></pre>
-<h5 id="扩展布局">扩展布局</h5>
-<pre><code class="language-c#">public class Extension
-{
-    //表示此方法会在C#代码每次编译完成后首先调用
-    [InitializeOnLoadMethod]
-    static void Function()
-    {
-        //监听EditorApplication.projectWindowItemOnGUI委托，即可使用GUI方法来绘制自定义UI元素
-        EditorApplication.projectWindowItemOnGUI = delegate(string guid, Rect rect) { 
-            //在project视图中选择一个资源
-            if (Selection.activeObject &amp;&amp;guid == AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(Selection.activeObject)))
-            {
-                //设置拓展按钮区域
-                float width = 50f;
-                rect.x += rect.width - width;
-                rect.y += 2f;
-                rect.width = width;
-                GUI.color = Color.red;
-                //点击事件处理的简单写法
-                if(GUI.Button(rect,&quot;click&quot;)){
-                    Debug.LogFormat(&quot;click:{0}&quot;,Selection.activeObject.name); 
-                };
-                GUI.color= Color.white;
-            }
-        };
-    }
-}
-</code></pre>
-<h5 id="监听事件">监听事件</h5>
-<pre><code class="language-C#">//事件监听需要继承父类UnityEditor.AssetModificationProcessor
-public class Extension:UnityEditor.AssetModificationProcessor{
-    //全局监听Project视图下的资源是否发生变化
-    [InitializeOnLoadMethod]
-    static void Function(){
-    	EditorApplication.projectChanged += delegate(){Debug.Log(&quot;change&quot;);};
-    }
-    //监听双击鼠标左键，打开资源事件
-    public static bool IsOpenForEdit(string assetPath, out string message){
-        return true;//true 表示该资源可以打开，false表示不允许在unity中打开该资源
-    }
-    //监听资源即将被创建
-    private static void OnWillCreateAsset(string assetName){ 
-    	Debug.LogFormat(&quot;path:{0}&quot;,assetName);
-    }
-    //监听资源即将被保存
-    private static string[] OnWillSaveAssets(string[] paths){
-        if (paths != null)Debug.LogFormat(&quot;path:{0}&quot;,string.Join(&quot;,&quot;,paths));
-        return paths;
-    }
-    //监听资源即将被移动
-    private static AssetMoveResult OnWillMoveAsset(string sourcePath, string destinationPath){
-        Debug.LogFormat(&quot;from:{0} to {1}&quot;,sourcePath,destinationPath);
-        return AssetMoveResult.DidMove;//AssetMoveResult.DidMove表示资源可以移动
-    }
-    //监听资源即将被删除
-    private static AssetDeleteResult OnWillDeleteAsset(string assetPath, RemoveAssetOptions options){
-        Debug.LogFormat(&quot;delete:{0}&quot;,assetPath);
-        return AssetDeleteResult.DidNotDelete;//表示该资源可以被删除
-    }
-}
-</code></pre>
-<h4 id="拓展hierarchy视图">拓展Hierarchy视图</h4>
-<h5 id="拓展菜单">拓展菜单</h5>
-<pre><code class="language-c#">public class Extension{
-    [MenuItem(&quot;GameObject/CustomCreate/Cube&quot;, false, 1)]
-    static void CreateCube()
-    {
-        GameObject.CreatePrimitive(PrimitiveType.Cube);
-    }
-}
-</code></pre>
-<h5 id="拓展布局">拓展布局</h5>
-<pre><code class="language-C#">public class Extension
-{
-    [InitializeOnLoadMethod]
-    static void InitializeOnLoad()
-    {
-        EditorApplication.hierarchyWindowItemOnGUI = delegate(int id, Rect rect) {  
-            //在hierarchy视图中选择一个资源
-            if (Selection.activeObject &amp;&amp; id == Selection.activeObject.GetInstanceID())
-            {
-                float width = 50f;
-                float height = 20f;
-                rect.x = rect.width - width;
-                rect.width = width;
-                rect.height = height;
-                if (GUI.Button(rect, AssetDatabase.LoadAssetAtPath&lt;Texture&gt;(&quot;Assets/Unity.png&quot;)))
-                {
-                    Debug.LogFormat(&quot;click:{0}&quot;,Selection.activeObject.name);
-                }
-            }
-        };
-    }
-}
-</code></pre>
-<h5 id="重写菜单">重写菜单</h5>
-<pre><code class="language-c#">public class Extension
-{
-    [InitializeOnLoadMethod]
-    static void StartInitializeOnLoadMethod() {
-        EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyGUI;
-    }
-    static void OnHierarchyGUI(int instanceId, Rect selectionRect) {
-        if (Event.current != null 
-            &amp;&amp; selectionRect.Contains(Event.current.mousePosition)
-            &amp;&amp;Event.current.button==1&amp;&amp;Event.current.type&lt;=EventType.MouseUp) {
-            GameObject selectedGameObject = EditorUtility.InstanceIDToObject(instanceId) as GameObject;
-            if (selectedGameObject) {
-                Vector2 mousePosition = Event.current.mousePosition;
-                EditorUtility.DisplayPopupMenu(new Rect(mousePosition.x,mousePosition.y,0,0),&quot;Window/Test&quot;,null );
-                Event.current.Use();
-            }
-        }
-    }
-    [MenuItem(&quot;Window/Test/tools1&quot;)]
-    static void Test() {}
-    [MenuItem(&quot;Window/Test/tools2&quot;)]
-    static void Test1() { }
-    [MenuItem(&quot;Window/Test/tools3&quot;)]
-    static void Test2() { }
-}
-</code></pre>
-<h4 id="拓展inspector视图">拓展Inspector视图</h4>
-<h5 id="拓展原生组件">拓展原生组件</h5>
-<pre><code class="language-c#">[CustomEditor(typeof(Camera))]
-public class Extension:Editor{
-    public override void OnInspectorGUI(){
-        if (GUILayout.Button(&quot;extensionButton&quot;)) {/*function*/ }
-        base.OnInspectorGUI();
-    }
-}
-</code></pre>
-<h5 id="拓展继承组件">拓展继承组件</h5>
-<p>Unity将大量的Editor绘制方法封装在内部DLL文件里，开发者无法调用它的方法，只能通过反射的方式调用内部未公开的方法。</p>
-<pre><code class="language-C#">[CustomEditor(typeof(Transform))]
-public class Extension:Editor{
-    private Editor m_Editor;
-    private void OnEnable(){
-        m_Editor = Editor.CreateEditor(target,     Assembly.GetAssembly(typeof(Editor)).GetType(&quot;UnityEditor.TransformInspector&quot;, true));
-    }
-    public override void OnInspectorGUI(){
-        if (GUILayout.Button(&quot;extensionButton&quot;)) { }
-        GUI.enabled = false;//------------开始禁止
-        m_Editor.OnInspectorGUI();//调用系统绘制方法
-        GUI.enabled = true;//------------结束禁止
-        if (GUILayout.Button(&quot;extensionButton2&quot;)) { }
-    }
-}
-</code></pre>
-<h5 id="组件不可编辑">组件不可编辑</h5>
-<p>HideFlag可以使用按位或(|)同时保持多个属性</p>
-<pre><code class="language-c#">GUI.enabled = false;//------------开始禁止
-////m_Editor.OnInspectorGUI();//调用系统绘制方法
-GUI.enabled = true;//------------结束禁止
-
-//全局锁定与解锁修改
-public class Extension{
-    [MenuItem(&quot;GameObject/3D Object/Lock/Lock&quot;)]
-    static void Lock(){
-        if (Selection.gameObjects != null){
-            foreach (var gameObject in Selection.gameObjects)       			                       gameObject.hideFlags = HideFlags.NotEditable;
-        }
-    }
-    [MenuItem(&quot;GameObject/3D Object/Lock/Unlock&quot;)]
-    static void Unlock(){
-        if (Selection.gameObjects != null){
-            foreach (var gameObject in Selection.gameObjects) {
-                gameObject.hideFlags = HideFlags.None;
-            }
-        }
-    }
-}
-</code></pre>
-<h5 id="context菜单">Context菜单</h5>
-<p>Inspector中的组件右键菜单，如果想给所有组件都添加上该菜单<code>Transform</code>&gt;&gt;&gt;<code>Component</code></p>
-<pre><code class="language-c#">public class Extension {
-    [MenuItem(&quot;CONTEXT/Transform/NewContext1&quot;)]
-    static void NewContext1(MenuCommand command) {
-        Debug.Log(command.context.name);
-    }
-}
-</code></pre>
-<p>该设置也可以用在自己写的脚本中,用于读取和写入组件属性</p>
-<pre><code class="language-c#">using UnityEngine;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-public class Extension:MonoBehaviour{
-    public string contextName;
-    #if UNITY_EDITOR
-    [MenuItem(&quot;CONTEXT/Extension/NewContext1&quot;)]
-    static void NewContext1(MenuCommand command) {
-        Extension extension = command.context as Extension;
-        if(extension!=null)extension.contextName = &quot;HelloWorld&quot;;
-    }
-    #endif
-}
-//#if UNITY_EDITOR     #endif只会在Editor模式下执行，发布后会被剔除
-</code></pre>
-<p>如果自定义菜单和系统菜单项目重名，还可以覆盖</p>
-<pre><code class="language-c#">[ContextMenu(&quot;Remove Component&quot;)]
-void RemoveComponent(){
-    Debug.Log(&quot;RemoveComponent&quot;);
-    //等一会在删除自己
-    UnityEditor.EditorApplication.delayCall = delegate(){DestoryImmediate(this);};
-}
-</code></pre>
-<h4 id="拓展scene视图">拓展Scene视图</h4>
-<h5 id="辅助元素该类不在editor目录下">辅助元素（该类不在Editor目录下）</h5>
-<pre><code class="language-c#">public class Extension:MonoBehaviour{
-    private void OnDrawGizmosSelected(){
-        Gizmos.color = Color.red;
-        Gizmos.DrawLine(transform.position,Vector3.zero);
-        Gizmos.DrawCube(Vector3.zero, Vector3.one);
-        //其他Gizmos.function()
-    }
-    //辅助元素不依赖选择对象出现(始终显示zaiScene视图中)
-    private void OnDrawGizmos(){
-        Gizmos.DrawSphere(transform.position,1);
-    }
-}
-</code></pre>
-<h5 id="辅助ui">辅助UI</h5>
-<p>在Scene中我们可以添加EditorGUI，方便在视图中处理一些操作。EditorGUI的代码需要在**Handles.BeginGUI()<strong>和</strong>Handles.EndGUI()**中间绘制完成。</p>
-<pre><code class="language-c#">[CustomEditor(typeof(Camera))]
-public class Extension:Editor{
-    private void OnSceneGUI(){
-        Camera camera = target as Camera;
-        if (camera != null){
-            Handles.color = Color.red;
-         Handles.Label(camera.transform.position,camera.transform.position.ToString());
-            Handles.BeginGUI();
-            GUI.backgroundColor = Color.red;
-            if (GUILayout.Button(&quot;click&quot;, GUILayout.Width(200f))){
-                Debug.LogFormat(&quot;click={0}&quot;,camera.name);
-            }
-            GUILayout.Label(&quot;Label&quot;);
-            Handles.EndGUI();
-        }
-    }
-}
-</code></pre>
-<h5 id="常驻辅助ui">常驻辅助UI</h5>
-<pre><code class="language-c#">public class Extension{
-    [InitializeOnLoadMethod]
-    static void InitializeOnLoadMethod(){
-        SceneView.duringSceneGui += delegate(SceneView sceneView){
-            Handles.BeginGUI();
-            GUI.Label(new Rect(0,0,50,15),&quot;title&quot; );
-            GUI.Button(new Rect(0, 20, 50, 50)
-                , AssetDatabase.GetBuiltinExtraResource&lt;Texture&gt;(&quot;Assets/unity.png&quot;));
-            Handles.EndGUI();
-        };
-    }
-}
-</code></pre>
-<h5 id="禁用选中对象">禁用选中对象</h5>
-<pre><code class="language-c#">public class Extension{
-    [InitializeOnLoadMethod]
-    static void InitializeOnLoadMethod(){
-        SceneView.duringSceneGui += delegate(SceneView sceneView){
-            Event e = Event.current;
-            if (e != null){
-                //获取它的controllID后，即可禁止将点击事件穿透下去
-                //表示禁止接收控制焦点
-                int controlID = GUIUtility.GetControlID(FocusType.Passive);
-                if (e.type == EventType.Layout){
-                    HandleUtility.AddDefaultControl(controlID);
-                }
-            }
-        };
-    }
-}
-</code></pre>
-<h4 id="拓展game视图">拓展Game视图</h4>
-<p>Game视图拓展分**1.<strong>运行模式</strong>2.**非运行模式</p>
-<pre><code class="language-C#">#if UNITY_EDITOR
-[ExecuteInEditMode]//非运行模式下也会执行代码的生命周期
-public class Extension:MonoBehaviour{
-    void OnGUI(){
-        if(GUILayout.Button(&quot;Click&quot;)){
-            Debug.Log(&quot;Click!&quot;);
-        }
-        GUILayout.Label(&quot;HelloWorld&quot;);
-    }
-}
-#endif
-</code></pre>
-<h4 id="menuitem菜单">MenuItem菜单</h4>
-<h5 id="覆盖系统菜单">覆盖系统菜单</h5>
-<pre><code class="language-c#">[MenuItem(&quot;GameObject/UI/Text&quot;)]
-static void CreateNewText(){
-    //todo
-}
-</code></pre>
-<h5 id="自定义菜单">自定义菜单</h5>
-<pre><code class="language-c#">[MenuItem(&quot;Root/TestCheck&quot;,false,1)]
-static void checkFunction() {
-    var menuPath = &quot;Root/TestCheck&quot;;
-    bool m_Checked = Menu.GetChecked(menuPath);
-    Menu.SetChecked(menuPath,!m_Checked);
-}
-[MenuItem(&quot;Root/TestGray&quot;)]
-static void grayFunction() { }
-[MenuItem(&quot;Root/TestGray&quot;,true,20)]
-static bool grayFunctionValidate() {
-    return false;//false表示置灰，不可点击
-}
-</code></pre>
-<h4 id="面板拓展">面板拓展</h4>
-<h5 id="inspector面板">Inspector面板</h5>
-<pre><code class="language-C#">#if UNITY_EDITOR
-using UnityEditor;
-#endif
-using UnityEditor.Experimental.TerrainAPI;
-using UnityEngine;
-
-#if UNITY_EDITOR
-[CustomEditor(typeof(PoJo))]
-public class Extension:Editor
-{
-    private bool m_EnableToogle;
-    public override void OnInspectorGUI()
-    {
-        PoJo poJo = target as PoJo;
-        poJo.scrollPos = EditorGUILayout.BeginScrollView(poJo.scrollPos, false, true);
-        poJo.myName = EditorGUILayout.TextField(&quot;text&quot;, poJo.myName);
-        poJo.myId = EditorGUILayout.IntField(&quot;int&quot;, poJo.myId);
-
-        poJo.prefab = EditorGUILayout.ObjectField(&quot;GameObject&quot;, poJo.prefab,typeof(GameObject),true)as GameObject;
-        //绘制按钮
-        EditorGUILayout.BeginHorizontal();
-        GUILayout.Button(&quot;1&quot;);
-        GUILayout.Button(&quot;2&quot;);
-        poJo.myEnum = (PoJo.MyEnum) EditorGUILayout.EnumPopup(&quot;MyEnum:&quot;, poJo.myEnum);
-        EditorGUILayout.EndHorizontal();
-        
-        //toogle component
-        m_EnableToogle = EditorGUILayout.BeginToggleGroup(&quot;EnableToogle&quot;, m_EnableToogle);
-        poJo.toogle1 = EditorGUILayout.Toggle(&quot;toogle1&quot;, poJo.toogle1);
-        poJo.toogle2 = EditorGUILayout.Toggle(&quot;toogle2&quot;, poJo.toogle2);
-        EditorGUILayout.EndToggleGroup();
-        EditorGUILayout.EndScrollView();
-    }
-}
-#endif
-</code></pre>
-<h5 id="编辑器窗口editor-window">编辑器窗口Editor Window</h5>
-<pre><code class="language-c#">public class CustomWindow:EditorWindow,IHasCustomMenu
-{
-    [MenuItem(&quot;Window/CustomWindow&quot;)]
-    static void Init(){
-        CustomWindow window = (CustomWindow) EditorWindow.GetWindow(typeof(CustomWindow));
-        window.Show();
-    }
-    private Texture m_MyTexture = null;
-    private float m_MyFloat = 0.5f;
-    private void Awake(){
-        Debug.LogFormat(&quot;窗口初始化调用&quot;);
-        m_MyTexture = AssetDatabase.LoadAssetAtPath&lt;Texture&gt;(&quot;Assets/unity.png&quot;);
-    }
-    private void OnGUI(){
-        GUILayout.Label(&quot;HelloWorld&quot;,EditorStyles.boldLabel);
-        m_MyFloat = EditorGUILayout.Slider(&quot;Slide&quot;, m_MyFloat, -5, 5);
-        GUI.DrawTexture(new Rect(0,30,100,100),m_MyTexture);
-    }
-    private void OnDestroy(){/*销毁时调用*/}
-    private void OnFocus(){/*拥有焦点时调用*/}
-    private void OnHierarchyChange(){/*hierarchy视图发生变化时调用*/}
-    private void OnInspectorUpdate(){/*Inspector每帧更新*/}
-    private void OnLostFocus(){ /*失去焦点时调用*/}
-    private void OnProjectChange(){/*Project视图发生变化时调用*/}
-    private void OnSelectionChange(){/*在hierarchy或project视图中选择一个对象时调用*/}
-    private void Update(){/*每帧调用*/}
-    public void AddItemsToMenu(GenericMenu menu){
-        menu.AddDisabledItem(new GUIContent(&quot;Disable&quot;));
-        menu.AddItem(new GUIContent(&quot;Test1&quot;),true, () =&gt;{/*todo*/});
-        menu.AddSeparator(&quot;Test/&quot;);
-        menu.AddItem(new GUIContent(&quot;Test/Test3&quot;),true, () =&gt; { });
-    }
-}
-</code></pre>
-<h4 id="自定义导入类型">自定义导入类型</h4>
-<pre><code class="language-c#">[ScriptedImporter(1,&quot;custom&quot;)]
-public class ImportListener : ScriptedImporter{
-    public override void OnImportAsset(AssetImportContext ctx){
-        var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        var position = JsonUtility.FromJson&lt;Vector3&gt;(File.ReadAllText(ctx.assetPath));
-        cube.transform.position = position;
-        cube.transform.localScale = Vector3.one;
-        ctx.AddObjectToAsset(&quot;obj&quot;,cube);
-        ctx.SetMainObject(cube);
-        //添加材质
-        var material = new Material(Shader.Find(&quot;Standard&quot;));
-        material.color = Color.red;
-        ctx.AddObjectToAsset(&quot;material&quot;,material);
-        var tempMesh = new Mesh();
-        DestroyImmediate(tempMesh);
-    }
-}
-</code></pre>
-<h3 id="游戏脚本">游戏脚本</h3>
-<h5 id="脚本序列化">脚本序列化</h5>
-<pre><code class="language-c#">#if UNITY_EDITOR
-[CustomEditor(typeof(SerializedClass))]
-public class ScriptInspector : Editor{
-    public override void OnInspectorGUI(){
-        serializedObject.Update();//更新最新数据
-        EditorGUI.BeginChangeCheck();//标记检查
-        SerializedProperty property = serializedObject.FindProperty(&quot;id&quot;);//获取数据信息
-        property.intValue = EditorGUILayout.IntField(&quot;主键&quot;, property.intValue);//保存数据
-        property = serializedObject.FindProperty(&quot;name&quot;);
-        property.stringValue = EditorGUILayout.TextField(&quot;姓名&quot;, property.stringValue);
-        property = serializedObject.FindProperty(&quot;prefab&quot;);
-        property.objectReferenceValue = EditorGUILayout.ObjectField(&quot;游戏对象&quot;,property.objectReferenceValue,typeof(GameObject),true);
-        EditorGUILayout.PropertyField(serializedObject.FindProperty(&quot;targets&quot;), true);
-        //标记检查发生变化
-        if (EditorGUI.EndChangeCheck());//标记检查发生变化
-        if (GUI.changed);//判断面板元素变化
-        //保存全部数据
-        serializedObject.ApplyModifiedProperties();
-    }
-}
-#endif
-</code></pre>
-<h5 id="序列化反序列化">序列化反序列化</h5>
-<pre><code class="language-c#">public class SerializedClass:MonoBehaviour,ISerializationCallbackReceiver{
-    [SerializeField] private List&lt;Sprite&gt; m_Values = new List&lt;Sprite&gt;();
-    [SerializeField]private List&lt;string&gt; m_Keys = new List&lt;string&gt;();
-    public Dictionary&lt;string, Sprite&gt; m_SpriteDic = new Dictionary&lt;string, Sprite&gt;();
-    public void OnBeforeSerialize(){
-        m_Keys.Clear();
-        m_Values.Clear();
-        foreach (KeyValuePair&lt;string,Sprite&gt; pair in m_SpriteDic){
-            m_Keys.Add(pair.Key);
-            m_Values.Add(pair.Value);
-        }
-    }
-    public void OnAfterDeserialize(){
-        m_SpriteDic.Clear();
-        for (int i = 0; i &lt; m_Keys.Count; i++){
-            m_SpriteDic[m_Keys[i]] = m_Values[i];
-        }
-    }
-}
-
-#if UNITY_EDITOR
-[CustomEditor(typeof(SerializedClass))]
-public class Extension:Editor{
-    public override void OnInspectorGUI(){
-        serializedObject.Update();
-        SerializedProperty propertyKey = serializedObject.FindProperty(&quot;m_Keys&quot;);
-        SerializedProperty propertyValue = serializedObject.FindProperty(&quot;m_Values&quot;);
-        GUILayout.BeginVertical();
-        for (int i = 0; i &lt; propertyKey.arraySize; i++){
-            GUILayout.BeginHorizontal();
-            SerializedProperty key = propertyKey.GetArrayElementAtIndex(i);
-            SerializedProperty value = propertyValue.GetArrayElementAtIndex(i);
-            key.stringValue = EditorGUILayout.TextField(&quot;Key&quot;, key.stringValue);
-            value.objectReferenceValue =
-                EditorGUILayout.ObjectField(&quot;Value&quot;, value.objectReferenceValue, typeof(Sprite),false);
-            GUILayout.EndHorizontal();
-        }
-        GUILayout.EndVertical();
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button(&quot;+&quot;)){
-            (target as SerializedClass).m_SpriteDic[propertyKey.arraySize.ToString()] = null;
-        }
-        GUILayout.EndHorizontal();
-        serializedObject.ApplyModifiedProperties();
-    }
-}
-#endif
-</code></pre>
-<h5 id="scriptable-object">Scriptable Object</h5>
-<pre><code class="language-C#">//菜单点击生成
-[CreateAssetMenu]
-public class Displayer : ScriptableObject{
-    [SerializeField] public List&lt;DisplayerInfo&gt; m_DisplayerInfo;
-    [Serializable]public class DisplayerInfo{
-        public int id;
-        public string name;
-    }
-}
-public class DisplayerReader : MonoBehaviour{
-    private void Start(){
-        Displayer display = Resources.Load&lt;Displayer&gt;(&quot;Path&quot;);//读取
-    }
-}
-</code></pre>
-<pre><code class="language-c#">public class Extension{
-    [MenuItem(&quot;Assets/Create ScriptableObject&quot;)]
-    static void CreateScriptableObject(){
-        Displayer displayer = ScriptableObject.CreateInstance&lt;Displayer&gt;();
-        displayer.m_DisplayerInfo = new List&lt;Displayer.DisplayerInfo&gt;();
-        displayer.m_DisplayerInfo.Add(new Displayer.DisplayerInfo() {id = 100, name = &quot;test&quot;});
-        //将资源保存到本地
-        AssetDatabase.CreateAsset(displayer,&quot;Assets/Resources/displayer.asset&quot;);
-        AssetDatabase.SaveAssets();
-        AssetDatabase.Refresh();
-    }
-}
-</code></pre>
-]]></content>
-    </entry>
-    <entry>
-        <title type="html"><![CDATA[Android]]></title>
-        <id>https://sunxiaohang.github.io/post/android/</id>
-        <link href="https://sunxiaohang.github.io/post/android/">
-        </link>
-        <updated>2020-04-06T11:24:25.000Z</updated>
-        <summary type="html"><![CDATA[<p>初学Android时的一些基础知识汇总，作为理解Android基本原理的实验性代码，不具有参考价值，主要参考书目为第一行代码</p>
-]]></summary>
-        <content type="html"><![CDATA[<p>初学Android时的一些基础知识汇总，作为理解Android基本原理的实验性代码，不具有参考价值，主要参考书目为第一行代码</p>
-<!-- more -->
-<h4 id="activity">Activity</h4>
-<pre><code>    protected void onCreate(Bundle savedInstanceState) {
-        Log.i(&quot;target&quot;,&quot;Activity onCreate&quot;);
-    }
-    protected void onStart() {
-        Log.i(&quot;target&quot;,&quot;Activity onStart&quot;);
-    }
-    protected void onRestart() {
-        Log.i(&quot;target&quot;,&quot;Activity onRestart&quot;);
-    }
-    protected void onResume() {
-        Log.i(&quot;target&quot;,&quot;Activity onResume&quot;);
-    }
-    protected void onPause() {
-        Log.i(&quot;target&quot;,&quot;Activity onPause&quot;);
-    }
-    protected void onStop() {
-        Log.i(&quot;target&quot;,&quot;Activity onStop&quot;);
-    }
-    protected void onDestroy() {
-        Log.i(&quot;target&quot;,&quot;Activity onDestroy&quot;);
-    }
-</code></pre>
-<h5 id="不同情境下生命周期方法执行顺序">不同情境下生命周期方法执行顺序</h5>
-<p><em>正常情况下生命周期</em><br>
-<code>从进入activity到按下回退键退出activity</code></p>
-<pre><code>com.example.root.activitylifecycle I/target: Activity onCreate
-com.example.root.activitylifecycle I/target: Activity onStart
-com.example.root.activitylifecycle I/target: Activity onResume
-com.example.root.activitylifecycle I/target: Activity onPause
-com.example.root.activitylifecycle I/target: Activity onStop
-com.example.root.activitylifecycle I/target: Activity onDestroy
-</code></pre>
-<p><em>屏幕灭掉</em></p>
-<pre><code>com.example.root.activitylifecycle I/target: Activity onCreate
-com.example.root.activitylifecycle I/target: Activity onStart
-com.example.root.activitylifecycle I/target: Activity onResume
-com.example.root.activitylifecycle I/target: Activity onPause
-com.example.root.activitylifecycle I/target: Activity onStop
-</code></pre>
-<p><code>可以看到并没有执行onDestroy方法，接下来点亮屏幕</code></p>
-<pre><code>com.example.root.activitylifecycle I/target: Activity onRestart
-com.example.root.activitylifecycle I/target: Activity onStart
-com.example.root.activitylifecycle I/target: Activity onResume
-</code></pre>
-<p><em>跳转到其他activity</em></p>
-<pre><code>com.example.root.activitylifecycle I/target: Activity onCreate
-com.example.root.activitylifecycle I/target: Activity onStart
-com.example.root.activitylifecycle I/target: Activity onResume
-com.example.root.activitylifecycle I/target: Activity onPause
-com.example.root.activitylifecycle I/target: SecondActivity onCreate
-com.example.root.activitylifecycle I/target: SecondActivity onStart
-com.example.root.activitylifecycle I/target: SecondActivity onResume
-com.example.root.activitylifecycle I/target: Activity onStop
-</code></pre>
-<p>注意：当第二个activity执行到<code>onResume</code>方法后第一个activity才执行<code>onStop</code>方法,即当第二个activity就绪之后第一个activity才执行onStop方法，但第一个activity并没有执行onDestroy方法，它被放入后退栈中。<br>
-<code>接下来按下退格键返回第一个activity</code></p>
-<pre><code>com.example.root.activitylifecycle I/target: SecondActivity onPause
-com.example.root.activitylifecycle I/target: Activity onRestart
-com.example.root.activitylifecycle I/target: Activity onStart
-com.example.root.activitylifecycle I/target: Activity onResume
-com.example.root.activitylifecycle I/target: SecondActivity onStop
-com.example.root.activitylifecycle I/target: SecondActivity onDestroy
-</code></pre>
-<p>第二个activity的生命周期执行完成，第一个activity执行<code>onRestart</code>到<code>onResume</code>重新就绪,再次按下退格键</p>
-<pre><code>com.example.root.activitylifecycle I/target: Activity onPause
-com.example.root.activitylifecycle I/target: SecondActivity onStop
-com.example.root.activitylifecycle I/target: SecondActivity onDestroy
-</code></pre>
-<p>第一个activity生命周期执行结束</p>
-<h5 id="activity异常时数据保存于数据恢复">Activity异常时数据保存于数据恢复</h5>
-<p>当屏幕旋转的时候activity就会重新执行onCreate,我们可以用屏幕旋转模拟activity异常销毁</p>
-<pre><code>    protected void onSaveInstanceState(Bundle outState) {
-        Log.i(&quot;target&quot;,&quot;Activity onSaveInstanceState&quot;);
-        outState.putString(&quot;target&quot;,&quot;this is onSaveInstanceState saved bundle data&quot;);
-    }
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        Log.i(&quot;target&quot;,&quot;Activity onRestoreInstanceState&quot;);
-        Log.i(&quot;target&quot;,savedInstanceState.getString(&quot;target&quot;));
-    }
-</code></pre>
-<p><code>日志信息</code></p>
-<pre><code>com.example.root.activitylifecycle I/target: Activity onSaveInstanceState
-com.example.root.activitylifecycle I/target: Activity onRestoreInstanceState
-com.example.root.activitylifecycle I/target: this is onSaveInstanceState saved bundle data
-</code></pre>
-<h5 id="activity的launchmode">Activity的LaunchMode</h5>
-<ul>
-<li><code>standard模式</code>：这是默认模式，每次激活Activity时都会创建Activity实例，并放入任务栈中，使用场景（大多数Activity）</li>
-<li><code>singleTop模式</code>：如果任务栈的栈顶正好存在该Activity的实例，就重用该实例（会调用实例的onNewIntent()），否则就会创建新的实例并放入栈顶，计时栈中已经存在该Activity的实例，只要不在栈顶，都会创建新的实例，使用场景（新闻类或者阅读类App的内容页面）</li>
-<li><code>singleTask模式</code>：如果栈中已经有该Activity的实例，就重写该实例（会调用实例的onNewIntent()）。重用时，会让该实例回到栈顶，因此在他上面的实例将会被移出栈，如果栈中不存在该实例，将创建新的实例放入栈中，使用场景如浏览器的主界面，不管从多少个应用启动浏览器，只会启动主界面一次，其余都会走onNewIntent，并清空主界面上的其他页面</li>
-<li><code>singleInstance模式</code>：在一个新栈中创建该Activity的实例，并让多个应用共享该栈中的该activity实例，一旦该模式的activity实例已经存在于某个栈中，任何英语再激活该activity时都会重用该栈中的实例，会调用（onNewIntent（）），其效果相当于多个应用共享一个应用，不管谁激活该activity都会进入同一个应用中，使用场景（闹铃提示，将闹钟提醒与闹钟设置分离），singleinstance不要勇于中间页面，如果用于中间页面，跳转会有问题（A-&gt;B-&gt;(singleinstance)-&gt;C）完全退出后再次启动首先打开的是B</li>
-</ul>
-<h5 id="activity的flags">Activity的Flags</h5>
-<p><code>intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)</code>;//指定Activity为&quot;singleTask&quot;启动模式<br>
-<code>intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)</code>;//指定Activity为&quot;singleTop&quot;启动模式<br>
-<code>intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)</code>;//位于其上的Activity都要出栈，类似&quot;singleTask&quot;<br>
-<code>intent.setFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)</code>;//不会出现在Activity的历史列表中，等同于<code>android:excludeFromRecents=&quot;true&quot;</code></p>
-<h5 id="intentfilter的匹配规则">IntentFilter的匹配规则</h5>
-<p>为了匹配过滤列表，需要同时匹配过滤列表中的action，category，data信息。一个Activity可以有多个intentFilter，一个Intent只要能匹配任何一组intentFilter即可成功启动对应Activity</p>
-<h6 id="action的匹配规则">action的匹配规则</h6>
-<p>action区分大小写，必须存在，只需匹配一个<br>
-category的匹配规则可以没有，若是有，必须全部匹配（可以比过滤规则中少）<br>
-示例：</p>
-<pre><code>&lt;intent-filter&gt;
-    &lt;action android:name=&quot;com.example.root.saveinstancelearn.secondactivity&quot;/&gt;
-    &lt;category android:name=&quot;android.intent.category.DEFAULT&quot;/&gt;
-    &lt;category android:name=&quot;com.example.root.saveinstancelearn.secondactivity&quot;/&gt;
-&lt;/intent-filter&gt;
-</code></pre>
-<pre><code>Intent intent=new Intent(&quot;com.example.root.saveinstancelearn.secondactivity&quot;);               
-intent.addCategory(Intent.CATEGORY_DEFAULT);
-startActivity(intent);
-</code></pre>
-<h5 id="data的匹配规则">data的匹配规则</h5>
-<p>data与action类似(data语法如下)</p>
-<pre><code>&lt;data android:scheme=&quot;string&quot;
-    android:host=&quot;string&quot;
-    android:port=&quot;string&quot;
-    android:path=&quot;string&quot;
-    android:pathPattern=&quot;string&quot;
-    android:pathPrefix=&quot;string&quot;
-    android:mimeType=&quot;string&quot; /&gt;
-</code></pre>
-<p>data有两部分组成，mimeType和URI。mimeType指定媒体类型，比如image/jpeg等<br>
-匹配示例：</p>
-<pre><code>&lt;intent-filter&gt;
-    &lt;data android:mimeType=&quot;image/*&quot;/&gt;
-&lt;intent-filter&gt;
-</code></pre>
-<p><code>intent.setDataAndType(Uri.parse(&quot;file://abc&quot;),&quot;image/png&quot;)</code>;</p>
-<blockquote>
-<p>ps:如果要为Intent指定完整的data，必须调用setDataAndType方法，不能先调用setData在调用setType，以为这两个方法会清除对方的值；</p>
-</blockquote>
-<p>实例</p>
-<pre><code>&lt;intent-filter&gt;
-    &lt;data android:mimeType=&quot;video/mpeg&quot; android:scheme=&quot;http&quot;/&gt;
-    &lt;data android:mimeType=&quot;audio/mpeg&quot; android:scheme=&quot;http&quot;/&gt;
-&lt;/intent-filter&gt;
-</code></pre>
-<p><code>intent.setDataAndType(Uri.parse(&quot;http://abc&quot;),&quot;video/mpeg&quot;)</code>;或者<br>
-<code>intent.setDataAndType(Uri.parse(&quot;http://abc&quot;),&quot;audio/mpeg&quot;)</code>;</p>
-<h4 id="service">Service</h4>
-<p>创建一个Binder类继承自<code>android.os.Binder</code>里面有两个方法，分别用于设置通信内容和获取Myservice对象。</p>
-<pre><code>  public class Binder extends android.os.Binder{
-      public void setData(String data){
-          MyService.this.data=data;
-      }
-      public MyService getService(){
-          return MyService.this;
-      }
-  }
-</code></pre>
-<p>下面是自定义的Myservice对象继承自Service类，并覆写<code>onCreate</code> <code>onDestory</code> <code>onBind</code>方法。</p>
-<pre><code>  public MyService() extends Service {
-    @Override
-    public void onCreate() {
-        running=true;
-        super.onCreate();
-        new Thread(){
-            @Override
-            public void run() {
-                super.run();
-                int i=0;
-                while (running){
-                    i++;
-                    String str=i+&quot;:&quot;+data;
-                    System.out.println(str);
-                    if(callback!=null){
-                        callback.onDataChange(str);
-                    }
-                    try {
-                        sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }.start();
-    }
- }
-  @Override
-  public void onDestroy() {
-      running=false;
-      super.onDestroy();
-  }
-  @Override
-  public IBinder onBind(Intent intent) {
-      return new Binder();
-  }
-}
-</code></pre>
-<p>之后需要创建一个接口用于检测通信消息发生变化的回调接口。</p>
-<pre><code>  public interface Callback{
-      void onDataChange(String data);
-  }
-</code></pre>
-<p>在主UI线程中添加一些按钮并绑定相应的点击事件用于启动和停止服务，以及更行Service数据。用来检测Service是否与UI线程实时通信。</p>
-<pre><code>public class MainActivity extends AppCompatActivity implements View.OnClickListener, ServiceConnection {
-  private Button bindService;
-  private Button unBindService;
-  private Button syncData;
-  private EditText editText;
-  private MyService.Binder binder;
-  private TextView textView;
-
-  @Override
-  protected void onCreate(Bundle savedInstanceState) {
-      super.onCreate(savedInstanceState);
-      setContentView(R.layout.activity_main);
-      initView();
-  }
-
-  private void initView() {
-      bindService = (Button) findViewById(R.id.bindService);
-      unBindService = (Button) findViewById(R.id.unBindService);
-      syncData = (Button) findViewById(R.id.syncData);
-      editText= (EditText) findViewById(R.id.editText);
-      textView= (TextView) findViewById(R.id.tv_textout);
-      bindService.setOnClickListener(this);
-      unBindService.setOnClickListener(this);
-      syncData.setOnClickListener(this);
-  }
-
-  @Override
-  public void onClick(View view) {
-      switch (view.getId()) {
-          case R.id.bindService:
-              bindService(new Intent(this, MyService.class), this, Context.BIND_AUTO_CREATE);
-              break;
-          case R.id.unBindService:
-              unbindService(this);
-              break;
-          case R.id.syncData:
-              if(binder!=null){
-                  binder.setData(editText.getText().toString());
-              }
-              break;
-      }
-  }
-
-  @Override
-  public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-      binder= (MyService.Binder) iBinder;
-      binder.getService().setCallback(new MyService.Callback() {
-          @Override
-          public void onDataChange(String data) {
-              Message msg=new Message();
-              Bundle b=new Bundle();
-              b.putString(&quot;data&quot;,data);
-              msg.setData(b);
-              handler.sendMessage(msg);
-          }
-      });
-  }
-  private Handler handler=new Handler(){
-      @Override
-      public void handleMessage(Message msg) {
-          super.handleMessage(msg);
-          textView.setText(msg.getData().getString(&quot;data&quot;));
-      }
-  };
-  @Override
-  public void onServiceDisconnected(ComponentName componentName) {
-  }
-}
-</code></pre>
-<h4 id="java-io流">Java IO流</h4>
-<table>
-<thead>
-<tr>
-<th>分类</th>
-<th style="text-align:center">字节输入流</th>
-<th style="text-align:center">字节输出流</th>
-<th style="text-align:center">字符输入流</th>
-<th style="text-align:center">字符输出流</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>抽象基类</td>
-<td style="text-align:center"><code>InputStream</code></td>
-<td style="text-align:center"><code>OutputStream</code></td>
-<td style="text-align:center"><code>Reader</code></td>
-<td style="text-align:center"><code>Writer</code></td>
-</tr>
-<tr>
-<td>访问文件</td>
-<td style="text-align:center">FileInputStream</td>
-<td style="text-align:center">FileOutputStream</td>
-<td style="text-align:center">FileReader</td>
-<td style="text-align:center">FileWriter</td>
-</tr>
-<tr>
-<td>访问数组</td>
-<td style="text-align:center">ByteArrayInputStream</td>
-<td style="text-align:center">BiteArrayOutputStream</td>
-<td style="text-align:center">CharArrayReader</td>
-<td style="text-align:center">CharArrayWriter</td>
-</tr>
-<tr>
-<td>访问管道</td>
-<td style="text-align:center">PipedInputStream</td>
-<td style="text-align:center">PipedOutputStream</td>
-<td style="text-align:center">PipedReader</td>
-<td style="text-align:center">PipedWriter</td>
-</tr>
-<tr>
-<td>访问字符串</td>
-<td style="text-align:center"></td>
-<td style="text-align:center"></td>
-<td style="text-align:center">StringReader</td>
-<td style="text-align:center">StringWriter</td>
-</tr>
-<tr>
-<td>缓冲流</td>
-<td style="text-align:center">BufferedInputStream</td>
-<td style="text-align:center">BufferedOutputStream</td>
-<td style="text-align:center">BufferedReader</td>
-<td style="text-align:center">BufferedWriter</td>
-</tr>
-<tr>
-<td>转换流</td>
-<td style="text-align:center"></td>
-<td style="text-align:center"></td>
-<td style="text-align:center">InputStreamReader</td>
-<td style="text-align:center">OutputStreamWriter</td>
-</tr>
-<tr>
-<td>对象流</td>
-<td style="text-align:center">ObjectInputStream</td>
-<td style="text-align:center">ObjectOutputStream</td>
-<td style="text-align:center"></td>
-<td style="text-align:center"></td>
-</tr>
-<tr>
-<td>抽象基类</td>
-<td style="text-align:center"><code>FilterInputStream</code></td>
-<td style="text-align:center"><code>FilterOutputStream</code></td>
-<td style="text-align:center"><code>FilterReader</code></td>
-<td style="text-align:center"><code>FilterWriter</code></td>
-</tr>
-<tr>
-<td>打印流</td>
-<td style="text-align:center"></td>
-<td style="text-align:center">PrintStream</td>
-<td style="text-align:center"></td>
-<td style="text-align:center">PrintWriter</td>
-</tr>
-<tr>
-<td>推回输入流</td>
-<td style="text-align:center">PushbackInputStream</td>
-<td style="text-align:center"></td>
-<td style="text-align:center">PushbackReader</td>
-<td style="text-align:center"></td>
-</tr>
-<tr>
-<td>特殊流</td>
-<td style="text-align:center">DataInputStream</td>
-<td style="text-align:center">DataOutputStream</td>
-<td style="text-align:center"></td>
-<td style="text-align:center"></td>
-</tr>
-</tbody>
-</table>
-<p>其中基类都是抽象类，不同的子类对应不同的用途<br>
-首先我们看一下字节流与字符流的不同之处</p>
-<blockquote>
-<p>字节流是由字节组成的,<a href="http://baike.baidu.com/item/%E5%AD%97%E7%AC%A6">字符</a>流是由字符组成的. Java里字符由两个字节组成.字节流是最基本的，所有的InputStream和OutputStream的子类都是，主要用在处理二进制数据，它是按字节来处理的但实际中很多的数据是文本，又提出了字符流的概念，它是按<a href="http://baike.baidu.com/item/%E8%99%9A%E6%8B%9F%E6%9C%BA">虚拟机</a>的encode来处理，也就是要进行<a href="http://baike.baidu.com/item/%E5%AD%97%E7%AC%A6%E9%9B%86">字符集</a>的转化。</p>
-</blockquote>
-<p>通俗的来讲，字节流就是二进制流，通常的图片，视频，音频文件都可以通过字节流来读写，字符流就是字符串，中文字符，等unicode字符编码后的字符集。字节流可以通过转换流（即<code>InputStreamReader</code>，<code>InputStreamWriter</code>）转换为字符流（转化的过程就是编码的过程），缓冲流是为了提高读写效率提供的类，可以开辟出一个缓冲区用于高速存取数据流（分别对应字节流和字符流）。</p>
-<h4 id="字节流读写文件的实例">字节流读写文件的实例</h4>
-<pre><code>public class FileCopy {
-	public void fileCopy(String sourceFile,String targetFile) throws IOException{
-		FileInputStream in=new FileInputStream(sourceFile);
-		FileOutputStream out=new FileOutputStream(targetFile);
-		byte[] buffer=new byte[2048];//创建2048个字节大小的缓冲区（可根据拷贝文件大小自行定义）
-		int value;
-		while((value=in.read(buffer))!=-1){//循环读写
-			out.write(buffer, 0, value);
-		}
-                if(in!=null)in.close();//关闭i/o流
-                if(out!=null)out.close();
-	}
-	public static void main(String[] args) throws IOException {
-		String in=&quot;readFile.txt&quot;;
-		String out=&quot;outFile.txt&quot;;
-		FileCopy f=new FileCopy();
-		f.fileCopy(in, out);
-	}
-}
-</code></pre>
-<h5 id="字节流转字符流实例">字节流转字符流实例</h5>
-<p>文件拷贝不推荐用这种方法，此方法仅作为字节流转字符流的实例，因为在文件copy中字节流转化为字符流读写的意义不大，而且会降低运行效率</p>
-<pre><code>public class FileCopy {
-	public void fileCopy(String sourceFile,String targetFile) throws IOException{
-		FileInputStream in=new FileInputStream(sourceFile);
-		FileOutputStream out=new FileOutputStream(targetFile);
-		BufferedReader reader=new BufferedReader(new InputStreamReader(in));
-		BufferedWriter writer=new BufferedWriter(new OutputStreamWriter(out));
-		String line=&quot;&quot;;
-		StringBuffer result=new StringBuffer();
-		while((line=reader.readLine())!=null){
-			writer.write(line);//此处的write是将数据写入缓冲区，并没有写入文件
-			writer.flush();//将缓冲区数据写入文件
-		}
-		if(writer!=null)writer.close();
-		if(reader!=null)reader.close();
-	}
-	public static void main(String[] args) throws IOException {
-		String in=&quot;readFile.txt&quot;;
-		String out=&quot;outFile.txt&quot;;
-		FileCopy f=new FileCopy();
-		f.fileCopy(in, out);
-		System.out.println(&quot;hell java&quot;);
-	}
-}
-</code></pre>
-<p>关键在于这两行</p>
-<pre><code>BufferedReader reader=new BufferedReader(new InputStreamReader(in));
-BufferedWriter writer=new BufferedWriter(new OutputStreamWriter(out));
-</code></pre>
-<p>将FileInputStream作为参数传入InputStreamReader中然后作为参数传给BufferedReader,其中InputStreamReader作为Reader的子类传入</p>
-<h4 id="android持久化存储">Android持久化存储</h4>
-<h5 id="文件写入">文件写入</h5>
-<pre><code>    public void save(String inputText){
-        FileOutputStream out=null;
-        BufferedWriter writer=null;
-        try {
-            out=openFileOutput(&quot;data&quot;, Context.MODE_PRIVATE);
-            writer=new BufferedWriter(new OutputStreamWriter(out));
-            writer.write(inputText);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }finally {
-            if(writer!=null){
-                try {
-                    writer.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-</code></pre>
-<h5 id="读取文件">读取文件</h5>
-<pre><code>    public String load(){
-        FileInputStream in =null;
-        BufferedReader reader=null;
-        StringBuilder content=new StringBuilder();
-        try {
-            in=openFileInput(&quot;data&quot;);
-            reader=new BufferedReader(new InputStreamReader(in));
-            String line=&quot;&quot;;
-            while ((line=reader.readLine())!=null){
-                content.append(line);
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }finally {
-            if(reader!=null){
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return content.toString();
-    }
-</code></pre>
-<h4 id="sharepreferences方法">SharePreferences方法</h4>
-<p><code>SharePreference</code>文件默认放在<code>/data/data/&lt;packagename&gt;/shared_prefs/目录下</code></p>
-<h5 id="sharedpreferences写入">SharedPreferences写入</h5>
-<pre><code>SharedPreferences.Editor editor=getSharedPreferences(&quot;data&quot;,MODE_PRIVATE).edit();
-editor.putString(&quot;et_inputText&quot;,&quot;sharePreferences test&quot;);
-editor.commit();
-</code></pre>
-<h5 id="sharedpreferences读取">SharedPreferences读取</h5>
-<pre><code>SharedPreferences sp=getSharedPreferences(&quot;data&quot;,MODE_PRIVATE);
-String input=sp.getString(&quot;et_inputText&quot;,&quot;请输入用户名&quot;);//第二个参数是为空的默认信息
-</code></pre>
-<h4 id="sqlite数据库存储">SQLite数据库存储</h4>
-<p><code>SQLite</code>文件默认放在<code>/data/data/&lt;packagename&gt;/databases/目录下</code></p>
-<pre><code>public class MyDataBaseHelper extends SQLiteOpenHelper{
-    private static final String CREATE_BOOK=&quot;create table Book(&quot;
-            +&quot;id integer primary key autoincrement, &quot;
-            +&quot;author text, &quot;
-            +&quot;price real, &quot;
-            +&quot;pages integer, &quot;
-            +&quot;name text)&quot;;
-    private static final String CREATE_CATEGORY=&quot;create table Category(&quot;
-            +&quot;id integer primary key autoincrement, &quot;
-            +&quot;category_name text, &quot;
-            +&quot;category_code integer)&quot;;
-    private Context mContext;
-    public MyDataBaseHelper(Context context, String name, SQLiteDatabase.CursorFactory factory, int version) {
-        super(context, name, factory, version);
-        mContext=context;
-    }
-
-    @Override
-    public void onCreate(SQLiteDatabase db) {
-        db.execSQL(CREATE_BOOK);
-        db.execSQL(CREATE_CATEGORY);
-        Toast.makeText(mContext,&quot;create succeed&quot;,Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL(&quot;drop table if exists Book&quot;);
-        db.execSQL(&quot;drop table if exists Category&quot;);
-        onCreate(db);
-    }
-</code></pre>
-<p>创建数据库</p>
-<pre><code> dbHelper=new MyDataBaseHelper(this,&quot;BookStore.db&quot;,null,2);
-</code></pre>
-<p>插入数据</p>
-<pre><code>SQLiteDatabase db=dbHelper.getWritableDatabase();
-ContentValues values=new ContentValues();
-values.put(&quot;name&quot;,&quot;Effective Java&quot;);
-values.put(&quot;author&quot;,&quot;Joshua Bloch&quot;);
-values.put(&quot;pages&quot;,454);
-values.put(&quot;price&quot;,16.96);
-db.insert(&quot;Book&quot;,null,values);
-</code></pre>
-<p>更新数据</p>
-<pre><code>ContentValues values=new ContentValues();
-values.put(&quot;price&quot;,198.00);
-SQLiteDatabase db=dbHelper.getReadableDatabase();
-db.update(&quot;Book&quot;,values,&quot;name=?&quot;,new String[]{&quot;Android Programme&quot;});
-</code></pre>
-<p>删除行</p>
-<pre><code>SQLiteDatabase db = dbHelper.getWritableDatabase();
-db.delete(&quot;Book&quot;, &quot;pages &gt; ?&quot;, new String[] { &quot;500&quot; });
-</code></pre>
-<p><code>ContentValues</code>知识android提供的一个便于数据库操作的类，为数据库操作提供便利，也可以直接使用数据库语句进行操作</p>
-]]></content>
-    </entry>
-    <entry>
         <title type="html"><![CDATA[Spring]]></title>
         <id>https://sunxiaohang.github.io/post/spring/</id>
         <link href="https://sunxiaohang.github.io/post/spring/">
         </link>
-        <updated>2020-04-06T11:23:21.000Z</updated>
+        <updated>2019-02-28T11:23:21.000Z</updated>
         <summary type="html"><![CDATA[<p>主要是一些读书笔记，总结java web项目常用框架的一些实现细节和基础理论。</p>
 ]]></summary>
         <content type="html"><![CDATA[<p>主要是一些读书笔记，总结java web项目常用框架的一些实现细节和基础理论。</p>
@@ -3356,11 +2224,492 @@ public class Collections {
 ]]></content>
     </entry>
     <entry>
+        <title type="html"><![CDATA[算法]]></title>
+        <id>https://sunxiaohang.github.io/post/suan-fa/</id>
+        <link href="https://sunxiaohang.github.io/post/suan-fa/">
+        </link>
+        <updated>2018-12-20T03:37:58.000Z</updated>
+        <summary type="html"><![CDATA[<p>算法包括，基础查找和排序算法，深度广度优先遍历，迷宫求解算法，优先队列，分支限界，动态规划和诸如N皇后等算法应用</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>算法包括，基础查找和排序算法，深度广度优先遍历，迷宫求解算法，优先队列，分支限界，动态规划和诸如N皇后等算法应用</p>
+<!-- more -->
+<h4 id="广度优先的迷宫求解算法">广度优先的迷宫求解算法</h4>
+<pre><code>class Position {
+    private int px;
+    private int py;
+    public Position(int px, int py) {
+        this.px = px;
+        this.py = py;
+    }
+    public int getPx() {
+        return px;
+    }
+    public void setPx(int px) {
+        this.px = px;
+    }
+    public int getPy() {
+        return py;
+    }
+    public void setPy(int py) {
+        this.py = py;
+    }
+}
+public class Maze {
+    private final Position start;//迷宫的起点final
+    private final Position end;//迷宫的终点final
+    private ArrayList&lt;String&gt; footPrint;//足迹
+    private ArrayList&lt;Position&gt; test;
+    private MyStack&lt;Position&gt; stacks;//自定义栈（也可以用java.util中的Stack栈）若想了解MyStack的实现，可以参考我的另一篇博客
+    private Position currentPosition;//定义当前位置
+    public Maze() {//集合，栈的初始化工作
+        start = new Position(1, 1);
+        end = new Position(8, 8);
+        currentPosition = start;
+        stacks = new MyStack&lt;&gt;();
+        test = new ArrayList&lt;&gt;();
+    }
+    public static final int map[][] = //定义地图10*10的方格
+            {{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 0, 0, 1, 0, 0, 0, 1, 0, 1},
+            {1, 0, 0, 1, 0, 0, 0, 1, 0, 1},
+            {1, 0, 0, 0, 0, 1, 1, 0, 0, 1},
+            {1, 0, 1, 1, 1, 0, 0, 0, 0, 1},
+            {1, 0, 0, 0, 1, 0, 0, 0, 0, 1},
+            {1, 0, 1, 0, 0, 0, 1, 0, 0, 1},
+            {1, 0, 1, 1, 1, 0, 1, 1, 0, 1},
+            {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
+    public static void printMap() {//打印地图
+        for (int i = 0; i &lt; 10; i++) {
+            for (int j = 0; j &lt; 10; j++) {
+                if (map[i][j] == 1) System.out.print(&quot; ■&quot;);
+                else System.out.print(&quot;  &quot;);
+            }
+            System.out.println();
+        }
+    }
+    public boolean moveTop() {//上移
+        String s = currentPosition.getPx() + &quot;&quot; + (currentPosition.getPy() - 1);
+        if ((map[currentPosition.getPx()][currentPosition.getPy() - 1] != 1) &amp; !isArrived(s)) {
+            footPrint.add(s);
+            return true;
+        }
+        return false;
+    }
+    public boolean moveRight() {//右移
+        String s = (currentPosition.getPx() + 1) + &quot;&quot; + currentPosition.getPy();
+        if (map[currentPosition.getPx() + 1][currentPosition.getPy()] != 1 &amp; !isArrived(s)) {
+            footPrint.add(s);
+            return true;
+        }
+        return false;
+    }
+    public boolean moveBottom() {//下移
+        String s = currentPosition.getPx() + &quot;&quot; + (currentPosition.getPy() + 1);
+        if ((map[currentPosition.getPx()][currentPosition.getPy() + 1] != 1) &amp; !isArrived(s)) {
+            footPrint.add(s);
+            return true;
+        }
+        return false;
+    }
+    public boolean moveLeft() {//左移
+        String s = (currentPosition.getPx() - 1) + &quot;&quot; + currentPosition.getPy();
+        if ((map[currentPosition.getPx() - 1][currentPosition.getPy()] != 1) &amp; !isArrived(s)) {
+            footPrint.add(s);
+            return true;
+        }
+        return false;
+    }
+    public boolean isArrived(String position) {//判断当前位置是否已经到打过
+        return footPrint.contains(position);
+    }
+    public void move() {//move函数分别向四个方向移动，然后将可行的path入栈
+        if (moveRight()) {
+            Position temp = new Position(currentPosition.getPx() + 1, currentPosition.getPy());
+            test.add(temp);
+            stacks.push(temp);
+        } else if (moveBottom()) {
+            Position temp = new Position(currentPosition.getPx(), currentPosition.getPy() + 1);
+            test.add(temp);
+            stacks.push(temp);
+        } else if (moveTop()) {
+            Position temp = new Position(currentPosition.getPx(), currentPosition.getPy() - 1);
+            test.add(temp);
+            stacks.push(temp);
+        } else if (moveLeft()) {
+            Position temp = new Position(currentPosition.getPx() - 1, currentPosition.getPy());
+            test.add(temp);
+            stacks.push(temp);
+        } else {
+            currentPosition = stacks.pop();//若当前位置四个方向都走不通，则将当前位置出栈，继续遍历上一节点
+        }
+    }
+    public static void main(String[] args) {
+        Maze m = new Maze();
+        m.footPrint = new ArrayList&lt;&gt;();
+        m.footPrint.add(&quot;11&quot;);
+        m.stacks.push(m.start);
+        while (m.currentPosition.getPx() != 8 || m.currentPosition.getPy() != 8) {
+            m.move();
+        }
+        printMap();
+        System.out.println(&quot;下面是足迹,长度是：&quot; + m.footPrint.size());
+        m.printFootPrint();
+    }
+    public void printFootPrint() {
+        for (int i = 0; i &lt; footPrint.size(); i++) {
+            System.out.print(footPrint.get(i) + &quot;,&quot;);
+        }
+        System.out.println();
+    }
+}
+</code></pre>
+<h4 id="二叉树">二叉树</h4>
+<pre><code>public class BinaryTree {
+    private Node parent;
+    private Node currentPoint;
+    private StringBuffer sb;
+    private int length=0;
+
+    class Node {
+        private int value;
+        private Node leftChild;
+        private Node rightChild;
+
+        public Node(int value, Node leftChild, Node rightChild) {
+            this.value = value;
+            this.leftChild = leftChild;
+            this.rightChild = rightChild;
+        }
+    }
+    public Node getParent(){
+        return parent;
+    }
+
+    public BinaryTree() {
+        sb=new StringBuffer();
+    }
+
+    public void insert(int value) {
+        if (parent == null) {
+            Node node = new Node(value, null, null);
+            parent = node;
+            length++;
+        } else {
+            currentPoint = parent;
+            while(true){
+                if(currentPoint.value&gt;value){
+                    if(currentPoint.leftChild!=null){
+                        currentPoint=currentPoint.leftChild;
+                    }else{
+                        currentPoint.leftChild=new Node(value,null,null);
+                        length++;
+                        break;
+                    }
+                }else{
+                    if(currentPoint.rightChild!=null){
+                        currentPoint=currentPoint.rightChild;
+                    }else{
+                        currentPoint.rightChild=new Node(value,null,null);
+                        length++;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    public String visit(Node node) {
+        sb.append(node.value+&quot;(&quot;);
+        if (node.leftChild != null) visit(node.leftChild);
+        if (node.rightChild != null) visit(node.rightChild);
+        sb.append(&quot;)&quot;);
+        return sb.toString();
+    }
+    public int getLength(){
+        return length;
+    }
+
+    @Override
+    public String toString() {
+        return visit(parent);
+    }
+}
+</code></pre>
+<h4 id="二分查找">二分查找</h4>
+<pre><code>int binary_search(int arrays[],int result,int length){
+    int begin=0,end=length-1;
+    int mid=0;
+    while(begin&lt;=end){
+        mid=(begin+end)/2;
+        if(arrays[mid]==result)break;
+        else if(arrays[mid]&lt;result)begin=mid+1;
+        else if(arrays[mid]&gt;result)end=mid-1;
+    }
+    return mid;
+}
+</code></pre>
+<h4 id="共享数组原地逆置">共享数组原地逆置</h4>
+<pre><code>public class Main {
+    public static char array[]={'A','B','C','D','E','F','G','H','1','2','3','4'};
+    public static void main(String[] args) {
+        reverse(0,7);//逆置字母序列结果为：HGFEDCBA1234
+        reverse(8,11);//逆置数字序列结果为：HGFEDCBA4321
+        reverse(0,11);//整体逆置结果为：1234ABCDEFG
+        print(array);
+    }
+    public static void reverse(int start,int end){//逆置函数
+        char temp;
+        while(start&lt;end) {
+            temp = array[start];
+            array[start++] = array[end];
+            array[end--] = temp;
+        }
+    }
+    private static void print(char[] array) {
+        for (int i = 0; i &lt;array.length; i++)
+            System.out.print(array[i]);
+        System.out.println();
+    }
+}
+</code></pre>
+<h4 id="n-皇后问题">N 皇后问题</h4>
+<pre><code>/**
+ * n queens problem
+ *
+ * */
+public class EightQueen {
+    private int QUEEN_COUNT = 0;//represent the queen count
+    private int[][] queenCount;//chess box matrix
+    private int resultCount = 0;//solution number
+    private int[] queenPlace;//mark the queen placed position
+    /**
+     * construct a EightQueen with a argument represent the number of queen
+     * initial a empty chess box
+     * 0 represent empty
+     * 1 represent the area has been taken
+     * recurse to call the putQueen method
+     * the queenPlace array to mark the queen's taken area which uses to print
+     *
+     * */
+    public EightQueen(int n) {
+        this.QUEEN_COUNT = n;
+        this.resultCount = 0;
+        this.queenCount = new int[QUEEN_COUNT][QUEEN_COUNT];
+        queenPlace = new int[QUEEN_COUNT];
+        putQueen(0);
+    }
+    /**
+     * implement the putQueen function to recursion
+     * use column index in outer loop and row index in inner loop with step increase
+     * */
+    private void putQueen(int row) {
+        for (int column = 0; column &lt; QUEEN_COUNT; column++) {//loop for QUEEN_COUNT times
+            if (queenCount[row][column] == 0) {//judge the condition
+                /**
+                 * each row has one queen
+                 * mark the column and diagonal back diagonal(row has been scatter)
+                 *
+                 * */
+                for (int nextRow = row + 1; nextRow &lt; QUEEN_COUNT; nextRow++) {
+                    queenCount[nextRow][column]++;
+                    if (column - nextRow + row &gt;= 0) {
+                        queenCount[nextRow][column - nextRow + row]++;
+                    }
+                    if (column + nextRow - row &lt; QUEEN_COUNT) {
+                        queenCount[nextRow][column + nextRow - row]++;
+                    }
+                }
+                queenPlace[row] = column;//place the queen with only column information
+                if (row == QUEEN_COUNT - 1) printQueen(++resultCount);//recursion has completed
+                else putQueen(row + 1);//recurse to call the putQueen function
+                /**
+                 *
+                 * unmarked the column and diagonal back diagonal(row has been scatter)
+                 *
+                 * */
+                for (int rows = row + 1; rows &lt; QUEEN_COUNT; rows++) {
+                    queenCount[rows][column]--;
+                    if (column - rows + row &gt;= 0) {
+                        queenCount[rows][column - rows + row]--;
+                    }
+                    if (column + rows - row &lt; QUEEN_COUNT) {
+                        queenCount[rows][column + rows - row]--;
+                    }
+                }
+            }
+        }
+        if (row == 0) System.out.println(QUEEN_COUNT + &quot; queens has totally &quot; + resultCount + &quot;result.&quot;);
+    }
+
+    private void printQueen(int size)
+    {
+        System.out.println(&quot;********** &quot;+size+&quot; **********\n&quot;);
+        for (int i = 0; i &lt; QUEEN_COUNT; i++) {
+            for (int j = 0; j &lt; QUEEN_COUNT; j++) {
+                System.out.print(queenPlace[i] == j ? &quot; # &quot; : &quot; - &quot;);
+            }
+            System.out.println();
+        }
+    }
+}
+
+</code></pre>
+<h4 id="最大子序和问题">最大子序和问题</h4>
+<pre><code>int MaxSubSeqSum(int arrays[], int left, int right) {
+    int sum = 0;
+    if (left == right) {
+        if (arrays[left] &gt; 0)return arrays[left];
+        else sum = 0;
+    } else {
+        int middle = (left + right) / 2;
+        int leftSum = MaxSubSeqSum(arrays, left, middle);
+        int rightSum = MaxSubSeqSum(arrays, middle + 1, right);
+        int finalLeftSum = 0, thisLeftSum = 0;
+        for (int i = left; i &lt;=middle; i++) {
+            thisLeftSum += arrays[i];
+            if (thisLeftSum &gt; finalLeftSum)finalLeftSum = thisLeftSum;
+        }
+        int finalRightSum = 0, thisRightSum = 0;
+        for (int j = middle + 1; j &lt; right; j++) {
+            thisRightSum += arrays[j];
+            if (thisRightSum &gt; finalRightSum)finalRightSum = thisRightSum;
+        }
+        sum = finalLeftSum + finalRightSum;
+        printf(&quot;left sum is %d,right sum is %d\n&quot;,finalLeftSum,finalRightSum);
+        if (sum &lt; leftSum)sum = leftSum;
+        if (sum &lt; rightSum)sum = rightSum;
+    }
+    return sum;
+}
+</code></pre>
+<h4 id="优先队列">优先队列</h4>
+<pre><code>/**
+ * use maximum-top heap to implement priority queue
+ * define a MAX_SIZE_OF_PRIORITY_QUEUE to limit the max length of priority queue
+ * use a integer array to store element
+ * hypothesis i is the root node and then use 2*i to mark left child and 2*i+1 to mark right child
+ * use initialArray[0] to store the length of heap
+ * */
+public class PriorityQueue{
+    private static final int MAX_SIZE_OF_PRIORITY_QUEUE=100;
+    private int[] initialArray;
+    /**
+     * initial priority queue with a exist array which can't be null
+     * */
+    public PriorityQueue(int[] initialElement) {
+        if(initialElement==null)return;
+        if(initialElement.length==0)return;
+        initialArray=new int[MAX_SIZE_OF_PRIORITY_QUEUE];
+        initialArray[0]=initialElement.length;
+        for(int i=0;i&lt;initialElement.length;i++)initialArray[i+1]=initialElement[i];
+        System.out.println(initialArray[0]);
+        for (int i = initialArray[0]; i &gt;0 ; i--)reBuildHeap(i);
+    }
+    /**
+     * rebuild array according to the value of each node
+     * maximum-top heap
+     * index represents the index of a node which should be rebuild(include it's children node)
+     *
+     * simple:
+     *         1
+     *      2     3
+     *   4   5  6   7
+     *
+     * */
+    private void reBuildHeap(int index){
+        System.out.println(&quot;execute rebuild function to rebuild a maximum-top heap with one loop&quot;);
+        int leftChildIndex=index*2;
+        int rightChildIndex=leftChildIndex+1;
+        int length=initialArray[0];
+        int biggerValueIndex=-1;
+        if(leftChildIndex&gt;length&amp;&amp;rightChildIndex&gt;length){
+            System.out.println(&quot;no left child&quot;);
+            return;
+        }
+        if(leftChildIndex&lt;=length&amp;&amp;rightChildIndex&gt;length){
+            System.out.println(&quot;only left child&quot;);
+            biggerValueIndex=leftChildIndex;
+        }
+        if(leftChildIndex&gt;length&amp;&amp;rightChildIndex&lt;=length){
+            System.out.println(&quot;only right child&quot;);
+            biggerValueIndex=rightChildIndex;
+        }
+        if(leftChildIndex&lt;=length&amp;&amp;rightChildIndex&lt;=length){
+            System.out.println(&quot;both children&quot;);
+            biggerValueIndex=initialArray[leftChildIndex]&gt;initialArray[rightChildIndex]?leftChildIndex:rightChildIndex;
+        }
+        if(initialArray[index]&gt;initialArray[biggerValueIndex]){
+            System.out.println(&quot;unnecessary to swap!&quot;);
+            return;
+        }else{
+            int temp=initialArray[index];
+            initialArray[index]=initialArray[biggerValueIndex];
+            initialArray[biggerValueIndex]=temp;
+            this.reBuildHeap(biggerValueIndex);
+        }
+    }
+    public int getLength() {
+        return initialArray[0];
+    }
+    /**
+     * get top priority value of heap
+     * the first element of array
+     * */
+    public int priority(){
+        return initialArray[1];
+    }
+    /**
+     * length++
+     * add element to the tail of array
+     * rebuild the heap to regular priority heap
+     * */
+    public void insert(int element){
+        initialArray[0]++;
+        initialArray[initialArray[0]]=element;
+        for(int i=initialArray[0];i&gt;=1;i=i/2){
+            reBuildHeap(i);
+        }
+    }
+    /**
+     * length--
+     * swap the first element and last element
+     * delete last value
+     * rebuild the heap
+     * */
+    public int deletePriority(){
+        if(initialArray[0]&lt;=0)return -1;
+        int maxValue=initialArray[1];
+        initialArray[1]=initialArray[initialArray[0]];
+        initialArray[0]--;
+        for(int i=initialArray[0];i&gt;=1;i=i/2){
+            reBuildHeap(i);
+        }
+        return maxValue;
+    }
+    /**
+     * print the structure of priority heap
+     * */
+    @Override
+    public String toString() {
+        StringBuilder builder=new StringBuilder(&quot;{&quot;);
+        for (int i = 1; i &lt;= initialArray[0]; i++) {
+            if(i!=1)builder.append(&quot;,&quot;);
+            builder.append(initialArray[i]);
+        }
+        builder.append(&quot;}&quot;);
+        return builder.toString();
+    }
+}
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
         <title type="html"><![CDATA[设计模式]]></title>
         <id>https://sunxiaohang.github.io/post/she-ji-mo-shi/</id>
         <link href="https://sunxiaohang.github.io/post/she-ji-mo-shi/">
         </link>
-        <updated>2020-04-06T11:19:42.000Z</updated>
+        <updated>2018-06-13T11:19:42.000Z</updated>
         <summary type="html"><![CDATA[<p>仅包含设计模式的一般实现和设计思想以及设计模式的使用方向，不拘泥于具体语言。以下设计模式思想仅基于Java语言实现，旨在优化软件工程结构，完善项目的鲁棒性和健壮性，便于后期迭代和维护。</p>
 ]]></summary>
         <content type="html"><![CDATA[<p>仅包含设计模式的一般实现和设计思想以及设计模式的使用方向，不拘泥于具体语言。以下设计模式思想仅基于Java语言实现，旨在优化软件工程结构，完善项目的鲁棒性和健壮性，便于后期迭代和维护。</p>
@@ -4030,6 +3379,742 @@ Receiver receiver = new ConcreteReceiver1();
 Command command = new ConcreteCommand1(receiver);
 invoke.setCommand(command);
 invoke.action();
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[about]]></title>
+        <id>https://sunxiaohang.github.io/post/about/</id>
+        <link href="https://sunxiaohang.github.io/post/about/">
+        </link>
+        <updated>2017-06-07T12:47:48.000Z</updated>
+        <content type="html"><![CDATA[<h4 id="孙航">孙航</h4>
+<p>132 0880 3520 | cssunhang@outlook.com | sunxiaohang.github.io</p>
+<h4 id="个人经历">个人经历</h4>
+<h5 id="20199至今">2019/9—至今</h5>
+<p>腾讯计算机系统有限公司 <strong>|</strong> 游戏开发</p>
+<p>工作描述：负责游戏项目的开发和维护工作</p>
+<h5 id="20171220189">2017/12—2018/9</h5>
+<p>北京华亿创新信息科技 | 前端 /QT嵌入式</p>
+<p>工作描述：全面负责开发跳水比赛后台管理系统/球类计时记分控制系统</p>
+<h5 id="2016620177">2016/6—2017/7</h5>
+<p>云南青才信息科技 | Android 开发</p>
+<p>工作描述：负责平安社区产品监控视频流采集及解码</p>
+<h5 id="20189至今">2018/9—至今</h5>
+<p>西安电子科技大学 | 软件工程 | 硕士</p>
+<h5 id="2013920176">2013/9—2017/6</h5>
+<p>西南林业大学 | 电子信息工程 | 本科</p>
+<h3 id="在校经历">在校经历</h3>
+<blockquote>
+<p>计算机设计大赛 | 省级 | 一等奖</p>
+<p>计算机设计大赛 | 国家级 | 二等奖</p>
+<p>西电腾讯俱乐部|学业奖学金|创新创业奖</p>
+</blockquote>
+<h4 id="专业技能">专业技能</h4>
+<h5 id="java">Java</h5>
+<ul>
+<li>Java 基础 <strong>|</strong> Java多线程 <strong>|</strong> Java并发 <strong>|</strong> Java锁</li>
+<li>Java设计模式 <strong>|</strong> Java虚拟机</li>
+<li>Spring <strong>|</strong> Spring MVC</li>
+<li>Spring boot <strong>|</strong> thymeleaf <strong>|</strong> dubbo RPC</li>
+</ul>
+<h5 id="android">Android</h5>
+<ul>
+<li>Android 应用框架 <strong>|</strong> Android设计模式</li>
+<li>View绘制 <strong>|</strong> 自定义ViewGroup</li>
+<li>Android 网络编程</li>
+<li>Android IPC</li>
+</ul>
+<h5 id="unity3d">Unity3D</h5>
+<ul>
+<li>UGUI <strong>|</strong> FairyGUI</li>
+<li>Unity3D基础 <strong>|</strong> 动画系统 <strong>|</strong> 对话口型</li>
+<li>Shader</li>
+</ul>
+<h4 id="博客主要分享">博客主要分享</h4>
+<ul>
+<li>Java <strong>|</strong> Android <strong>|</strong> Unity3D</li>
+<li>数据结构 <strong>|</strong> 算法 <strong>|</strong> 设计模式</li>
+</ul>
+<h4 id="项目经验">项目经验</h4>
+<h5 id="20199至今-腾讯计算机系统有限公司-游戏开发">2019/9—至今 | 腾讯计算机系统有限公司 |游戏开发</h5>
+<blockquote>
+<p>项目简介：MMO游戏项目的开发与维护</p>
+<p>功能：MMO游戏UI|事件系统|Unity3D引擎|动画表现组</p>
+<p>职责：项目开发 | 代码维护 | 文档的撰写</p>
+</blockquote>
+<h5 id="2019420195-个人项目-ctimes">2019/4—2019/5 | 个人项目 | CTimes</h5>
+<blockquote>
+<p>项目简:新闻影音图书客户端</p>
+<p>功能:  最新新闻|豆瓣图书|豆瓣电影|音视频</p>
+<p>职责:  项目UI设计 | 架构设计 | 代码实现 | 数据调试|文档撰写</p>
+</blockquote>
+<h5 id="2019120192-个人项目-停车场仿真系统">2019/1—2019/2 | 个人项目 | 停车场仿真系统</h5>
+<blockquote>
+<p>项目简介:停车场管理仿真系统</p>
+<p>功能:  停车场模拟|用户管理|数据持久化</p>
+<p>职责:  项目UI设计 | 架构设计 | 代码实现 | 数据库调试 | 文档撰写</p>
+</blockquote>
+<h5 id="20171220189-北京华亿创新-跳水比赛后台管理系统">2017/12—2018/9 | 北京华亿创新 | 跳水比赛后台管理系统</h5>
+<blockquote>
+<p>项目简介：管理跳水比赛项目的人员编排，赛程安排，打分系统等</p>
+<p>职责：系统的设计与实现 | 代码编写、调试 | 帮助文档的撰写</p>
+</blockquote>
+<h5 id="2018320184-北京华亿创新-球类计时记分系统">2018/3—2018/4 | 北京华亿创新 | 球类计时记分系统</h5>
+<blockquote>
+<p>项目简介：球类计时、记分，球权控制，离场，犯规等</p>
+<p>职责：系统设计与实现 | 代码的编写、调试 | 文档的撰写</p>
+</blockquote>
+<h5 id="20161020175-云南青才信息-平安社区">2016/10—2017/5 | 云南青才信息 | 平安社区</h5>
+<blockquote>
+<p>项目简介：社区维护，管理，报备系统</p>
+<p>职责：沟通对接 | 视频流解码</p>
+</blockquote>
+<h5 id="20168201610-比赛项目-intelligent-car">2016/8—2016/10 | 比赛项目 | Intelligent Car</h5>
+<blockquote>
+<p>项目简介:  语音控制的智能小车</p>
+<p>功能:  语音识别 | 人脸识别 | 视频流传输 | 语音助手</p>
+<p>职责:  项目UI设计 | 机械控制程序编写 | Android控制程序编写 | 通信服务器实现 | 文档撰写</p>
+</blockquote>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[数据结构]]></title>
+        <id>https://sunxiaohang.github.io/post/shu-ju-jie-gou-yu-suan-fa/</id>
+        <link href="https://sunxiaohang.github.io/post/shu-ju-jie-gou-yu-suan-fa/">
+        </link>
+        <updated>2016-04-14T11:00:43.000Z</updated>
+        <summary type="html"><![CDATA[<p>本文包含一般数据结构的实现方式和常用算法的实现<br>
+包含线性结构的单、双向链表，栈，非线性结构的二叉树，搜索树等</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>本文包含一般数据结构的实现方式和常用算法的实现<br>
+包含线性结构的单、双向链表，栈，非线性结构的二叉树，搜索树等</p>
+<!-- more -->
+<h2 id="数据结构">数据结构</h2>
+<h4 id="栈">栈</h4>
+<pre><code>//-----------------------------------------------------
+//----------------------顺序存储----------------------
+//-----------------------------------------------------
+
+typedef struct{
+    int Data[MAXSIZE];
+    int Top;
+}Stack;
+void Push(Stack *stack,int value){
+    if(stack-&gt;Top==MAXSIZE-1){//数组有界
+        printf(&quot;堆栈满&quot;);
+    }else{
+        stack-&gt;Data[++(stack-&gt;Top)]=value;
+        return;
+    }
+}
+int Pop(Stack *stack){
+    if(stack-&gt;Top==-1){//为空检查
+        printf(&quot;堆栈为空&quot;);
+        return ERROR;
+    } else
+    return stack-&gt;Data[stack-&gt;Top--];
+}
+
+//-----------------------------------------------------
+//----------------------链式存储----------------------
+//-----------------------------------------------------
+
+/*用单向链表表示栈时候，栈Top结点一定是链头结点
+ * */
+typedef struct Node{
+    int value;
+    struct Node *next;
+}LinkedStack;
+LinkedStack * CreateLinkedStack(){
+    LinkedStack *stack;
+    stack=(LinkedStack *)malloc(sizeof(LinkedStack));
+    stack-&gt;next=NULL;
+    return stack;
+};
+int isEmpty(LinkedStack *stack){//注意Top结点没有值，只有一个单链表的头指针
+    return (stack-&gt;next==NULL);
+}
+void Push(LinkedStack *stack,int value){
+    LinkedStack *insertElement;
+    insertElement=malloc(sizeof(LinkedStack));//分配内存空间
+    insertElement-&gt;value=value;//插入的值赋值给结点
+    insertElement-&gt;next=stack-&gt;next;//将已存在链表链接到插入的结点
+    stack-&gt;next=insertElement;//改变Top结点
+}
+int Pop(LinkedStack *stack){
+    int result;
+    LinkedStack *popElement;
+    if(isEmpty(stack)){
+        printf(&quot;链表为空&quot;);
+        return ERROR;
+    }else{
+        popElement=stack-&gt;next;
+        result=popElement-&gt;value;
+        stack-&gt;next=popElement-&gt;next;
+        free(popElement);//记得释放无用内存空间
+        return result;
+    }
+}
+</code></pre>
+<h4 id="队列">队列</h4>
+<pre><code>//-----------------------------------------------------
+//----------------------顺序存储----------------------
+//-----------------------------------------------------
+
+#define MAXSIZE 50
+typedef struct {
+    int value[MAXSIZE];
+    int rear;
+    int front;
+}Queue;
+Queue *CreateQueue(){
+    Queue *queue;
+    queue=(Queue *)malloc(sizeof(Queue));
+    queue-&gt;front=0;
+    queue-&gt;rear=0;
+    return queue;
+}
+void AddQueue(Queue *queue,int value){
+    if((queue-&gt;rear+1)%MAXSIZE==queue-&gt;front){
+        printf(&quot;queue is full&quot;);
+        return;
+    }else {
+        queue-&gt;rear=(queue-&gt;rear+1)%MAXSIZE;
+        queue-&gt;value[queue-&gt;rear] = value;
+    }
+}
+int IsEmpty(Queue *queue){
+    if(queue-&gt;rear==queue-&gt;front)return 1;
+    else return 0;
+}
+void OutQueue(Queue* queue,int *value){
+    if(IsEmpty(queue)){
+        printf(&quot;Queue is empty&quot;);
+        return;
+    }else{
+        queue-&gt;front=(queue-&gt;front+1)%MAXSIZE;
+        *value=queue-&gt;value[queue-&gt;front];
+    }
+}
+
+//-----------------------------------------------------
+//----------------------链式存储----------------------
+//-----------------------------------------------------
+
+typedef struct Node {
+    int value;
+    struct Node *next;
+} QNode;
+typedef struct {
+    QNode *rear;
+    QNode *front;
+} Queue;
+
+void InitQueue(Queue **queue) {
+    QNode *p;
+    p = (QNode *) malloc(sizeof(QNode));
+    p-&gt;next = NULL;
+    (*queue)-&gt;front = p;
+    (*queue)-&gt;rear = p;
+}
+
+void InQueue(Queue *queue, int value) {
+    QNode *InElement;
+    InElement = (QNode *) malloc(sizeof(QNode));
+    InElement-&gt;value = value;
+    InElement-&gt;next = NULL;
+    queue-&gt;rear-&gt;next = InElement;
+    queue-&gt;rear = InElement;
+}
+
+int IsEmpty(Queue *queue) {
+    if (queue-&gt;rear = queue-&gt;front)return 1;
+    else return 0;
+}
+
+void OutQueue(Queue *queue, int *value) {
+    QNode *OutElement;
+    if (IsEmpty(queue)) {
+        printf(&quot;queue is empty&quot;);
+        return;
+    } else {
+        OutElement = queue-&gt;front-&gt;next;
+        queue-&gt;front-&gt;next=OutElement-&gt;next;//指针头结点指向下一个结点(pspspspsps)
+        *value=OutElement-&gt;value;
+        free(OutElement);
+        if(IsEmpty(queue)){//出队列后如果队列为空则置为空队列
+            queue-&gt;front=queue-&gt;rear;
+        }
+    }
+}
+</code></pre>
+<h5 id="判定树">判定树</h5>
+<p>每个结点需要查找的次数刚好为该结点所在的层数，查找成功时查找次数不会超过判定树的深度，n个结点的判定树的深度为[LgN]+1</p>
+<p><strong>平均查找长度ASL（Average Search Length）</strong><br>
+ASL=sum(层数*个数)/各层总个数n(n&gt;=0)个结点构成的有限集合当n=0时称为空树</p>
+<p>对于任何一棵非空树（n&gt;0），它具备以下性质</p>
+<ul>
+<li>树中会有一个root特殊结点用r表示</li>
+<li>其余结点可分为m(m&gt;0)个互不相交的有限集，其中每个集合本身又是一棵树，称为原来树的子树</li>
+</ul>
+<p><strong>树的特点：</strong></p>
+<ul>
+<li>子树是不相交的</li>
+<li>出了根节点外，每隔结点有且仅有一个父结点</li>
+<li>一棵N个结点的树有N-1条边（树是保证结点连通的最少边链接方式）</li>
+</ul>
+<p>树的一些基本术语：</p>
+<ul>
+<li>
+<p>结点的度：结点的子树个数（满二叉树单个结点的度为2）</p>
+</li>
+<li>
+<p>树的度：树的所有结点中最大的度数</p>
+</li>
+<li>
+<p>叶结点：结点度为0的结点</p>
+</li>
+<li>
+<p>父节点，子节点，兄弟结点</p>
+</li>
+<li>
+<p>路径和路径长度</p>
+</li>
+<li>
+<p>祖先节点：沿树根到某一结点路径上的所有节点都是这个结点的祖先结点<br>
+子孙结点通；</p>
+</li>
+<li>
+<p>结点的层次：规定根结点在一层，其他层次随子节点+1</p>
+</li>
+<li>
+<p>树的深度：树中结点的最大层次就是这棵树的深度</p>
+<p>儿子兄弟表示法可以将所有的树转化为二叉树<br>
+<strong>特殊二叉树：</strong></p>
+</li>
+<li>
+<p>斜二叉树：只有左儿子或只有右结点</p>
+</li>
+<li>
+<p>完美二叉树：满二叉树</p>
+</li>
+<li>
+<p>完全二叉树：结点编号与满二叉树结点编号相同（编号不间断）<br>
+<strong>二叉树的特点</strong></p>
+</li>
+<li>
+<p>一个二叉树第i层的最大节点数为：2(i-1),i&gt;=1</p>
+</li>
+<li>
+<p>深度为k的二叉树有最大节点总数为2k-1,k&gt;=1;</p>
+</li>
+<li>
+<p>对于任何非空二叉树T，若N0表示叶子结点的个数，N2是度为2的非叶结点个数，那么两者满足关系：N0=N2+1;(即叶子结点个数-1=度数为2的结点个数)</p>
+</li>
+</ul>
+<p><strong>二叉树的抽象数据类型定义</strong><br>
+数据对象集：一个有穷的结点集合<br>
+若不为空，则由根节点和其左、右二叉树组成<br>
+操作集：判断树是否为空，遍历，创建二叉树</p>
+<p><strong>常用的遍历方法有：</strong><br>
+先序遍历（根左右），<br>
+中序遍历（左根右），<br>
+后序遍历（左右根），<br>
+层次遍历（从上到下，从左到右）</p>
+<p>在二叉树中，我们知道叶结点总数n0与有两个儿子的结点总数n2之间的关系是：n0=n2+1.<br>
+那么类似关系是否可以推广到m叉树中？也就是，如果在m叉树中，叶结点总数是n0，<br>
+有一个儿子的结点总数是n1，有2个儿子的结点总数是n2，有3个儿子的结点总数是n3，<br>
+那么，ni之间存在什么关系？</p>
+<ul>
+<li>完全二叉树，非根节点的父节点序号是[i/2]</li>
+<li>结点的左孩子结点序号是2i，若2i&lt;=n，否则没有左孩子结点</li>
+<li>结点的右孩子结点序号是2i+1，（若2i+1&lt;=n,否则没有右孩子）</li>
+</ul>
+<pre><code> typedef struct BT{
+     int value;
+     struct BT *leftchild;
+     struct BT *rightchild;
+ }BinTree;
+ //二叉树的每个结点遍历都会遇到三次，第一次遇到就打印的为先序遍历，第二次遇到就打印的为中序遍历，第三次遇到就打印的为后序遍历
+ //先序遍历(递归遍历)
+ void PreOrderTraversal(BinTree *BT){
+     if(BT){
+     if(!BT-&gt;leftchild&amp;&amp;!BT-&gt;rightchild)
+         printf(&quot;%d\n&quot;,BT-&gt;value);
+         PreOrderTraversal(BT-&gt;leftchild);
+         PreOrderTraversal(BT-&gt;rightchild);
+     }
+ }
+ //中序遍历(递归遍历)
+ void InOrderTraversal(BinTree *BT){
+     if(BT){
+     if(!BT-&gt;leftchild&amp;&amp;!BT-&gt;rightchild)
+         InOrderTraversal(BT-&gt;leftchild);
+         printf(&quot;%d\n&quot;,BT-&gt;value);
+         InOrderTraversal(BT-&gt;rightchild);
+     }
+ }
+ //后序遍历(递归遍历)
+ void PostOrderTraversal(BinTree *BT){
+     if(BT){
+     if(!BT-&gt;leftchild&amp;&amp;!BT-&gt;rightchild)
+         PostOrderTraversal(BT-&gt;leftchild);
+         PostOrderTraversal(BT-&gt;rightchild);
+         printf(&quot;%d\n&quot;,BT-&gt;value);
+     }
+ }
+ //二叉树遍历的本质是将二维序列转换为一维序列
+ //使用队列进行二叉树的层级访问（遍历根节点，将左右儿子节点入队列）
+ void LevelOrderTraversal(BinTree BT){
+     Queue *queue;
+     BinTree *T;
+     queue=CreateQueue();
+     AddQueue(queue,BT);
+     while(!IsEmptyQueue(queue)){
+         T=DeleteQueue(queue);
+         printf(&quot;%d\n&quot;,T-&gt;value);
+         if(T-&gt;leftchild)AddQueue(queue,T-&gt;leftchild);
+         if(T-&gt;rightchild)AddQueue(queue,T-&gt;rightchild);
+     }
+ }
+ //给定前中序遍历结果或中后序遍历结果可以唯一确定一棵二叉树，给定前后序遍历结果不能唯一确定二叉树
+ //非递归实现（中序遍历）
+ void InOrderTraversal(BinTree *BT){
+     BinTree *T=BT;
+     LinkedStack *stack=CreateLinkedStack();//创建并初始化堆栈
+     while(T||!isEmpty(stack)){
+         while(T){//一直向左将沿途结点压入堆栈
+             Push(stack,T);
+             T=T-&gt;leftchild;//转向左子树
+         }
+         if(!isEmpty(stack)){
+             T=Pop(stack);//结点弹出堆栈
+             printf(&quot;%5d&quot;,T-&gt;value);//打印结点
+             T=T-&gt;rightchild;//转向右子树
+         }
+     }
+ }
+ //非递归实现（先序遍历）
+ void PreOrderTraversal(BinTree *BT){
+     BinTree *T=BT;
+     LinkedStack *stack=CreateLinkedStack();//创建并初始化堆栈
+     while(T||!isEmpty(stack)){
+         while(T){//一直向左将沿途结点压入堆栈
+             printf(&quot;%5d&quot;,T-&gt;value);//打印结点
+             Push(stack,T);
+             T=T-&gt;leftchild;//转向左子树
+         }
+         if(!isEmpty(stack)){
+             T=Pop(stack);//结点弹出堆栈
+             T=T-&gt;rightchild;//转向右子树
+         }
+     }
+ }
+</code></pre>
+<h5 id="二叉搜索树bstbinary-search-tree">二叉搜索树：BST(binary search tree)</h5>
+<p>也称二叉排序树或二叉查找树<br>
+二叉搜索树条件<br>
+1.非空左子树的所有键值小于其根节点的键值<br>
+2.非空右子树的所有键值大于其根节点的键值<br>
+3.左，右子树都是二叉搜索树</p>
+<pre><code>//递归方式实现
+Position Find(BinTree *binTree,int result){
+    if(!binTree)return NULL;
+    if(result&gt;binTree-&gt;value)return Find(binTree-&gt;rightchild,result);
+    else if(result&lt;binTree-&gt;value)return Find(binTree,result);
+    else return binTree;//查找成功，返回结点地址(return尾递归)
+}
+//非递归方式实现
+Position IterFind(BinTree *binTree,int value){
+    while(binTree){
+        if(result&gt;binTree-&gt;value)
+            binTree=binTree-&gt;rightchild;
+        else if(result&lt;binTree-&gt;value)
+            binTree=binTree-&gt;leftchild;
+        else 
+            return binTree;
+    }
+    return NULL;
+}
+//寻找最小值
+Position FindMin(BinTree *binTree){
+    if(!binTree)return NULL;
+    else if(!binTree-&gt;leftchild)
+        return binTree;
+    else
+        return FindMin(binTree-&gt;leftchild);
+}
+//寻找最大值
+Position FindMax(BinTree *binTree){
+    if(binTree){
+        while(binTree-&gt;rightchild)
+            binTree=binTree-&gt;rightchild;
+    }
+    return binTree;
+}
+//结点插入
+BinTree * Insert(BinTree *binTree, int value) {
+    if(!binTree){
+        binTree=malloc(sizeof(BinTree));
+        binTree-&gt;value=value;
+        binTree-&gt;leftchild=binTree-&gt;rightchild=NULL;
+    }else{
+        if(value&lt;binTree-&gt;value)
+            binTree-&gt;leftchild=Insert(binTree-&gt;leftchild,value);
+        else if(value&gt;binTree-&gt;value)
+            binTree-&gt;rightchild=Insert(binTree-&gt;rightchild,value);
+    }
+    return binTree;
+}
+//删除结点
+BinTree *Delete(BinTree *binTree,int value){
+    (Position)BinTree *Temp;
+    if(!binTree)printf(&quot;要删除的元素未找到&quot;);
+        //左子树递归删除
+    else if(value&lt;binTree-&gt;value)binTree-&gt;leftchild=Delete(binTree,value);
+        //右子树递归删除
+    else if(value&gt;binTree-&gt;value)binTree-&gt;rightchild=Delete(binTree-&gt;rightchild,value);
+    else //找到要删除的结点
+        if(binTree-&gt;leftchild&amp;&amp;binTree-&gt;rightchild){//被删除结点有左右量子子节点
+            Temp=FindMin(binTree-&gt;rightchild);//在右子树中招最小的元素填充删除结点
+            binTree-&gt;value=Temp-&gt;value;
+            binTree-&gt;rightchild=Delete(binTree-&gt;rightchild,binTree-&gt;value);
+        }else{//被删除的结点有一个或无子结点
+            Temp=binTree;
+            if(!binTree-&gt;leftchild)binTree=binTree-&gt;rightchild;
+            else if(!binTree-&gt;rightchild)binTree=binTree-&gt;leftchild;
+            free(Temp);
+        }
+    return binTree;
+}
+</code></pre>
+<h5 id="平衡二叉树balanced-binary-tree">平衡二叉树(Balanced Binary Tree)</h5>
+<p><strong>(AVL树)(AVL是提出平衡树的学者名字首字母)</strong></p>
+<ul>
+<li>空树或任一结点左右子树高度差不超不过1|BF(T)|&lt;=1</li>
+<li>平衡因子(Balance Factor 简称BF：BF(T)=Hl-Hr)</li>
+<li>其中hl和hr分别为T的左右子树高度</li>
+<li>高度=层数-1</li>
+<li>完全二叉树高度为log2N(平衡二叉树)</li>
+<li>Nh是高度为h的平衡二叉树的最小结点树</li>
+<li>Nh=F(h+2)-1</li>
+</ul>
+<pre><code> #define MaxData 10000
+ typedef struct HeapStruct{
+     int *value;//存储对元素的数组
+     int length;//堆的当前元素个数
+     int capacity;//堆的最大容量
+ }Heap;
+</code></pre>
+<h5 id="优先队列priorityqueue">优先队列（PriorityQueue）</h5>
+<p>取出元素的先后顺序是按照元素的优先权（关键字）大小，而不是元素进入队列的先后顺序<br>
+最大堆和最小堆都必须满足完全二叉树（切根节点最大或最小）最大堆的建立</p>
+<p>建立最大堆：将已经存在的N个元素按最大堆的要求存放在要给一维数组中</p>
+<ul>
+<li>方法一：通过插入操作，将N个元素一个个相继插入到一个初始为空的堆中去，其时间代价最大为O（NlogN）</li>
+<li>方法二：在线性时间复杂度下建立最大堆</li>
+<li>(1)将N个元素按输入顺序存入，先满足完全二叉树的结构特性</li>
+<li>(2)调整各结点位置以满足最大堆的有序特性<br>
+建堆时，最坏的情况下需要挪动的元素次数等于树中各节点的高度和</li>
+</ul>
+<p><strong>对由同样n个整数构成的二叉搜索树（查找树）和最小堆：有以下结论</strong></p>
+<ul>
+<li>二叉搜索树高度大于等于最小堆高度</li>
+<li>对该二叉搜索树进行中序遍历可得到从小到大的序列</li>
+<li>从最小堆根节点到起任何叶结点的路径上的结点值构成从小到大的序列</li>
+</ul>
+<pre><code> Heap * Create(int MaxSize){
+     Heap *heap=malloc(sizeof(Heap));
+     heap-&gt;value=malloc((MaxSize+1)*sizeof(int));
+     heap-&gt;length=0;
+     heap-&gt;capacity=MaxSize;
+     heap-&gt;value[0]=MaxData;//定义哨兵，便于操作
+     return heap;
+ }
+ void Insert(Heap *heap,int value){
+     int i;
+     if(IsFull(heap)){
+         printf(&quot;最大堆已经满了&quot;);
+         return;
+     }
+     i=++heap-&gt;length;
+     for(;heap-&gt;value[i/2]&lt;value;i/=2)
+         heap-&gt;value[i]=heap-&gt;value[i/2];
+     heap-&gt;value[i]=value;
+ }
+ int DeleteMax(Heap *heap){
+     int parent,child;
+     int maxValue,temp;
+     if(IsEmpty(heap)){
+         printf(&quot;最大堆已空&quot;);
+         return 0;
+     }
+     maxValue=heap-&gt;value[1];
+     //用最大堆中最后一个元素从根节点开始过滤下层结点
+     temp=heap-&gt;value[heap-&gt;length--];
+     for(parent=1;parent*2&lt;=heap-&gt;length;parent=child){
+         child=parent*2;
+         //左儿子和右儿子节点比较取较大者
+         if((child!=heap-&gt;length)&amp;&amp;(heap-&gt;value[child]&lt;heap-&gt;value[child+1]))
+             child++;
+         if(temp&gt;=heap-&gt;value[child])break;
+         else
+             heap-&gt;value[parent]=heap-&gt;value[child];
+     }
+     heap-&gt;value[parent]=temp;
+     return maxValue;
+ }
+ int IsEmpty(Heap *heap){
+     return heap-&gt;length==0;
+ }
+ int IsFull(Heap *heap){
+     return heap-&gt;length==heap-&gt;capacity;
+ }
+ 
+ typedef struct TreeNode{
+     int weight;
+     struct TreeNode *left,*right;
+ }HuffmanTree;
+</code></pre>
+<h5 id="哈夫曼树huffmantree">哈夫曼树（HuffmanTree）</h5>
+<p>查找效率，查找次数乘查找概率<br>
+<strong>带权路径长度（WPL）</strong>：设二叉树有n个叶子结点，每隔叶子结点带有权值Wk，从根节点到每隔叶子结点的长度是Lk，则每隔叶子结点的带全路径长度之和WPL=（nEk=1）WkLk<br>
+<strong>最优二叉树或哈夫曼树</strong>：WPL最小的二叉树<br>
+<strong>哈夫曼树的特点</strong></p>
+<ul>
+<li>没有度为1的结点</li>
+<li>n个叶子结点的HuffmanTree有2n-1个结点</li>
+<li>HuffmanTree的任意非叶结点的左右子树交换后仍是HuffmanTree<br>
+对于一组权值，可能有不同构的两棵HuffmanTree</li>
+</ul>
+<pre><code>HuffmanTree *Huffman(Heap *heap){
+    //假设heap-&gt;length权值已经存在heap-&gt;value[]-&gt;weight里面
+    int i;HuffmanTree *huffmanTree;
+    BuildHeap(heap);//将heap-&gt;value[]按权值调整为最小堆
+    for(i=1;i&lt;heap-&gt;length;i++){
+        huffmanTree=malloc(sizeof(HuffmanTree));//建立新结点
+        huffmanTree-&gt;left=DeleteMin(heap);//从最小堆中删除一个结点，作为新huffmanTree的左子结点
+        huffmanTree-&gt;right=DeleteMin(heap);//从最小堆中删除一个结点，作为新huffmanTree的右子结点
+        huffmanTree-&gt;weight=huffmanTree-&gt;weight+huffmanTree-&gt;right-&gt;weight;//计算新// 权值
+        Insert(heap,huffmanTree);
+    }
+    huffmanTree=DeleteMin(heap);
+    return huffmanTree;
+}
+/*二叉树用于编码
+ * 当被编码字母全部在二叉树的叶子结点的时候（即，编码字母不会出现在有子节点的结点中）便可以保证字符编码没有二义性
+ * */
+</code></pre>
+<h4 id="双向链表">双向链表</h4>
+<pre><code>public class DoubleLinkedList&lt;E&gt; {
+    private Node first;//指向第一个元素
+    private Node last;//指向最后一个元素
+    private int length=0;//链表长度
+    class Node {
+        private Node previous;
+        private Node next;
+        private E e;
+
+        public Node(Node previous, Node next, E e) {
+            this.previous = previous;
+            this.next = next;
+            this.e = e;
+        }
+    }
+    /***
+     * 向头节点添加元素，节点结构对外应该是不可见的，所以这里只传递一个泛型的值e
+     */
+    public void addFirst(E e) {
+        if (first == null) {//链表为空判断
+            Node node = new Node(null, null, e);//创建一个新的节点，前驱和后继都为空
+            this.first = node;
+            this.last=node;//将first和last指针指向链表的第一个元素
+            length++;//链表长度自增一，下同
+        }else{
+            Node node=new Node(null,first,e);//链表不为空创建一个前驱为空，后继为当前first节点的节点，值为传入的参数e
+            this.first.previous=node;//当前first的前驱设置为node
+            this.first=node;//将first指针指向新节点
+            length++;
+        }
+    }
+/***
+*addLast同addFirst
+*/
+    public void addLast(E e) {
+        if (last == null) {
+            Node node = new Node(null, null, e);
+            this.first = node;
+            this.last=node;
+            length++;
+        }else{
+            Node node=new Node(last,null,e);
+            this.last.next=node;
+            this.last=node;
+            length++;
+        }
+    }
+    public void insertPrevious(E baseElement,E value){
+        Node index=this.first;
+        while(index!=null){
+            if(index.e==baseElement)break;
+            index=index.next;
+        }
+        Node insertValue=new Node(index.previous,index,value);
+        index.previous.next=insertValue;
+        index.previous=insertValue;
+        length++;
+    }
+    public void insertNext(E baseElement,E value){
+        Node index=this.first;
+        while(index!=null){
+            if(index.e==baseElement)break;
+            index=index.next;
+        }
+        Node insertValue=new Node(index,index.next,value);
+        index.next.previous=insertValue;
+        index.next=insertValue;
+        length++;
+    }
+    public void removeElement(E value){
+        Node index=this.first;
+        while(index!=null){
+            if(index.e==value)break;
+            index=index.next;
+        }
+        index.previous.next=index.next;
+        index.next.previous=index.previous;
+        length--;
+    }
+    public int getLength(){
+        return length;
+    }
+    @Override
+    public String toString() {
+        StringBuffer sb=new StringBuffer();
+        Node current=this.first;
+        while(current!=null){
+            sb.append(current.e+&quot;-&gt;&quot;);
+            current=current.next;
+        }
+        return sb.toString();
+    }
+    public static void main(String[] args) {
+        DoubleLinkedList&lt;String&gt; list=new DoubleLinkedList&lt;&gt;();
+        list.addLast(&quot;value1&quot;);
+        list.addLast(&quot;value2&quot;);
+        list.addLast(&quot;value3&quot;);
+        list.addLast(&quot;value4&quot;);
+        list.addFirst(&quot;value0&quot;);
+        list.insertPrevious(&quot;value3&quot;,&quot;insertValue&quot;);
+        list.insertNext(&quot;value3&quot;,&quot;insertValue2&quot;);
+        System.out.println(list.toString());
+        System.out.println(&quot;链表的长度是&quot;+list.getLength());
+        list.removeElement(&quot;value3&quot;);
+        System.out.println(list.toString());
+        System.out.println(&quot;链表的长度是&quot;+list.getLength());
+    }
+}
 </code></pre>
 ]]></content>
     </entry>
