@@ -1,0 +1,619 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    
+<meta charset="utf-8" >
+
+<title>算法 | KnowledgeBase</title>
+<meta name="description" content="KnowledgeBase">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
+
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+<link rel="shortcut icon" href="https://sunxiaohang.github.io/favicon.ico?v=1586403556007">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+<link rel="stylesheet" href="https://sunxiaohang.github.io/styles/main.css">
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.12.0/highlight.min.js"></script>
+
+
+
+  </head>
+  <body>
+    <div id="app" class="main">
+      <div class="site-header-container">
+  <div class="site-header">
+    <div class="left">
+      <a href="https://sunxiaohang.github.io">
+        <img class="avatar" src="https://sunxiaohang.github.io/images/avatar.png?v=1586403556007" alt="" width="32px" height="32px">
+      </a>
+      <a href="https://sunxiaohang.github.io">
+        <h1 class="site-title">KnowledgeBase</h1>
+      </a>
+    </div>
+    <div class="right">
+      <transition name="fade">
+        <i class="icon" :class="{ 'icon-close-outline': menuVisible, 'icon-menu-outline': !menuVisible }" @click="menuVisible = !menuVisible"></i>
+      </transition>
+    </div>
+  </div>
+</div>
+
+<transition name="fade">
+  <div class="menu-container" style="display: none;" v-show="menuVisible">
+    <div class="menu-list">
+      
+        
+          <a href="/" class="menu purple-link">
+            首页
+          </a>
+        
+      
+        
+          <a href="/archives" class="menu purple-link">
+            归档
+          </a>
+        
+      
+        
+          <a href="/tags" class="menu purple-link">
+            标签
+          </a>
+        
+      
+        
+          <a href="/post/about" class="menu purple-link">
+            关于
+          </a>
+        
+      
+    </div>
+  </div>
+</transition>
+
+
+      <div class="content-container">
+        <div class="post-detail">
+          
+          <h2 class="post-title">算法</h2>
+          <div class="post-info post-detail-info">
+            <span><i class="icon-calendar-outline"></i> 2020-04-09</span>
+            
+          </div>
+          <div class="post-content">
+            <p>算法包括，基础查找和排序算法，深度广度优先遍历，迷宫求解算法，优先队列，分支限界，动态规划和诸如N皇后等算法应用</p>
+<!-- more -->
+<h4 id="广度优先的迷宫求解算法">广度优先的迷宫求解算法</h4>
+<pre><code>class Position {
+    private int px;
+    private int py;
+    public Position(int px, int py) {
+        this.px = px;
+        this.py = py;
+    }
+    public int getPx() {
+        return px;
+    }
+    public void setPx(int px) {
+        this.px = px;
+    }
+    public int getPy() {
+        return py;
+    }
+    public void setPy(int py) {
+        this.py = py;
+    }
+}
+public class Maze {
+    private final Position start;//迷宫的起点final
+    private final Position end;//迷宫的终点final
+    private ArrayList&lt;String&gt; footPrint;//足迹
+    private ArrayList&lt;Position&gt; test;
+    private MyStack&lt;Position&gt; stacks;//自定义栈（也可以用java.util中的Stack栈）若想了解MyStack的实现，可以参考我的另一篇博客
+    private Position currentPosition;//定义当前位置
+    public Maze() {//集合，栈的初始化工作
+        start = new Position(1, 1);
+        end = new Position(8, 8);
+        currentPosition = start;
+        stacks = new MyStack&lt;&gt;();
+        test = new ArrayList&lt;&gt;();
+    }
+    public static final int map[][] = //定义地图10*10的方格
+            {{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+            {1, 0, 0, 1, 0, 0, 0, 1, 0, 1},
+            {1, 0, 0, 1, 0, 0, 0, 1, 0, 1},
+            {1, 0, 0, 0, 0, 1, 1, 0, 0, 1},
+            {1, 0, 1, 1, 1, 0, 0, 0, 0, 1},
+            {1, 0, 0, 0, 1, 0, 0, 0, 0, 1},
+            {1, 0, 1, 0, 0, 0, 1, 0, 0, 1},
+            {1, 0, 1, 1, 1, 0, 1, 1, 0, 1},
+            {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
+            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
+    public static void printMap() {//打印地图
+        for (int i = 0; i &lt; 10; i++) {
+            for (int j = 0; j &lt; 10; j++) {
+                if (map[i][j] == 1) System.out.print(&quot; ■&quot;);
+                else System.out.print(&quot;  &quot;);
+            }
+            System.out.println();
+        }
+    }
+    public boolean moveTop() {//上移
+        String s = currentPosition.getPx() + &quot;&quot; + (currentPosition.getPy() - 1);
+        if ((map[currentPosition.getPx()][currentPosition.getPy() - 1] != 1) &amp; !isArrived(s)) {
+            footPrint.add(s);
+            return true;
+        }
+        return false;
+    }
+    public boolean moveRight() {//右移
+        String s = (currentPosition.getPx() + 1) + &quot;&quot; + currentPosition.getPy();
+        if (map[currentPosition.getPx() + 1][currentPosition.getPy()] != 1 &amp; !isArrived(s)) {
+            footPrint.add(s);
+            return true;
+        }
+        return false;
+    }
+    public boolean moveBottom() {//下移
+        String s = currentPosition.getPx() + &quot;&quot; + (currentPosition.getPy() + 1);
+        if ((map[currentPosition.getPx()][currentPosition.getPy() + 1] != 1) &amp; !isArrived(s)) {
+            footPrint.add(s);
+            return true;
+        }
+        return false;
+    }
+    public boolean moveLeft() {//左移
+        String s = (currentPosition.getPx() - 1) + &quot;&quot; + currentPosition.getPy();
+        if ((map[currentPosition.getPx() - 1][currentPosition.getPy()] != 1) &amp; !isArrived(s)) {
+            footPrint.add(s);
+            return true;
+        }
+        return false;
+    }
+    public boolean isArrived(String position) {//判断当前位置是否已经到打过
+        return footPrint.contains(position);
+    }
+    public void move() {//move函数分别向四个方向移动，然后将可行的path入栈
+        if (moveRight()) {
+            Position temp = new Position(currentPosition.getPx() + 1, currentPosition.getPy());
+            test.add(temp);
+            stacks.push(temp);
+        } else if (moveBottom()) {
+            Position temp = new Position(currentPosition.getPx(), currentPosition.getPy() + 1);
+            test.add(temp);
+            stacks.push(temp);
+        } else if (moveTop()) {
+            Position temp = new Position(currentPosition.getPx(), currentPosition.getPy() - 1);
+            test.add(temp);
+            stacks.push(temp);
+        } else if (moveLeft()) {
+            Position temp = new Position(currentPosition.getPx() - 1, currentPosition.getPy());
+            test.add(temp);
+            stacks.push(temp);
+        } else {
+            currentPosition = stacks.pop();//若当前位置四个方向都走不通，则将当前位置出栈，继续遍历上一节点
+        }
+    }
+    public static void main(String[] args) {
+        Maze m = new Maze();
+        m.footPrint = new ArrayList&lt;&gt;();
+        m.footPrint.add(&quot;11&quot;);
+        m.stacks.push(m.start);
+        while (m.currentPosition.getPx() != 8 || m.currentPosition.getPy() != 8) {
+            m.move();
+        }
+        printMap();
+        System.out.println(&quot;下面是足迹,长度是：&quot; + m.footPrint.size());
+        m.printFootPrint();
+    }
+    public void printFootPrint() {
+        for (int i = 0; i &lt; footPrint.size(); i++) {
+            System.out.print(footPrint.get(i) + &quot;,&quot;);
+        }
+        System.out.println();
+    }
+}
+</code></pre>
+<h4 id="二叉树">二叉树</h4>
+<pre><code>public class BinaryTree {
+    private Node parent;
+    private Node currentPoint;
+    private StringBuffer sb;
+    private int length=0;
+
+    class Node {
+        private int value;
+        private Node leftChild;
+        private Node rightChild;
+
+        public Node(int value, Node leftChild, Node rightChild) {
+            this.value = value;
+            this.leftChild = leftChild;
+            this.rightChild = rightChild;
+        }
+    }
+    public Node getParent(){
+        return parent;
+    }
+
+    public BinaryTree() {
+        sb=new StringBuffer();
+    }
+
+    public void insert(int value) {
+        if (parent == null) {
+            Node node = new Node(value, null, null);
+            parent = node;
+            length++;
+        } else {
+            currentPoint = parent;
+            while(true){
+                if(currentPoint.value&gt;value){
+                    if(currentPoint.leftChild!=null){
+                        currentPoint=currentPoint.leftChild;
+                    }else{
+                        currentPoint.leftChild=new Node(value,null,null);
+                        length++;
+                        break;
+                    }
+                }else{
+                    if(currentPoint.rightChild!=null){
+                        currentPoint=currentPoint.rightChild;
+                    }else{
+                        currentPoint.rightChild=new Node(value,null,null);
+                        length++;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    public String visit(Node node) {
+        sb.append(node.value+&quot;(&quot;);
+        if (node.leftChild != null) visit(node.leftChild);
+        if (node.rightChild != null) visit(node.rightChild);
+        sb.append(&quot;)&quot;);
+        return sb.toString();
+    }
+    public int getLength(){
+        return length;
+    }
+
+    @Override
+    public String toString() {
+        return visit(parent);
+    }
+}
+</code></pre>
+<h4 id="二分查找">二分查找</h4>
+<pre><code>int binary_search(int arrays[],int result,int length){
+    int begin=0,end=length-1;
+    int mid=0;
+    while(begin&lt;=end){
+        mid=(begin+end)/2;
+        if(arrays[mid]==result)break;
+        else if(arrays[mid]&lt;result)begin=mid+1;
+        else if(arrays[mid]&gt;result)end=mid-1;
+    }
+    return mid;
+}
+</code></pre>
+<h4 id="共享数组原地逆置">共享数组原地逆置</h4>
+<pre><code>public class Main {
+    public static char array[]={'A','B','C','D','E','F','G','H','1','2','3','4'};
+    public static void main(String[] args) {
+        reverse(0,7);//逆置字母序列结果为：HGFEDCBA1234
+        reverse(8,11);//逆置数字序列结果为：HGFEDCBA4321
+        reverse(0,11);//整体逆置结果为：1234ABCDEFG
+        print(array);
+    }
+    public static void reverse(int start,int end){//逆置函数
+        char temp;
+        while(start&lt;end) {
+            temp = array[start];
+            array[start++] = array[end];
+            array[end--] = temp;
+        }
+    }
+    private static void print(char[] array) {
+        for (int i = 0; i &lt;array.length; i++)
+            System.out.print(array[i]);
+        System.out.println();
+    }
+}
+</code></pre>
+<h4 id="n-皇后问题">N 皇后问题</h4>
+<pre><code>/**
+ * n queens problem
+ *
+ * */
+public class EightQueen {
+    private int QUEEN_COUNT = 0;//represent the queen count
+    private int[][] queenCount;//chess box matrix
+    private int resultCount = 0;//solution number
+    private int[] queenPlace;//mark the queen placed position
+    /**
+     * construct a EightQueen with a argument represent the number of queen
+     * initial a empty chess box
+     * 0 represent empty
+     * 1 represent the area has been taken
+     * recurse to call the putQueen method
+     * the queenPlace array to mark the queen's taken area which uses to print
+     *
+     * */
+    public EightQueen(int n) {
+        this.QUEEN_COUNT = n;
+        this.resultCount = 0;
+        this.queenCount = new int[QUEEN_COUNT][QUEEN_COUNT];
+        queenPlace = new int[QUEEN_COUNT];
+        putQueen(0);
+    }
+    /**
+     * implement the putQueen function to recursion
+     * use column index in outer loop and row index in inner loop with step increase
+     * */
+    private void putQueen(int row) {
+        for (int column = 0; column &lt; QUEEN_COUNT; column++) {//loop for QUEEN_COUNT times
+            if (queenCount[row][column] == 0) {//judge the condition
+                /**
+                 * each row has one queen
+                 * mark the column and diagonal back diagonal(row has been scatter)
+                 *
+                 * */
+                for (int nextRow = row + 1; nextRow &lt; QUEEN_COUNT; nextRow++) {
+                    queenCount[nextRow][column]++;
+                    if (column - nextRow + row &gt;= 0) {
+                        queenCount[nextRow][column - nextRow + row]++;
+                    }
+                    if (column + nextRow - row &lt; QUEEN_COUNT) {
+                        queenCount[nextRow][column + nextRow - row]++;
+                    }
+                }
+                queenPlace[row] = column;//place the queen with only column information
+                if (row == QUEEN_COUNT - 1) printQueen(++resultCount);//recursion has completed
+                else putQueen(row + 1);//recurse to call the putQueen function
+                /**
+                 *
+                 * unmarked the column and diagonal back diagonal(row has been scatter)
+                 *
+                 * */
+                for (int rows = row + 1; rows &lt; QUEEN_COUNT; rows++) {
+                    queenCount[rows][column]--;
+                    if (column - rows + row &gt;= 0) {
+                        queenCount[rows][column - rows + row]--;
+                    }
+                    if (column + rows - row &lt; QUEEN_COUNT) {
+                        queenCount[rows][column + rows - row]--;
+                    }
+                }
+            }
+        }
+        if (row == 0) System.out.println(QUEEN_COUNT + &quot; queens has totally &quot; + resultCount + &quot;result.&quot;);
+    }
+
+    private void printQueen(int size)
+    {
+        System.out.println(&quot;********** &quot;+size+&quot; **********\n&quot;);
+        for (int i = 0; i &lt; QUEEN_COUNT; i++) {
+            for (int j = 0; j &lt; QUEEN_COUNT; j++) {
+                System.out.print(queenPlace[i] == j ? &quot; # &quot; : &quot; - &quot;);
+            }
+            System.out.println();
+        }
+    }
+}
+
+</code></pre>
+<h4 id="最大子序和问题">最大子序和问题</h4>
+<pre><code>int MaxSubSeqSum(int arrays[], int left, int right) {
+    int sum = 0;
+    if (left == right) {
+        if (arrays[left] &gt; 0)return arrays[left];
+        else sum = 0;
+    } else {
+        int middle = (left + right) / 2;
+        int leftSum = MaxSubSeqSum(arrays, left, middle);
+        int rightSum = MaxSubSeqSum(arrays, middle + 1, right);
+        int finalLeftSum = 0, thisLeftSum = 0;
+        for (int i = left; i &lt;=middle; i++) {
+            thisLeftSum += arrays[i];
+            if (thisLeftSum &gt; finalLeftSum)finalLeftSum = thisLeftSum;
+        }
+        int finalRightSum = 0, thisRightSum = 0;
+        for (int j = middle + 1; j &lt; right; j++) {
+            thisRightSum += arrays[j];
+            if (thisRightSum &gt; finalRightSum)finalRightSum = thisRightSum;
+        }
+        sum = finalLeftSum + finalRightSum;
+        printf(&quot;left sum is %d,right sum is %d\n&quot;,finalLeftSum,finalRightSum);
+        if (sum &lt; leftSum)sum = leftSum;
+        if (sum &lt; rightSum)sum = rightSum;
+    }
+    return sum;
+}
+</code></pre>
+<h4 id="优先队列">优先队列</h4>
+<pre><code>/**
+ * use maximum-top heap to implement priority queue
+ * define a MAX_SIZE_OF_PRIORITY_QUEUE to limit the max length of priority queue
+ * use a integer array to store element
+ * hypothesis i is the root node and then use 2*i to mark left child and 2*i+1 to mark right child
+ * use initialArray[0] to store the length of heap
+ * */
+public class PriorityQueue{
+    private static final int MAX_SIZE_OF_PRIORITY_QUEUE=100;
+    private int[] initialArray;
+    /**
+     * initial priority queue with a exist array which can't be null
+     * */
+    public PriorityQueue(int[] initialElement) {
+        if(initialElement==null)return;
+        if(initialElement.length==0)return;
+        initialArray=new int[MAX_SIZE_OF_PRIORITY_QUEUE];
+        initialArray[0]=initialElement.length;
+        for(int i=0;i&lt;initialElement.length;i++)initialArray[i+1]=initialElement[i];
+        System.out.println(initialArray[0]);
+        for (int i = initialArray[0]; i &gt;0 ; i--)reBuildHeap(i);
+    }
+    /**
+     * rebuild array according to the value of each node
+     * maximum-top heap
+     * index represents the index of a node which should be rebuild(include it's children node)
+     *
+     * simple:
+     *         1
+     *      2     3
+     *   4   5  6   7
+     *
+     * */
+    private void reBuildHeap(int index){
+        System.out.println(&quot;execute rebuild function to rebuild a maximum-top heap with one loop&quot;);
+        int leftChildIndex=index*2;
+        int rightChildIndex=leftChildIndex+1;
+        int length=initialArray[0];
+        int biggerValueIndex=-1;
+        if(leftChildIndex&gt;length&amp;&amp;rightChildIndex&gt;length){
+            System.out.println(&quot;no left child&quot;);
+            return;
+        }
+        if(leftChildIndex&lt;=length&amp;&amp;rightChildIndex&gt;length){
+            System.out.println(&quot;only left child&quot;);
+            biggerValueIndex=leftChildIndex;
+        }
+        if(leftChildIndex&gt;length&amp;&amp;rightChildIndex&lt;=length){
+            System.out.println(&quot;only right child&quot;);
+            biggerValueIndex=rightChildIndex;
+        }
+        if(leftChildIndex&lt;=length&amp;&amp;rightChildIndex&lt;=length){
+            System.out.println(&quot;both children&quot;);
+            biggerValueIndex=initialArray[leftChildIndex]&gt;initialArray[rightChildIndex]?leftChildIndex:rightChildIndex;
+        }
+        if(initialArray[index]&gt;initialArray[biggerValueIndex]){
+            System.out.println(&quot;unnecessary to swap!&quot;);
+            return;
+        }else{
+            int temp=initialArray[index];
+            initialArray[index]=initialArray[biggerValueIndex];
+            initialArray[biggerValueIndex]=temp;
+            this.reBuildHeap(biggerValueIndex);
+        }
+    }
+    public int getLength() {
+        return initialArray[0];
+    }
+    /**
+     * get top priority value of heap
+     * the first element of array
+     * */
+    public int priority(){
+        return initialArray[1];
+    }
+    /**
+     * length++
+     * add element to the tail of array
+     * rebuild the heap to regular priority heap
+     * */
+    public void insert(int element){
+        initialArray[0]++;
+        initialArray[initialArray[0]]=element;
+        for(int i=initialArray[0];i&gt;=1;i=i/2){
+            reBuildHeap(i);
+        }
+    }
+    /**
+     * length--
+     * swap the first element and last element
+     * delete last value
+     * rebuild the heap
+     * */
+    public int deletePriority(){
+        if(initialArray[0]&lt;=0)return -1;
+        int maxValue=initialArray[1];
+        initialArray[1]=initialArray[initialArray[0]];
+        initialArray[0]--;
+        for(int i=initialArray[0];i&gt;=1;i=i/2){
+            reBuildHeap(i);
+        }
+        return maxValue;
+    }
+    /**
+     * print the structure of priority heap
+     * */
+    @Override
+    public String toString() {
+        StringBuilder builder=new StringBuilder(&quot;{&quot;);
+        for (int i = 1; i &lt;= initialArray[0]; i++) {
+            if(i!=1)builder.append(&quot;,&quot;);
+            builder.append(initialArray[i]);
+        }
+        builder.append(&quot;}&quot;);
+        return builder.toString();
+    }
+}
+
+</code></pre>
+
+          </div>
+        </div>
+
+        
+          <div class="next-post">
+            <a class="purple-link" href="https://sunxiaohang.github.io/post/about/">
+              <h3 class="post-title">
+                下一篇：about
+              </h3>
+            </a>
+          </div>
+          
+      </div>
+
+      
+
+      <div class="site-footer">
+  <div class="slogan">KnowledgeBase</div>
+  <div class="social-container">
+    
+      
+        <a href="https://github.com/sunxiaohang" target="_blank">
+          <i class="fab fa-github"></i>
+        </a>
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+  Powered by <a href="mailto:cssunhang@outlook.com" target="_blank">hangsun</a> | <a class="rss" href="https://sunxiaohang.github.io/atom.xml" target="_blank">RSS</a>
+</div>
+
+
+    </div>
+    <script type="application/javascript">
+
+hljs.initHighlightingOnLoad()
+
+var app = new Vue({
+  el: '#app',
+  data: {
+    menuVisible: false,
+  },
+})
+
+</script>
+
+
+
+
+  </body>
+</html>
