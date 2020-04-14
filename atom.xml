@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://sunxiaohang.github.io</id>
     <title>KnowledgeBase</title>
-    <updated>2020-04-14T07:00:33.807Z</updated>
+    <updated>2020-04-14T07:01:48.997Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://sunxiaohang.github.io"/>
     <link rel="self" href="https://sunxiaohang.github.io/atom.xml"/>
@@ -16,7 +16,10 @@
         <link href="https://sunxiaohang.github.io/post/shader/">
         </link>
         <updated>2020-04-14T06:15:44.000Z</updated>
+        <summary type="html"><![CDATA[<p>Unity shader的渲染流程，模型空间，世界空间，裁切空间，屏幕空间的转换，顶点着色器，片元着色器的一般原理，基础光照模型分析。透明，光线追踪等高特性光照模型原理。主要侧重于移动端的轻量级渲染管线，不考虑主机或PC设备。</p>
+]]></summary>
         <content type="html"><![CDATA[<p>Unity shader的渲染流程，模型空间，世界空间，裁切空间，屏幕空间的转换，顶点着色器，片元着色器的一般原理，基础光照模型分析。透明，光线追踪等高特性光照模型原理。主要侧重于移动端的轻量级渲染管线，不考虑主机或PC设备。</p>
+<!-- more -->
 <p>tips:渲染流水线的最终目的是渲染一张二维纹理</p>
 <p>输入：1.虚拟相机 2.光源 3.一些shader及纹理</p>
 <figure data-type="image" tabindex="1"><img src="https://sunxiaohang.github.io/post-images/1586845473202.png" alt="" loading="lazy"></figure>
