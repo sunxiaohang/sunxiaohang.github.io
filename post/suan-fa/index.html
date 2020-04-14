@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css">
 
 <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-<link rel="shortcut icon" href="https://sunxiaohang.github.io/favicon.ico?v=1586404338638">
+<link rel="shortcut icon" href="https://sunxiaohang.github.io/favicon.ico?v=1586847314634">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
 <link rel="stylesheet" href="https://sunxiaohang.github.io/styles/main.css">
 
@@ -30,7 +30,7 @@
   <div class="site-header">
     <div class="left">
       <a href="https://sunxiaohang.github.io">
-        <img class="avatar" src="https://sunxiaohang.github.io/images/avatar.png?v=1586404338638" alt="" width="32px" height="32px">
+        <img class="avatar" src="https://sunxiaohang.github.io/images/avatar.png?v=1586847314634" alt="" width="32px" height="32px">
       </a>
       <a href="https://sunxiaohang.github.io">
         <h1 class="site-title">KnowledgeBase</h1>
@@ -86,224 +86,8 @@
             
           </div>
           <div class="post-content">
-            <p>算法包括，基础查找和排序算法，深度广度优先遍历，迷宫求解算法，优先队列，分支限界，动态规划和诸如N皇后等算法应用</p>
+            <p>算法包括，基础查找和排序算法，深度广度优先遍历，迷宫求解算法，优先队列，分支限界，动态规划和诸如N皇后等算法应用，重点关注基础算法，和诸如动态规划的一般算法思想，递归和非递归算法实现的优缺点，参考算法导论</p>
 <!-- more -->
-<h4 id="广度优先的迷宫求解算法">广度优先的迷宫求解算法</h4>
-<pre><code>class Position {
-    private int px;
-    private int py;
-    public Position(int px, int py) {
-        this.px = px;
-        this.py = py;
-    }
-    public int getPx() {
-        return px;
-    }
-    public void setPx(int px) {
-        this.px = px;
-    }
-    public int getPy() {
-        return py;
-    }
-    public void setPy(int py) {
-        this.py = py;
-    }
-}
-public class Maze {
-    private final Position start;//迷宫的起点final
-    private final Position end;//迷宫的终点final
-    private ArrayList&lt;String&gt; footPrint;//足迹
-    private ArrayList&lt;Position&gt; test;
-    private MyStack&lt;Position&gt; stacks;//自定义栈（也可以用java.util中的Stack栈）若想了解MyStack的实现，可以参考我的另一篇博客
-    private Position currentPosition;//定义当前位置
-    public Maze() {//集合，栈的初始化工作
-        start = new Position(1, 1);
-        end = new Position(8, 8);
-        currentPosition = start;
-        stacks = new MyStack&lt;&gt;();
-        test = new ArrayList&lt;&gt;();
-    }
-    public static final int map[][] = //定义地图10*10的方格
-            {{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-            {1, 0, 0, 1, 0, 0, 0, 1, 0, 1},
-            {1, 0, 0, 1, 0, 0, 0, 1, 0, 1},
-            {1, 0, 0, 0, 0, 1, 1, 0, 0, 1},
-            {1, 0, 1, 1, 1, 0, 0, 0, 0, 1},
-            {1, 0, 0, 0, 1, 0, 0, 0, 0, 1},
-            {1, 0, 1, 0, 0, 0, 1, 0, 0, 1},
-            {1, 0, 1, 1, 1, 0, 1, 1, 0, 1},
-            {1, 1, 0, 0, 0, 0, 0, 0, 0, 1},
-            {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}};
-    public static void printMap() {//打印地图
-        for (int i = 0; i &lt; 10; i++) {
-            for (int j = 0; j &lt; 10; j++) {
-                if (map[i][j] == 1) System.out.print(&quot; ■&quot;);
-                else System.out.print(&quot;  &quot;);
-            }
-            System.out.println();
-        }
-    }
-    public boolean moveTop() {//上移
-        String s = currentPosition.getPx() + &quot;&quot; + (currentPosition.getPy() - 1);
-        if ((map[currentPosition.getPx()][currentPosition.getPy() - 1] != 1) &amp; !isArrived(s)) {
-            footPrint.add(s);
-            return true;
-        }
-        return false;
-    }
-    public boolean moveRight() {//右移
-        String s = (currentPosition.getPx() + 1) + &quot;&quot; + currentPosition.getPy();
-        if (map[currentPosition.getPx() + 1][currentPosition.getPy()] != 1 &amp; !isArrived(s)) {
-            footPrint.add(s);
-            return true;
-        }
-        return false;
-    }
-    public boolean moveBottom() {//下移
-        String s = currentPosition.getPx() + &quot;&quot; + (currentPosition.getPy() + 1);
-        if ((map[currentPosition.getPx()][currentPosition.getPy() + 1] != 1) &amp; !isArrived(s)) {
-            footPrint.add(s);
-            return true;
-        }
-        return false;
-    }
-    public boolean moveLeft() {//左移
-        String s = (currentPosition.getPx() - 1) + &quot;&quot; + currentPosition.getPy();
-        if ((map[currentPosition.getPx() - 1][currentPosition.getPy()] != 1) &amp; !isArrived(s)) {
-            footPrint.add(s);
-            return true;
-        }
-        return false;
-    }
-    public boolean isArrived(String position) {//判断当前位置是否已经到打过
-        return footPrint.contains(position);
-    }
-    public void move() {//move函数分别向四个方向移动，然后将可行的path入栈
-        if (moveRight()) {
-            Position temp = new Position(currentPosition.getPx() + 1, currentPosition.getPy());
-            test.add(temp);
-            stacks.push(temp);
-        } else if (moveBottom()) {
-            Position temp = new Position(currentPosition.getPx(), currentPosition.getPy() + 1);
-            test.add(temp);
-            stacks.push(temp);
-        } else if (moveTop()) {
-            Position temp = new Position(currentPosition.getPx(), currentPosition.getPy() - 1);
-            test.add(temp);
-            stacks.push(temp);
-        } else if (moveLeft()) {
-            Position temp = new Position(currentPosition.getPx() - 1, currentPosition.getPy());
-            test.add(temp);
-            stacks.push(temp);
-        } else {
-            currentPosition = stacks.pop();//若当前位置四个方向都走不通，则将当前位置出栈，继续遍历上一节点
-        }
-    }
-    public static void main(String[] args) {
-        Maze m = new Maze();
-        m.footPrint = new ArrayList&lt;&gt;();
-        m.footPrint.add(&quot;11&quot;);
-        m.stacks.push(m.start);
-        while (m.currentPosition.getPx() != 8 || m.currentPosition.getPy() != 8) {
-            m.move();
-        }
-        printMap();
-        System.out.println(&quot;下面是足迹,长度是：&quot; + m.footPrint.size());
-        m.printFootPrint();
-    }
-    public void printFootPrint() {
-        for (int i = 0; i &lt; footPrint.size(); i++) {
-            System.out.print(footPrint.get(i) + &quot;,&quot;);
-        }
-        System.out.println();
-    }
-}
-</code></pre>
-<h4 id="二叉树">二叉树</h4>
-<pre><code>public class BinaryTree {
-    private Node parent;
-    private Node currentPoint;
-    private StringBuffer sb;
-    private int length=0;
-
-    class Node {
-        private int value;
-        private Node leftChild;
-        private Node rightChild;
-
-        public Node(int value, Node leftChild, Node rightChild) {
-            this.value = value;
-            this.leftChild = leftChild;
-            this.rightChild = rightChild;
-        }
-    }
-    public Node getParent(){
-        return parent;
-    }
-
-    public BinaryTree() {
-        sb=new StringBuffer();
-    }
-
-    public void insert(int value) {
-        if (parent == null) {
-            Node node = new Node(value, null, null);
-            parent = node;
-            length++;
-        } else {
-            currentPoint = parent;
-            while(true){
-                if(currentPoint.value&gt;value){
-                    if(currentPoint.leftChild!=null){
-                        currentPoint=currentPoint.leftChild;
-                    }else{
-                        currentPoint.leftChild=new Node(value,null,null);
-                        length++;
-                        break;
-                    }
-                }else{
-                    if(currentPoint.rightChild!=null){
-                        currentPoint=currentPoint.rightChild;
-                    }else{
-                        currentPoint.rightChild=new Node(value,null,null);
-                        length++;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    public String visit(Node node) {
-        sb.append(node.value+&quot;(&quot;);
-        if (node.leftChild != null) visit(node.leftChild);
-        if (node.rightChild != null) visit(node.rightChild);
-        sb.append(&quot;)&quot;);
-        return sb.toString();
-    }
-    public int getLength(){
-        return length;
-    }
-
-    @Override
-    public String toString() {
-        return visit(parent);
-    }
-}
-</code></pre>
-<h4 id="二分查找">二分查找</h4>
-<pre><code>int binary_search(int arrays[],int result,int length){
-    int begin=0,end=length-1;
-    int mid=0;
-    while(begin&lt;=end){
-        mid=(begin+end)/2;
-        if(arrays[mid]==result)break;
-        else if(arrays[mid]&lt;result)begin=mid+1;
-        else if(arrays[mid]&gt;result)end=mid-1;
-    }
-    return mid;
-}
-</code></pre>
 <h4 id="共享数组原地逆置">共享数组原地逆置</h4>
 <pre><code>public class Main {
     public static char array[]={'A','B','C','D','E','F','G','H','1','2','3','4'};
