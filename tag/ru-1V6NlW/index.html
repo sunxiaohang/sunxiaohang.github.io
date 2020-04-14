@@ -5,7 +5,7 @@
     
 <meta charset="utf-8" >
 
-<title>C# | KnowledgeBase</title>
+<title>计算机图形学 | KnowledgeBase</title>
 <meta name="description" content="KnowledgeBase">
 
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -78,88 +78,62 @@
 
 
       <div class="content-container">
-        <div class="post-detail">
-          
-          <h2 class="post-title">C#</h2>
-          <div class="post-info post-detail-info">
-            <span><i class="icon-calendar-outline"></i> 2019-10-17</span>
-            
-          </div>
-          <div class="post-content">
-            <p>C#关键知识点总结，主要针对一些新特性和泛型，和C#事件系统，主要针对Unity3d，非标准C#<br>
-注意在一些较新版本的.net 支持的新特性当中，要特别注意兼容性问题和性能问题，例如函数式，lambda以及null option.</p>
-<!-- more -->
-<h4 id="泛型委托">泛型委托</h4>
-<pre><code>delegate void Del&lt;T&gt;(T item);
-public static void Notify(int i) { }
-...
-Del&lt;int&gt; m1 = new Del&lt;int&gt;(Notify);
-//Del&lt;int&gt; m2 = Notify;
 
-//在泛型类中定义的委托可以用类方法使用的相同方式来使用泛型类类型参数
-class Stack&lt;T&gt;
-{
-	T[] items;
-	int index;
-	public delegate void StackDelegate(T[] items);
-}//引用委托的代码必须指定包含类的类型参数
-class Instance
-{
-	private static void DoWork(float[] items){}
-public static void TestStatck()
-{
-Stack&lt;float&gt; s = new Stack&lt;float&gt;();
-Stack&lt;float&gt;.StackDelegate d = DoWork;
-}
-}
-
-//常用事件发布订阅系统
-public class PublicSubscribeManager
-{
- //定义发布消息体extends EventArgs
- public class MessageBox : System.EventArgs{ public MessageBox(string subject, string content){}}
- //定义代理 parameter(object sender,SubEventArgs message)
- public delegate void PublishEventHandler(object sender, MessageBox message);
- //定义event DelegateType eventVariable;
- public event PublishEventHandler Publish;
- //定义执行函数
- protected virtual void OnPublished(MessageBox message){if (Publish != null)Publish(this,message);}
-	public void Trigger(string subject,string content){OnPublished(new MessageBox(subject,content));}
-}
-class MainClass
-{
- static void Main()
- {
-  	PublicSubscribeManager manager = new PublicSubscribeManager();
-  	manager.Publish += new PublicSubscribeManager.PublishEventHandler((sender,message)=&gt; { Console.WriteLine(&quot;{sender},{message}&quot;);});
-  	manager.Trigger(&quot;_subject&quot;, &quot;_content&quot;);
- }
-}
-</code></pre>
-<h4 id="特性解析">特性解析</h4>
-<pre><code>Type type = typeof(class);
-object[] XXX = type.GetXXX();
-for(XX x int XXX)x.reduce();
----------------------------
-System.Reflection.MemberInfo info = type.getMember(Type.MemberName);
-System.Reflection.MethodInfo info = type.GetMethod(Type.MethodName);
-</code></pre>
-
-          </div>
+        <div class="current-tag-container">
+          <h2 class="title">
+            <i class="icon icon-pricetags-outline"></i> 计算机图形学
+          </h2> 
         </div>
 
         
-          <div class="next-post">
-            <a class="purple-link" href="https://sunxiaohang.github.io/post/ruan-jian-gong-cheng-jia-gou/">
-              <h3 class="post-title">
-                下一篇：软件工程架构
-              </h3>
-            </a>
-          </div>
-          
+<section class="post-item">
+    <div class="content">
+      <a href="https://sunxiaohang.github.io/post/shader/">
+        <h2 class="post-title">Shader</h2>
+      </a>
+      <div class="post-abstract">
+        
       </div>
+      <div class="post-info">
+        <span><i class="icon icon-calendar-outline"></i> 2020-04-14</span>
+        
+          <span>
+            <i class="icon icon-pricetags-outline"></i>
+            
+              <a href="https://sunxiaohang.github.io/tag/1gmIsfBLO/">
+                Unity
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://sunxiaohang.github.io/tag/11sEhzdYL/">
+                游戏开发
+                
+                  ，
+                
+              </a>
+            
+              <a href="https://sunxiaohang.github.io/tag/ru-1V6NlW/">
+                计算机图形学
+                
+              </a>
+            
+          </span>
+        
+      </div>
+    </div>
+    
+  </section>
 
-      
+
+<div class="pagination-container">
+  
+  
+</div>
+
+
+      </div>
 
       <div class="site-footer">
   <div class="slogan">KnowledgeBase</div>
