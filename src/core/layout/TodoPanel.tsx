@@ -97,7 +97,7 @@ export function TodoPanel() {
           <input type="text" placeholder="✨ 添加新任务..." value={newText}
             onChange={e=>setNewText(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')handleAdd();}}
             className="flex-1 h-10 px-4 bg-secondary border border-border rounded-2xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all" />
-          <Button onClick={handleAdd} size="icon" className="shrink-0 rounded-2xl"><Plus size={18}/></Button>
+          <button type="button" onClick={handleAdd} className="inline-flex items-center justify-center w-10 h-10 shrink-0 rounded-2xl bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 transition-all"><Plus size={18}/></button>
         </div>
       </div>
 

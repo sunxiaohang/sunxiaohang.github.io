@@ -48,7 +48,6 @@ export default function App() {
           </div>
           <StatusBar
             editMode={editMode}
-            onToggleEdit={() => setEditMode(!editMode)}
             onOpenDrawer={() => setDrawerOpen(true)}
           />
         </div>
