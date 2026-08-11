@@ -1,7 +1,15 @@
 import { createContext, useContext } from 'react';
 
-export const EditModeContext = createContext(false);
+interface EditModeCtx {
+  editMode: boolean;
+  toggle: () => void;
+}
 
-export function useEditMode(): boolean {
+export const EditModeContext = createContext<EditModeCtx>({
+  editMode: false,
+  toggle: () => {},
+});
+
+export function useEditMode(): EditModeCtx {
   return useContext(EditModeContext);
 }

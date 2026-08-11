@@ -23,7 +23,7 @@ export default function QuickLinksWidget({}: WidgetProps) {
   const [data, setData, loading] = useWidgetData<QuickLinksData>('quick-links-main', defaultData);
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const editMode = useEditMode();
+  const { editMode } = useEditMode();
 
   if (loading) return <div className="flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" /></div>;
 
