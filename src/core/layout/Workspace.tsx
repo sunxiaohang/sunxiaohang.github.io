@@ -1,12 +1,11 @@
 import { useCallback, useMemo, useEffect, useRef, useState } from 'react';
 import GridLayout from 'react-grid-layout';
+import { motion } from 'framer-motion';
 import { useWorkspaceStore } from '../store/workspaceStore';
 import { WidgetCard } from './WidgetCard';
-import { LayoutGrid, Pen } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
-interface WorkspaceProps {
-  editMode: boolean;
-}
+interface WorkspaceProps { editMode: boolean; }
 
 export function Workspace({ editMode }: WorkspaceProps) {
   const widgets = useWorkspaceStore((s) => s.widgets);
@@ -15,10 +14,9 @@ export function Workspace({ editMode }: WorkspaceProps) {
   const [containerWidth, setContainerWidth] = useState(800);
 
   useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) setContainerWidth(entry.contentRect.width - 32);
+    const el = containerRef.current; if (!el) return;
+    const observer = new ResizeObserver(entries => {
+      for (const e of entries) setContainerWidth(e.contentRect.width - 32);
     });
     observer.observe(el);
     setContainerWidth(el.clientWidth - 32);
@@ -26,7 +24,7 @@ export function Workspace({ editMode }: WorkspaceProps) {
   }, []);
 
   const layout = useMemo(
-    () => widgets.map((w) => ({ i: w.instanceId, x: w.x, y: w.y, w: w.cols, h: w.rows, minW: 3, minH: 2 })),
+    () => widgets.map(w => ({ i: w.instanceId, x: w.x, y: w.y, w: w.cols, h: w.rows, minW: 3, minH: 2 })),
     [widgets]
   );
 
@@ -38,22 +36,17 @@ export function Workspace({ editMode }: WorkspaceProps) {
   if (widgets.length === 0) {
     return (
       <div ref={containerRef} className="flex-1 flex items-center justify-center min-h-full">
-        <div className="text-center space-y-5 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-xl bg-surface-100 dark:bg-white/[0.02] border border-surface-200 dark:border-white/[0.04]">
-            <LayoutGrid size={32} className="text-surface-300 dark:text-neutral-700" />
-          </div>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-5">
+          <motion.div animate={{ y: [0, -8, 0] }} transition={{ duration: 3, repeat: Infinity }} className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-secondary border border-border/50">
+            <span className="text-4xl">🪄</span>
+          </motion.div>
           <div className="space-y-1.5">
-            <p className="text-base font-semibold text-ink-muted dark:text-neutral-400">工作区为空</p>
-            <p className="text-body-sm text-ink-hint dark:text-neutral-500">
-              {editMode ? '从右侧部件库选择部件添加' : '点击「编辑中」进入编辑模式添加部件'}
+            <p className="text-base font-semibold text-muted-foreground">工作区为空</p>
+            <p className="text-sm text-muted-foreground/70">
+              {editMode ? '点击底部「添加部件」开始 ✨' : '切换到编辑模式添加部件 🎨'}
             </p>
           </div>
-          {editMode && (
-            <button onClick={() => document.getElementById('widget-search')?.focus()} className="mdc-btn-outline">
-              <Pen size={14} />浏览部件库
-            </button>
-          )}
-        </div>
+        </motion.div>
       </div>
     );
   }
@@ -70,7 +63,7 @@ export function Workspace({ editMode }: WorkspaceProps) {
         isDraggable={editMode}
         isResizable={editMode}
       >
-        {widgets.map((w) => (
+        {widgets.map(w => (
           <div key={w.instanceId}>
             <WidgetCard instanceId={w.instanceId} editMode={editMode} />
           </div>

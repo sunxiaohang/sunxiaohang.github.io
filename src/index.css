@@ -3,119 +3,97 @@
 @tailwind utilities;
 
 @layer base {
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --background: 30 20% 98%;
+    --foreground: 240 10% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 12%;
+    --primary: 10 85% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 5% 30%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 50%;
+    --accent: 260 60% 97%;
+    --accent-foreground: 260 50% 40%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 10 85% 55%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 240 10% 5%;
+    --foreground: 0 0% 95%;
+    --card: 240 10% 8%;
+    --card-foreground: 0 0% 95%;
+    --primary: 10 85% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 12%;
+    --secondary-foreground: 0 0% 80%;
+    --muted: 240 5% 12%;
+    --muted-foreground: 240 5% 55%;
+    --accent: 260 40% 15%;
+    --accent-foreground: 260 60% 75%;
+    --border: 240 5% 18%;
+    --input: 240 5% 18%;
+    --ring: 10 85% 60%;
+  }
+
+  * { @apply border-border; }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
       'Helvetica Neue', Arial, 'Noto Sans SC', 'PingFang SC', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    @apply bg-surface text-ink;
-    @apply dark:bg-[#0d0d10] dark:text-neutral-200;
+    @apply bg-background text-foreground;
     min-height: 100vh;
     overflow-x: hidden;
   }
 
   #root { min-height: 100vh; }
 
-  ::selection {
-    @apply bg-primary-100 text-primary-700;
-    @apply dark:bg-primary-500/20 dark:text-primary-200;
-  }
+  ::selection { @apply bg-primary/20 text-foreground; }
 
-  /* Scrollbar - Material style */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-surface-300 rounded-full;
-    @apply dark:bg-white/[0.08];
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-surface-300/80;
-    @apply dark:bg-white/[0.14];
-  }
+  ::-webkit-scrollbar-thumb { @apply bg-muted-foreground/20 rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-muted-foreground/30; }
   .scrollbar-none::-webkit-scrollbar { display: none; }
   .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
 @layer components {
-  /* Material card */
-  .mdc-card {
-    @apply bg-white dark:bg-neutral-900/80 rounded-xl shadow-md
-           border border-black/[0.06] dark:border-white/[0.06];
-  }
-  .mdc-card:hover {
-    @apply shadow-lg border-black/[0.1] dark:border-white/[0.1];
+  /* Playful card */
+  .fun-card {
+    @apply bg-card text-card-foreground rounded-3xl border border-border/50
+           shadow-sm hover:shadow-md transition-all duration-300;
   }
 
-  /* Material input */
-  .mdc-input {
-    @apply w-full px-3.5 py-2.5 bg-surface-100 dark:bg-white/[0.04]
-           border border-surface-300 dark:border-white/[0.08] rounded-lg
-           text-body-sm text-ink dark:text-neutral-200
-           placeholder:text-ink-hint dark:placeholder:text-neutral-600
-           focus:outline-none focus:border-primary-400 dark:focus:border-primary-500/40
-           focus:ring-2 focus:ring-primary-500/10 dark:focus:ring-primary-500/10
-           transition-all duration-200;
+  /* Playful chip */
+  .fun-chip {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-2xl text-sm font-medium
+           bg-secondary text-secondary-foreground border border-border/50
+           whitespace-nowrap shrink-0 transition-all duration-200
+           hover:bg-secondary/80;
   }
-
-  /* Material button - primary */
-  .mdc-btn {
-    @apply inline-flex items-center justify-center gap-1.5 px-4 py-2.5
-           bg-primary-500 text-white rounded-lg text-body-sm font-semibold
-           hover:bg-primary-600 active:scale-[0.97]
-           shadow-sm hover:shadow
-           transition-all duration-150;
-  }
-
-  /* Material button - outline */
-  .mdc-btn-outline {
-    @apply inline-flex items-center justify-center gap-1.5 px-4 py-2.5
-           bg-transparent text-primary-600 dark:text-primary-400
-           border border-primary-200 dark:border-primary-500/20
-           rounded-lg text-body-sm font-semibold
-           hover:bg-primary-50 dark:hover:bg-primary-500/10
-           active:scale-[0.97] transition-all duration-150;
-  }
-
-  /* Material chip */
-  .mdc-chip {
-    @apply inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-body-sm font-medium
-           bg-surface-100 dark:bg-white/[0.05]
-           text-ink-muted dark:text-neutral-400
-           border border-surface-200 dark:border-white/[0.05]
-           hover:bg-surface-200 dark:hover:bg-white/[0.1]
-           whitespace-nowrap shrink-0
-           transition-all duration-150;
-  }
-  .mdc-chip-active {
-    @apply bg-primary-50 dark:bg-primary-500/10
-           text-primary-600 dark:text-primary-400
-           border-primary-200 dark:border-primary-500/20;
+  .fun-chip-active {
+    @apply bg-primary/10 text-primary border-primary/20;
   }
 
   /* react-grid-layout */
   .react-grid-item.react-grid-placeholder {
-    @apply bg-primary-400/20 dark:bg-primary-500/[0.1] rounded-xl;
-    transition-duration: 150ms !important;
+    @apply bg-primary/15 rounded-3xl;
+    transition-duration: 200ms !important;
   }
-  .react-grid-item > .react-resizable-handle {
-    opacity: 0; transition: opacity 0.15s;
-  }
+  .react-grid-item > .react-resizable-handle { opacity: 0; transition: opacity 0.2s; }
   .react-grid-item:hover > .react-resizable-handle { opacity: 1; }
   .react-grid-item > .react-resizable-handle::after {
-    @apply border-surface-300 dark:border-white/20;
+    @apply border-muted-foreground/30 dark:border-white/20;
     width: 9px !important; height: 9px !important;
     bottom: 8px !important; right: 8px !important;
     border-right-width: 2px !important;
     border-bottom-width: 2px !important;
   }
-}
-
-@layer utilities {
-  .glass {
-    @apply bg-white/80 dark:bg-black/60 backdrop-blur-xl
-           border border-black/[0.04] dark:border-white/[0.04];
-  }
-  .text-balance { text-wrap: balance; }
 }

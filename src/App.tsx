@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Sun, Moon, Eye, Pen } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Workspace } from '@/core/layout/Workspace';
 import { InfoPanel } from '@/core/layout/InfoPanel';
-import { WidgetToolbar } from '@/core/layout/WidgetToolbar';
+import { StatusBar } from '@/core/layout/StatusBar';
+import { WidgetDrawer } from '@/core/layout/WidgetDrawer';
 import { TodoPanel } from '@/core/layout/TodoPanel';
 import { useTheme } from '@/hooks/useTheme';
 import '@/widgets/registry';
@@ -10,61 +12,55 @@ import '@/widgets/registry';
 export default function App() {
   const { toggle: toggleTheme, isDark } = useTheme();
   const [editMode, setEditMode] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <div className="h-screen flex flex-col bg-surface dark:bg-[#0d0d10] transition-colors">
+    <div className="h-screen flex flex-col bg-background transition-colors">
       {/* Top bar */}
-      <header className="flex items-center justify-between h-14 px-5 border-b border-black/[0.04] dark:border-white/[0.04] bg-white/90 dark:bg-[#0f0f14]/90 backdrop-blur-xl shrink-0 z-30">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-primary-500 flex items-center justify-center shadow-md shadow-primary-500/25">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="3" />
-                <line x1="3" y1="9" x2="21" y2="9" />
-                <line x1="9" y1="21" x2="9" y2="9" />
-              </svg>
-            </div>
-            <span className="text-sm font-bold text-ink dark:text-neutral-100 tracking-tight">Entrance</span>
+      <header className="flex items-center justify-between h-14 px-5 border-b border-border/50 bg-card/80 backdrop-blur-xl shrink-0 z-30">
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-center gap-3"
+        >
+          <div className="w-8 h-8 rounded-2xl bg-gradient-to-br from-coral-400 to-coral-500 flex items-center justify-center shadow-md shadow-coral-500/25">
+            <span className="text-white text-sm">🏠</span>
           </div>
+          <span className="text-sm font-bold text-foreground tracking-tight">Entrance</span>
+        </motion.div>
 
-          <button
-            onClick={() => setEditMode(!editMode)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              editMode
-                ? 'bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400 border border-primary-200 dark:border-primary-500/20'
-                : 'text-ink-muted dark:text-neutral-400 hover:text-ink dark:hover:text-neutral-200 hover:bg-surface-100 dark:hover:bg-white/[0.04] border border-transparent'
-            }`}
-          >
-            {editMode ? <Pen size={13} /> : <Eye size={13} />}
-            {editMode ? '编辑中' : '预览'}
-          </button>
-        </div>
-
-        <button onClick={toggleTheme} className="p-2 rounded-xl text-ink-muted dark:text-neutral-400 hover:text-ink dark:hover:text-neutral-200 hover:bg-surface-100 dark:hover:bg-white/[0.06] transition-all" title={isDark ? '浅色模式' : '深色模式'}>
+        <button onClick={toggleTheme} className="p-2 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-all" title={isDark ? '☀️' : '🌙'}>
           {isDark ? <Sun size={15} /> : <Moon size={15} />}
         </button>
       </header>
 
       {/* Three-column body */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left: Todo */}
-        <div className="w-[360px] shrink-0 border-r border-black/[0.04] dark:border-white/[0.04] bg-surface-50 dark:bg-[#0f0f14]">
+        {/* Left: Todo 🎯 */}
+        <div className="w-[360px] shrink-0 border-r border-border/50 bg-card/50">
           <TodoPanel />
         </div>
 
-        {/* Center: Workspace + Toolbar */}
+        {/* Center: Workspace + StatusBar */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex-1 overflow-auto">
             <Workspace editMode={editMode} />
           </div>
-          <WidgetToolbar editMode={editMode} />
+          <StatusBar
+            editMode={editMode}
+            onToggleEdit={() => setEditMode(!editMode)}
+            onOpenDrawer={() => setDrawerOpen(true)}
+          />
         </div>
 
-        {/* Right: Info cards */}
-        <div className="w-[360px] shrink-0 border-l border-black/[0.04] dark:border-white/[0.04] bg-surface-50 dark:bg-[#0f0f14]">
+        {/* Right: Info cards ✨ */}
+        <div className="w-[360px] shrink-0 border-l border-border/50 bg-card/50">
           <InfoPanel />
         </div>
       </div>
+
+      {/* Widget drawer */}
+      <WidgetDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </div>
   );
 }

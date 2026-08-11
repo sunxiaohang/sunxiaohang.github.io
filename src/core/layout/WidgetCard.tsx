@@ -1,13 +1,11 @@
 import { useState, useEffect, ComponentType } from 'react';
 import { GripVertical, X, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import type { WidgetProps } from '../registry/types';
 import { widgetRegistry } from '../registry/WidgetRegistry';
 import { useWorkspaceStore } from '../store/workspaceStore';
 
-interface WidgetCardProps {
-  instanceId: string;
-  editMode: boolean;
-}
+interface WidgetCardProps { instanceId: string; editMode: boolean; }
 
 export function WidgetCard({ instanceId, editMode }: WidgetCardProps) {
   const widgetInstance = useWorkspaceStore((s) => s.widgets.find((w) => w.instanceId === instanceId));
@@ -30,37 +28,37 @@ export function WidgetCard({ instanceId, editMode }: WidgetCardProps) {
   if (!widgetInstance || !manifest) return null;
 
   return (
-    <div className="flex flex-col h-full mdc-card transition-shadow duration-200">
-      {/* Header - only show drag handle & remove in edit mode */}
-      <div className={`flex items-center justify-between px-4 py-2.5 select-none border-b border-black/[0.03] dark:border-white/[0.03] shrink-0 transition-colors ${editMode ? 'cursor-grab active:cursor-grabbing drag-handle' : ''}`}>
-        <div className="flex items-center gap-2 text-ink-hint dark:text-neutral-500">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col h-full fun-card"
+    >
+      <div className={`flex items-center justify-between px-4 py-2.5 select-none border-b border-border/30 shrink-0 ${editMode ? 'cursor-grab active:cursor-grabbing drag-handle' : ''}`}>
+        <div className="flex items-center gap-2 text-muted-foreground">
           {editMode && <GripVertical size={14} className="shrink-0" />}
-          <span className="text-body-sm font-medium text-ink-secondary dark:text-neutral-300 tracking-wide">
-            {manifest.name}
-          </span>
+          <span className="text-sm font-semibold text-foreground/80 tracking-wide">{manifest.name}</span>
         </div>
         {editMode && (
           <button
+            onMouseDown={(e) => e.stopPropagation()}
             onClick={(e) => { e.stopPropagation(); removeWidget(instanceId); }}
-            className="p-1.5 rounded-lg text-ink-hint dark:text-neutral-600 hover:text-primary-500 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-all"
+            className="p-1.5 rounded-xl text-muted-foreground hover:text-coral-500 hover:bg-coral-50 dark:hover:bg-coral-500/10 transition-all"
           >
             <X size={14} />
           </button>
         )}
       </div>
-
-      {/* Content */}
       <div className="flex-1 p-4 overflow-visible">
         {loadError ? (
-          <div className="flex items-center justify-center h-full text-ink-hint dark:text-neutral-500 text-body-sm">加载失败</div>
+          <div className="flex items-center justify-center h-full text-muted-foreground text-sm">😵 加载失败</div>
         ) : WidgetComponent ? (
           <WidgetComponent instanceId={instanceId} config={widgetInstance.config} />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <Loader2 size={20} className="text-primary-400 animate-spin" />
+            <Loader2 size={20} className="text-primary animate-spin" />
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
