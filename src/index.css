@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+      'Helvetica Neue', Arial, 'Noto Sans SC', 'PingFang SC', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    @apply bg-surface text-ink;
+    @apply dark:bg-[#0d0d10] dark:text-neutral-200;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  #root { min-height: 100vh; }
+
+  ::selection {
+    @apply bg-primary-100 text-primary-700;
+    @apply dark:bg-primary-500/20 dark:text-primary-200;
+  }
+
+  /* Scrollbar - Material style */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-300 rounded-full;
+    @apply dark:bg-white/[0.08];
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-surface-300/80;
+    @apply dark:bg-white/[0.14];
+  }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+  .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+@layer components {
+  /* Material card */
+  .mdc-card {
+    @apply bg-white dark:bg-neutral-900/70 rounded-3xl shadow-card
+           border border-black/[0.04] dark:border-white/[0.05];
+  }
+  .mdc-card:hover {
+    @apply shadow-card-hover border-black/[0.06] dark:border-white/[0.08];
+  }
+
+  /* Material input */
+  .mdc-input {
+    @apply w-full px-3.5 py-2.5 bg-surface-100 dark:bg-white/[0.03]
+           border border-surface-300 dark:border-white/[0.06] rounded-xl
+           text-body-sm text-ink dark:text-neutral-200
+           placeholder:text-ink-hint dark:placeholder:text-neutral-600
+           focus:outline-none focus:border-primary-400 dark:focus:border-primary-500/40
+           focus:ring-2 focus:ring-primary-500/10 dark:focus:ring-primary-500/10
+           transition-all duration-200;
+  }
+
+  /* Material button - primary */
+  .mdc-btn {
+    @apply inline-flex items-center justify-center gap-1.5 px-4 py-2.5
+           bg-primary-500 text-white rounded-xl text-body-sm font-semibold
+           hover:bg-primary-600 active:scale-[0.97]
+           shadow-sm hover:shadow-md
+           transition-all duration-150;
+  }
+
+  /* Material button - outline */
+  .mdc-btn-outline {
+    @apply inline-flex items-center justify-center gap-1.5 px-4 py-2.5
+           bg-transparent text-primary-600 dark:text-primary-400
+           border border-primary-200 dark:border-primary-500/20
+           rounded-xl text-body-sm font-semibold
+           hover:bg-primary-50 dark:hover:bg-primary-500/10
+           active:scale-[0.97] transition-all duration-150;
+  }
+
+  /* Material chip */
+  .mdc-chip {
+    @apply inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-body-sm font-medium
+           bg-surface-100 dark:bg-white/[0.04]
+           text-ink-muted dark:text-neutral-400
+           border border-surface-200 dark:border-white/[0.04]
+           hover:bg-surface-200 dark:hover:bg-white/[0.08]
+           whitespace-nowrap shrink-0
+           transition-all duration-150;
+  }
+  .mdc-chip-active {
+    @apply bg-primary-50 dark:bg-primary-500/10
+           text-primary-600 dark:text-primary-400
+           border-primary-200 dark:border-primary-500/20;
+  }
+
+  /* react-grid-layout */
+  .react-grid-item.react-grid-placeholder {
+    @apply bg-primary-400/20 dark:bg-primary-500/[0.1] rounded-3xl;
+    transition-duration: 150ms !important;
+  }
+  .react-grid-item > .react-resizable-handle {
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .react-grid-item:hover > .react-resizable-handle { opacity: 1; }
+  .react-grid-item > .react-resizable-handle::after {
+    @apply border-surface-300 dark:border-white/20;
+    width: 9px !important; height: 9px !important;
+    bottom: 8px !important; right: 8px !important;
+    border-right-width: 2px !important;
+    border-bottom-width: 2px !important;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/80 dark:bg-black/60 backdrop-blur-xl
+           border border-black/[0.04] dark:border-white/[0.04];
+  }
+  .text-balance { text-wrap: balance; }
+}
