@@ -1,19 +1,15 @@
 import { useState } from 'react';
 import { Sun, Moon, Eye, Pen } from 'lucide-react';
 import { Workspace } from '@/core/layout/Workspace';
-import { WidgetLibrary } from '@/core/layout/WidgetLibrary';
+import { InfoPanel } from '@/core/layout/InfoPanel';
+import { WidgetToolbar } from '@/core/layout/WidgetToolbar';
 import { TodoPanel } from '@/core/layout/TodoPanel';
 import { useTheme } from '@/hooks/useTheme';
 import '@/widgets/registry';
 
-export function useEditMode() {
-  const [editMode, setEditMode] = useState(false);
-  return { editMode, setEditMode, toggle: () => setEditMode((v) => !v) };
-}
-
 export default function App() {
   const { toggle: toggleTheme, isDark } = useTheme();
-  const { editMode, toggle: toggleEdit } = useEditMode();
+  const [editMode, setEditMode] = useState(false);
 
   return (
     <div className="h-screen flex flex-col bg-surface dark:bg-[#0d0d10] transition-colors">
@@ -31,9 +27,8 @@ export default function App() {
             <span className="text-sm font-bold text-ink dark:text-neutral-100 tracking-tight">Entrance</span>
           </div>
 
-          {/* Edit/View mode toggle */}
           <button
-            onClick={toggleEdit}
+            onClick={() => setEditMode(!editMode)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
               editMode
                 ? 'bg-primary-50 text-primary-600 dark:bg-primary-500/10 dark:text-primary-400 border border-primary-200 dark:border-primary-500/20'
@@ -52,14 +47,22 @@ export default function App() {
 
       {/* Three-column body */}
       <div className="flex-1 flex overflow-hidden">
+        {/* Left: Todo */}
         <div className="w-[360px] shrink-0 border-r border-black/[0.04] dark:border-white/[0.04] bg-surface-50 dark:bg-[#0f0f14]">
           <TodoPanel />
         </div>
-        <div className="flex-1 overflow-auto">
-          <Workspace editMode={editMode} />
+
+        {/* Center: Workspace + Toolbar */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-auto">
+            <Workspace editMode={editMode} />
+          </div>
+          <WidgetToolbar editMode={editMode} />
         </div>
+
+        {/* Right: Info cards */}
         <div className="w-[360px] shrink-0 border-l border-black/[0.04] dark:border-white/[0.04] bg-surface-50 dark:bg-[#0f0f14]">
-          <WidgetLibrary editMode={editMode} />
+          <InfoPanel />
         </div>
       </div>
     </div>
