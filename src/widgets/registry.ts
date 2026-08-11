@@ -11,6 +11,7 @@ import { bookmarksManifest } from './bookmarks';
 import { ideasManifest } from './ideas';
 import { toolsManifest } from './tools';
 import { quickNoteManifest } from './quick-note';
+import { quickLinksManifest } from './quick-links';
 
 const builtInWidgets = [
   clockManifest,
@@ -18,6 +19,7 @@ const builtInWidgets = [
   ideasManifest,
   toolsManifest,
   quickNoteManifest,
+  quickLinksManifest,
 ];
 
 builtInWidgets.forEach((manifest) => widgetRegistry.register(manifest));
