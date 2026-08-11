@@ -56,14 +56,14 @@ export function Workspace({ editMode }: WorkspaceProps) {
         className="layout"
         layout={layout}
         cols={12}
-        rowHeight={76}
+        rowHeight={64}
         width={containerWidth}
         onLayoutChange={handleLayoutChange}
         draggableHandle={editMode ? '.drag-handle' : '.no-drag'}
-        margin={[16, 16]}
+        margin={[10, 10]}
         containerPadding={[16, 16]}
         resizeHandles={editMode ? ['se'] : []}
-        compactType="vertical"
+        compactType={null}
         isDraggable={editMode}
         isResizable={editMode}
       >

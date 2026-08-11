@@ -59,8 +59,11 @@ export function TodoPanel() {
   }, [data.tasks,filter,activeTasks,completedTasks]);
 
   const handleAdd = () => {
-    const t = newText.trim(); if(!t) return;
-    setData((prev:TodoData)=>({tasks:[{id:nanoid(),text:t,completed:false,priority:'medium',dueDate:null,note:'',createdAt:new Date().toISOString()},...prev.tasks]}));
+    const t = newText.trim();
+    if (!t) return;
+    const newTask: TodoItem = { id: nanoid(), text: t, completed: false, priority: 'medium', dueDate: null, note: '', createdAt: new Date().toISOString() };
+    const next: TodoData = { tasks: [newTask, ...data.tasks] };
+    setData(next);
     setNewText('');
   };
 
