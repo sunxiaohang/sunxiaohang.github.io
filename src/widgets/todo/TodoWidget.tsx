@@ -53,7 +53,7 @@ export default function TodoWidget({}: WidgetProps) {
           </div>
         )}
         {sorted.map((task) => (
-          <div key={task.id} className={`flex items-center gap-3 px-3 py-3 rounded-2xl group transition-all hover:bg-surface-100 dark:hover:bg-white/[0.02] ${task.completed ? 'opacity-40' : ''}`}>
+          <div key={task.id} className={`flex items-center gap-3 px-3 py-3 rounded-xl group transition-all hover:bg-surface-100 dark:hover:bg-white/[0.02] ${task.completed ? 'opacity-40' : ''}`}>
             <button onClick={() => setData({ tasks: data.tasks.map((t) => (t.id === task.id ? { ...t, completed: !t.completed } : t)) })} className="shrink-0 text-surface-300 dark:text-neutral-700 hover:text-primary-500 dark:hover:text-primary-400 transition-colors">
               {task.completed ? <CheckCircle2 size={19} className="text-emerald-500" /> : <Circle size={19} />}
             </button>

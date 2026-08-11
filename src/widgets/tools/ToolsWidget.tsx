@@ -38,7 +38,7 @@ export default function ToolsWidget({}: WidgetProps) {
         <div className="grid grid-cols-2 gap-2.5">
           {filtered.map((tool) => (
             <a key={tool.id} href={tool.url} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-surface-50 dark:bg-white/[0.015] hover:bg-surface-100 dark:hover:bg-white/[0.04] transition-all group no-underline border border-surface-100 dark:border-white/[0.03] hover:border-surface-200 dark:hover:border-white/[0.06] hover:shadow-card">
+              className="flex items-center gap-3 px-4 py-3.5 rounded-xl bg-surface-50 dark:bg-white/[0.015] hover:bg-surface-100 dark:hover:bg-white/[0.04] transition-all group no-underline border border-surface-100 dark:border-white/[0.03] hover:border-surface-200 dark:hover:border-white/[0.06] hover:shadow-card">
               <div className="w-9 h-9 rounded-xl bg-surface-100 dark:bg-white/[0.03] border border-surface-200 dark:border-white/[0.04] flex items-center justify-center shrink-0 group-hover:border-surface-300 dark:group-hover:border-white/[0.1] transition-all">
                 {tool.icon ? <img src={tool.icon} alt="" className="w-5 h-5 rounded" /> : <Wrench size={16} className="text-ink-muted dark:text-neutral-500 group-hover:text-ink-secondary dark:group-hover:text-neutral-300 transition-colors" />}
               </div>
@@ -67,7 +67,7 @@ function AddDialog({ categories, onAdd, onClose }: { categories: string[]; onAdd
   const h = (e: React.FormEvent) => { e.preventDefault(); if (!name.trim() || !url.trim()) return; onAdd({ id: nanoid(), name: name.trim(), url: url.trim().startsWith('http') ? url.trim() : `https://${url.trim()}`, description: description.trim(), category: newCat.trim() || category, createdAt: new Date().toISOString() }); };
 
   return (
-    <div className="absolute inset-0 bg-white/95 dark:bg-[#0d0d10]/95 backdrop-blur-sm rounded-3xl flex items-center justify-center z-10 p-5">
+    <div className="absolute inset-0 bg-white/95 dark:bg-[#0d0d10]/95 backdrop-blur-sm rounded-xl flex items-center justify-center z-10 p-5">
       <form onSubmit={h} className="w-full max-w-[280px] space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-base font-bold text-ink dark:text-neutral-100">添加工具</span>

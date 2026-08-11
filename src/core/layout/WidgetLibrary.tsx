@@ -98,7 +98,7 @@ export function WidgetLibrary({ onClose }: WidgetLibraryProps) {
           const count = widgetCounts[widget.id] || 0;
           return (
             <button key={widget.id} onClick={() => addWidget(widget.id)}
-              className="w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl hover:bg-surface-100 dark:hover:bg-white/[0.03] active:scale-[0.985] transition-all text-left group">
+              className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl hover:bg-surface-100 dark:hover:bg-white/[0.03] active:scale-[0.985] transition-all text-left group">
               <div className="w-9 h-9 rounded-xl bg-surface-100 dark:bg-white/[0.03] border border-surface-200 dark:border-white/[0.04] flex items-center justify-center text-ink-muted dark:text-neutral-500 group-hover:text-primary-500 dark:group-hover:text-primary-400 group-hover:border-primary-200 dark:group-hover:border-primary-500/20 group-hover:bg-primary-50 dark:group-hover:bg-primary-500/[0.04] transition-all shrink-0">
                 <Icon size={16} />
               </div>

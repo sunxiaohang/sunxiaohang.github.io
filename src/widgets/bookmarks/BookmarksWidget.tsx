@@ -40,7 +40,7 @@ export default function BookmarksWidget({}: WidgetProps) {
         )}
         {filtered.map((bm) => (
           <a key={bm.id} href={bm.url} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-surface-100 dark:hover:bg-white/[0.02] transition-all group no-underline border border-transparent hover:border-surface-200 dark:hover:border-white/[0.04]">
+            className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-100 dark:hover:bg-white/[0.02] transition-all group no-underline border border-transparent hover:border-surface-200 dark:hover:border-white/[0.04]">
             <div className="w-8 h-8 rounded-xl bg-surface-100 dark:bg-white/[0.03] border border-surface-200 dark:border-white/[0.04] flex items-center justify-center shrink-0 overflow-hidden">
               <img src={bm.icon || getFavicon(bm.url)} alt="" className="w-4 h-4 rounded" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
             </div>
@@ -68,7 +68,7 @@ function AddDialog({ categories, onAdd, onClose }: { categories: string[]; onAdd
   const h = (e: React.FormEvent) => { e.preventDefault(); if (!title.trim() || !url.trim()) return; onAdd({ id: nanoid(), title: title.trim(), url: url.trim().startsWith('http') ? url.trim() : `https://${url.trim()}`, category: newCat.trim() || category, icon: getFavicon(url.trim()), createdAt: new Date().toISOString() }); };
 
   return (
-    <div className="absolute inset-0 bg-white/95 dark:bg-[#0d0d10]/95 backdrop-blur-sm rounded-3xl flex items-center justify-center z-10 p-5">
+    <div className="absolute inset-0 bg-white/95 dark:bg-[#0d0d10]/95 backdrop-blur-sm rounded-xl flex items-center justify-center z-10 p-5">
       <form onSubmit={h} className="w-full max-w-[280px] space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-base font-bold text-ink dark:text-neutral-100">添加书签</span>

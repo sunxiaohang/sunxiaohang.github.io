@@ -51,7 +51,7 @@ export default function IdeasWidget({}: WidgetProps) {
         {showNew && <NewIdeaInline onSave={(note) => { const u: IdeaNote = { ...note, id: nanoid(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }; setData({ notes: [u, ...data.notes], tags: [...new Set([...data.tags, ...note.tags])] }); setSelectedId(u.id); setShowNew(false); }} onCancel={() => setShowNew(false)} />}
         {sorted.map((note) => (
           <button key={note.id} onClick={() => setSelectedId(note.id)}
-            className="w-full text-left px-4 py-3 rounded-2xl hover:bg-surface-100 dark:hover:bg-white/[0.02] transition-all group">
+            className="w-full text-left px-4 py-3 rounded-xl hover:bg-surface-100 dark:hover:bg-white/[0.02] transition-all group">
             <div className="flex items-start justify-between gap-2">
               <span className="text-body-sm font-semibold text-ink dark:text-neutral-200 truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">{note.title || '无标题'}</span>
               <span className="text-xs text-ink-hint dark:text-neutral-500 shrink-0 mt-0.5">{formatDate(note.updatedAt)}</span>
@@ -76,7 +76,7 @@ function NewIdeaInline({ onSave, onCancel }: { onSave: (note: Omit<IdeaNote, 'id
   const [tags, setTags] = useState<string[]>([]);
 
   return (
-    <div className="p-4 space-y-3 bg-amber-50/50 dark:bg-amber-500/[0.03] rounded-2xl border border-amber-100 dark:border-amber-500/10">
+    <div className="p-4 space-y-3 bg-amber-50/50 dark:bg-amber-500/[0.03] rounded-xl border border-amber-100 dark:border-amber-500/10">
       <input type="text" placeholder="灵感标题..." value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-transparent text-body font-semibold text-ink dark:text-neutral-200 placeholder:text-ink-hint dark:placeholder:text-neutral-600 focus:outline-none" autoFocus />
       <textarea placeholder="记录你的想法..." value={content} onChange={(e) => setContent(e.target.value)} rows={3} className="w-full bg-transparent text-body-sm text-ink-secondary dark:text-neutral-300 placeholder:text-ink-hint dark:placeholder:text-neutral-600 focus:outline-none resize-none leading-relaxed" />
       <div className="flex items-center gap-1.5 flex-wrap">

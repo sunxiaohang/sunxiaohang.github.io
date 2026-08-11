@@ -281,10 +281,10 @@ function TodoRow({
   const p = pc[task.priority];
 
   return (
-    <div className={`rounded-2xl transition-all mb-0.5 ${expanded ? 'bg-surface-100 dark:bg-white/[0.02]' : ''}`}>
+    <div className={`rounded-xl transition-all mb-0.5 ${expanded ? 'bg-surface-100 dark:bg-white/[0.02]' : ''}`}>
       {/* Main row */}
       <div
-        className={`flex items-center gap-3 px-3 py-3 group transition-all hover:bg-surface-100 dark:hover:bg-white/[0.02] rounded-2xl cursor-pointer ${task.completed ? 'opacity-40' : ''}`}
+        className={`flex items-center gap-3 px-3 py-3 group transition-all hover:bg-surface-100 dark:hover:bg-white/[0.02] rounded-xl cursor-pointer ${task.completed ? 'opacity-40' : ''}`}
         onClick={onExpand}
       >
         {/* Priority dot */}

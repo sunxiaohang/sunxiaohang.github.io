@@ -42,7 +42,7 @@ export function Workspace() {
     return (
       <div ref={containerRef} className="flex-1 flex items-center justify-center min-h-full">
         <div className="text-center space-y-5 animate-fade-in">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-surface-100 dark:bg-white/[0.02] border border-surface-200 dark:border-white/[0.04]">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-xl bg-surface-100 dark:bg-white/[0.02] border border-surface-200 dark:border-white/[0.04]">
             <LayoutGrid size={32} className="text-surface-300 dark:text-neutral-700" />
           </div>
           <div className="space-y-1.5">
