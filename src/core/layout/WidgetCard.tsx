@@ -4,9 +4,12 @@ import type { WidgetProps } from '../registry/types';
 import { widgetRegistry } from '../registry/WidgetRegistry';
 import { useWorkspaceStore } from '../store/workspaceStore';
 
-interface WidgetCardProps { instanceId: string; }
+interface WidgetCardProps {
+  instanceId: string;
+  editMode: boolean;
+}
 
-export function WidgetCard({ instanceId }: WidgetCardProps) {
+export function WidgetCard({ instanceId, editMode }: WidgetCardProps) {
   const widgetInstance = useWorkspaceStore((s) => s.widgets.find((w) => w.instanceId === instanceId));
   const removeWidget = useWorkspaceStore((s) => s.removeWidget);
   const manifest = widgetInstance ? widgetRegistry.get(widgetInstance.widgetId) : undefined;
@@ -28,20 +31,22 @@ export function WidgetCard({ instanceId }: WidgetCardProps) {
 
   return (
     <div className="flex flex-col h-full mdc-card transition-shadow duration-200">
-      {/* Drag handle */}
-      <div className="flex items-center justify-between px-4 py-2.5 cursor-grab active:cursor-grabbing drag-handle select-none border-b border-black/[0.03] dark:border-white/[0.03] shrink-0">
+      {/* Header - only show drag handle & remove in edit mode */}
+      <div className={`flex items-center justify-between px-4 py-2.5 select-none border-b border-black/[0.03] dark:border-white/[0.03] shrink-0 transition-colors ${editMode ? 'cursor-grab active:cursor-grabbing drag-handle' : ''}`}>
         <div className="flex items-center gap-2 text-ink-hint dark:text-neutral-500">
-          <GripVertical size={14} className="shrink-0" />
+          {editMode && <GripVertical size={14} className="shrink-0" />}
           <span className="text-body-sm font-medium text-ink-secondary dark:text-neutral-300 tracking-wide">
             {manifest.name}
           </span>
         </div>
-        <button
-          onClick={(e) => { e.stopPropagation(); removeWidget(instanceId); }}
-          className="p-1.5 rounded-lg text-ink-hint dark:text-neutral-600 hover:text-primary-500 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-all"
-        >
-          <X size={14} />
-        </button>
+        {editMode && (
+          <button
+            onClick={(e) => { e.stopPropagation(); removeWidget(instanceId); }}
+            className="p-1.5 rounded-lg text-ink-hint dark:text-neutral-600 hover:text-primary-500 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-500/10 transition-all"
+          >
+            <X size={14} />
+          </button>
+        )}
       </div>
 
       {/* Content */}

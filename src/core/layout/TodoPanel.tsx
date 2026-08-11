@@ -111,21 +111,23 @@ export function TodoPanel() {
   }, [data.tasks, filter, activeTasks, completedTasks]);
 
   const handleAdd = () => {
-    if (!newText.trim()) return;
-    setData({ tasks: [{ id: nanoid(), text: newText.trim(), completed: false, priority: 'medium', dueDate: null, note: '', createdAt: new Date().toISOString() }, ...data.tasks] });
+    const text = newText.trim();
+    if (!text) return;
+    const task: TodoItem = { id: nanoid(), text, completed: false, priority: 'medium', dueDate: null, note: '', createdAt: new Date().toISOString() };
+    setData((prev: TodoData) => ({ tasks: [task, ...prev.tasks] }));
     setNewText('');
   };
 
   const handleToggle = (id: string) => {
-    setData({ tasks: data.tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)) });
+    setData((prev: TodoData) => ({ tasks: prev.tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)) }));
   };
 
   const handleDelete = (id: string) => {
-    setData({ tasks: data.tasks.filter((t) => t.id !== id) });
+    setData((prev: TodoData) => ({ tasks: prev.tasks.filter((t) => t.id !== id) }));
   };
 
   const handleUpdate = (id: string, patch: Partial<TodoItem>) => {
-    setData({ tasks: data.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) });
+    setData((prev: TodoData) => ({ tasks: prev.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)) }));
   };
 
   if (loading) return <div className="flex items-center justify-center h-full"><div className="w-5 h-5 border-2 border-surface-300 dark:border-white/[0.08] border-t-primary-500 rounded-full animate-spin" /></div>;

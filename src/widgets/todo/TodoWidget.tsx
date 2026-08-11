@@ -31,9 +31,9 @@ export default function TodoWidget({}: WidgetProps) {
       <div className="flex gap-2">
         <input type="text" placeholder="添加新任务..." value={newText}
           onChange={(e) => setNewText(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter' && newText.trim()) { setData({ tasks: [{ id: nanoid(), text: newText.trim(), completed: false, priority: 'medium', createdAt: new Date().toISOString() }, ...data.tasks] }); setNewText(''); } }}
+          onKeyDown={(e) => { if (e.key === 'Enter' && newText.trim()) { const t = { id: nanoid(), text: newText.trim(), completed: false, priority: 'medium' as Priority, createdAt: new Date().toISOString() }; setData((prev: TodoData) => ({ tasks: [t, ...prev.tasks] })); setNewText(''); } }}
           className="flex-1 mdc-input" />
-        <button onClick={() => { if (!newText.trim()) return; setData({ tasks: [{ id: nanoid(), text: newText.trim(), completed: false, priority: 'medium', createdAt: new Date().toISOString() }, ...data.tasks] }); setNewText(''); }}
+        <button onClick={() => { const text = newText.trim(); if (!text) return; const t = { id: nanoid(), text, completed: false, priority: 'medium' as Priority, createdAt: new Date().toISOString() }; setData((prev: TodoData) => ({ tasks: [t, ...prev.tasks] })); setNewText(''); }}
           className="mdc-btn px-3.5 shrink-0"><Plus size={16} /></button>
       </div>
 

@@ -2,29 +2,26 @@ import { useCallback, useMemo, useEffect, useRef, useState } from 'react';
 import GridLayout from 'react-grid-layout';
 import { useWorkspaceStore } from '../store/workspaceStore';
 import { WidgetCard } from './WidgetCard';
-import { LayoutGrid, Plus } from 'lucide-react';
+import { LayoutGrid, Pen } from 'lucide-react';
 
-export function Workspace() {
+interface WorkspaceProps {
+  editMode: boolean;
+}
+
+export function Workspace({ editMode }: WorkspaceProps) {
   const widgets = useWorkspaceStore((s) => s.widgets);
   const updateLayout = useWorkspaceStore((s) => s.updateLayout);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(800);
 
-  // Observe actual container width (panel is now resizable)
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-
     const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerWidth(entry.contentRect.width - 32); // 2*padding
-      }
+      for (const entry of entries) setContainerWidth(entry.contentRect.width - 32);
     });
-
     observer.observe(el);
-    // Initial measurement
     setContainerWidth(el.clientWidth - 32);
-
     return () => observer.disconnect();
   }, []);
 
@@ -47,12 +44,15 @@ export function Workspace() {
           </div>
           <div className="space-y-1.5">
             <p className="text-base font-semibold text-ink-muted dark:text-neutral-400">工作区为空</p>
-            <p className="text-body-sm text-ink-hint dark:text-neutral-500">从右侧部件库选择部件添加到工作区</p>
+            <p className="text-body-sm text-ink-hint dark:text-neutral-500">
+              {editMode ? '从右侧部件库选择部件添加' : '点击「编辑中」进入编辑模式添加部件'}
+            </p>
           </div>
-          <button onClick={() => { document.getElementById('widget-search')?.focus(); }}
-            className="mdc-btn-outline">
-            <Plus size={15} />浏览部件库
-          </button>
+          {editMode && (
+            <button onClick={() => document.getElementById('widget-search')?.focus()} className="mdc-btn-outline">
+              <Pen size={14} />浏览部件库
+            </button>
+          )}
         </div>
       </div>
     );
@@ -63,11 +63,17 @@ export function Workspace() {
       <GridLayout
         className="layout" layout={layout} cols={12} rowHeight={76}
         width={containerWidth} onLayoutChange={handleLayoutChange}
-        draggableHandle=".drag-handle" margin={[16, 16]} containerPadding={[0, 0]}
-        resizeHandles={['se']} compactType="vertical" isDraggable isResizable
+        draggableHandle={editMode ? '.drag-handle' : '.no-drag'}
+        margin={[16, 16]} containerPadding={[0, 0]}
+        resizeHandles={editMode ? ['se'] : []}
+        compactType="vertical"
+        isDraggable={editMode}
+        isResizable={editMode}
       >
         {widgets.map((w) => (
-          <div key={w.instanceId}><WidgetCard instanceId={w.instanceId} /></div>
+          <div key={w.instanceId}>
+            <WidgetCard instanceId={w.instanceId} editMode={editMode} />
+          </div>
         ))}
       </GridLayout>
     </div>

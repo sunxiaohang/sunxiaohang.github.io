@@ -7,7 +7,7 @@
 import { widgetRegistry } from '@/core/registry/WidgetRegistry';
 import { clockManifest } from './clock';
 import { bookmarksManifest } from './bookmarks';
-import { todoManifest } from './todo';
+
 import { ideasManifest } from './ideas';
 import { toolsManifest } from './tools';
 import { quickNoteManifest } from './quick-note';
@@ -15,7 +15,6 @@ import { quickNoteManifest } from './quick-note';
 const builtInWidgets = [
   clockManifest,
   bookmarksManifest,
-  todoManifest,
   ideasManifest,
   toolsManifest,
   quickNoteManifest,
