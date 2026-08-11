@@ -1,13 +1,11 @@
 import { Plus, LayoutGrid } from 'lucide-react';
 import { useWorkspaceStore } from '../store/workspaceStore';
-import { Button } from '@/shared/ui/button';
 
 interface StatusBarProps {
-  editMode: boolean;
   onOpenDrawer: () => void;
 }
 
-export function StatusBar({ editMode, onOpenDrawer }: StatusBarProps) {
+export function StatusBar({ onOpenDrawer }: StatusBarProps) {
   const widgets = useWorkspaceStore((s) => s.widgets);
 
   return (
@@ -17,16 +15,13 @@ export function StatusBar({ editMode, onOpenDrawer }: StatusBarProps) {
         <span>{widgets.length} 个部件</span>
       </div>
 
-      <Button
-        size="sm"
-        variant="default"
+      <button
         onClick={onOpenDrawer}
-        disabled={!editMode}
-        className="gap-1.5 rounded-2xl"
+        className="inline-flex items-center gap-1.5 h-8 px-4 rounded-2xl bg-primary text-primary-foreground text-xs font-semibold shadow-sm hover:bg-primary/90 active:scale-[0.97] transition-all"
       >
         <Plus size={14} />
         添加部件
-      </Button>
+      </button>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Plus, X, Pencil, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWidgetData } from '@/hooks/useWidgetData';
-import { Button } from '@/shared/ui/button';
+import { useEditMode } from '@/core/layout/EditModeContext';
 import { nanoid } from '@/lib/utils';
 import type { WidgetProps } from '@/core/registry/types';
 import type { QuickLink, QuickLinksData } from './types';
@@ -23,6 +23,7 @@ export default function QuickLinksWidget({}: WidgetProps) {
   const [data, setData, loading] = useWidgetData<QuickLinksData>('quick-links-main', defaultData);
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const editMode = useEditMode();
 
   if (loading) return <div className="flex items-center justify-center h-full"><div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" /></div>;
 
@@ -43,12 +44,14 @@ export default function QuickLinksWidget({}: WidgetProps) {
           <div className="flex items-center gap-2 text-muted-foreground min-w-max">
             <span className="text-lg">🌐</span>
             <span className="text-sm">添加快捷链接</span>
+            {editMode && (
             <div className="flex gap-1">
               {presets.map(p => (
                 <button key={p.url} onClick={() => setData({ links: [...data.links, { ...p, id: nanoid(), icon: getFavicon(p.url), createdAt: new Date().toISOString() }] })}
                   className="px-2.5 py-1 text-xs rounded-2xl bg-secondary text-muted-foreground border border-border/50 hover:text-primary hover:border-primary/30 transition-all">+{p.name}</button>
               ))}
             </div>
+            )}
           </div>
         )}
 
@@ -69,6 +72,7 @@ export default function QuickLinksWidget({}: WidgetProps) {
                     <Globe size={20} className="text-muted-foreground" />}
                 </div>
                 <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors truncate max-w-[72px]">{link.name}</span>
+                {editMode && (
                 <div className="absolute -top-0.5 -right-0.5 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
                   <button onClick={e => { e.preventDefault(); e.stopPropagation(); setEditingId(link.id); }}
                     className="w-5 h-5 rounded-full bg-card border border-border flex items-center justify-center hover:bg-sky-50 dark:hover:bg-sky-500/10 hover:border-sky-200 dark:hover:border-sky-500/20 transition-all" title="编辑">
@@ -77,18 +81,21 @@ export default function QuickLinksWidget({}: WidgetProps) {
                     className="w-5 h-5 rounded-full bg-card border border-border flex items-center justify-center hover:bg-coral-50 dark:hover:bg-coral-500/10 hover:border-coral-200 dark:hover:border-coral-500/20 transition-all" title="删除">
                     <X size={9} className="text-muted-foreground hover:text-coral-500" /></button>
                 </div>
+                )}
               </motion.a>
             )
           ))}
         </AnimatePresence>
       </div>
 
-      {!showAdd ? (
-        <button onClick={() => setShowAdd(true)}
-          className="w-10 h-10 shrink-0 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all">
-          <Plus size={18} /></button>
-      ) : (
-        <AddForm onAdd={handleAdd} onClose={() => setShowAdd(false)} />
+      {editMode && (
+        !showAdd ? (
+          <button onClick={() => setShowAdd(true)}
+            className="w-10 h-10 shrink-0 rounded-2xl border-2 border-dashed border-border hover:border-primary/50 flex items-center justify-center text-muted-foreground hover:text-primary hover:bg-primary/5 transition-all">
+            <Plus size={18} /></button>
+        ) : (
+          <AddForm onAdd={handleAdd} onClose={() => setShowAdd(false)} />
+        )
       )}
     </div>
   );
@@ -101,7 +108,7 @@ function AddForm({ onAdd, onClose }: { onAdd: (link: QuickLink) => void; onClose
       className="flex items-center gap-1.5 shrink-0">
       <input type="text" placeholder="名称" value={name} onChange={e => setName(e.target.value)} className="w-20 h-9 px-3 bg-secondary border border-border rounded-2xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all" autoFocus />
       <input type="text" placeholder="https://" value={url} onChange={e => setUrl(e.target.value)} className="w-32 h-9 px-3 bg-secondary border border-border rounded-2xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all" />
-      <Button type="submit" size="sm" className="rounded-2xl">添加</Button>
+      <button type="submit" className="inline-flex items-center justify-center h-8 px-4 rounded-2xl bg-primary text-primary-foreground text-xs font-semibold shadow-sm hover:bg-primary/90 active:scale-95 transition-all">添加</button>
       <button type="button" onClick={onClose} className="p-1.5 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"><X size={14} /></button>
     </motion.form>
   );
@@ -114,7 +121,7 @@ function EditForm({ initialName, initialUrl, onSave, onCancel }: { initialName: 
       className="flex items-center gap-1.5 shrink-0">
       <input type="text" placeholder="名称" value={name} onChange={e => setName(e.target.value)} className="w-20 h-9 px-3 bg-secondary border border-border rounded-2xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all" autoFocus />
       <input type="text" placeholder="https://" value={url} onChange={e => setUrl(e.target.value)} className="w-32 h-9 px-3 bg-secondary border border-border rounded-2xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 transition-all" />
-      <Button type="submit" size="sm" className="rounded-2xl">保存</Button>
+      <button type="submit" className="inline-flex items-center justify-center h-8 px-4 rounded-2xl bg-primary text-primary-foreground text-xs font-semibold shadow-sm hover:bg-primary/90 active:scale-95 transition-all">保存</button>
       <button type="button" onClick={onCancel} className="p-1.5 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"><X size={14} /></button>
     </motion.form>
   );
