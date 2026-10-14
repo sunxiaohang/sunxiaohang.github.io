@@ -247,3 +247,23 @@ test('star：支持 points 角数，越界自动修正到 [3,24]', () => {
   assert.equal(compile(wrap('<star points="2"/>')).scene.entities[0].points, 3);
   assert.equal(compile(wrap('<star points="40"/>')).scene.entities[0].points, 24);
 });
+
+// ---------------- icon 图标实体 ----------------
+test('icon：emoji 图标实体，可定位、可补间、复用 text 渲染', () => {
+  const r = compile(wrap('<icon id="i" at="2,2" text="🎯" size=".5c"/><step say="x"><i pulse/></step>'));
+  assert.ok(r.ok, JSON.stringify(r.diagnostics));
+  assert.equal(r.scene.byId.get('i').type, 'icon');
+  assert.equal(r.scene.byId.get('i').init.text, '🎯');
+  // 参与超框检测（POSITIONAL）
+  assert.ok(r.scene.entities.some((e) => e.type === 'icon'));
+});
+
+// ---------------- lint 诊断结构化 id（错误可视化数据源） ----------------
+test('lint：诊断带结构化 id / ids，供画布高亮定位', () => {
+  const over = lint(compile('<scene width="300" height="200" grid="1x1"><text id="t" at="1,1" text="这是一段特别特别特别长的文字" size="40"/><step say="x"/></scene>').scene)
+    .find((d) => d.code === 'W_OVERFLOW');
+  assert.ok(over && over.id === 't');
+  const overlap = lint(compile('<scene width="400" height="300" grid="2x1"><circle id="a" at="1,1"/><circle id="b" at="1,1"/><step say="x"/></scene>').scene)
+    .find((d) => d.code === 'W_OVERLAP');
+  assert.ok(overlap && overlap.ids.includes('a') && overlap.ids.includes('b'));
+});

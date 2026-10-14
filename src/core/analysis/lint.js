@@ -14,7 +14,7 @@ function textWidth(text, size) {
 }
 
 /** 实体的真实包围盒（世界坐标，含缩放）。text 用估算宽度，形状用 w/h/size；三角/星形按实际几何而非外接正方形。 */
-function aabb(e, L) {
+export function aabb(e, L) {
   const x = L.x + L.ox, y = L.y + L.oy;
   let w, h;
   if (e.type === 'text') { w = textWidth(e.init.text, L.size); h = L.size; }
@@ -31,8 +31,8 @@ const offscreen = (scene, e, L) => {
   return b.r < 0 || b.l > scene.width || b.b < 0 || b.t > scene.height;
 };
 
-/** 参与重叠检测的类型：实心图形 + 文字 */
-const OVERLAPPABLE = new Set([...SOLID, 'text']);
+/** 参与重叠检测的类型：实心图形 + 文字 + 图标 */
+const OVERLAPPABLE = new Set([...SOLID, 'text', 'icon']);
 
 /**
  * 采样检查：
@@ -63,7 +63,7 @@ export function lint(scene, step = 0.1) {
     }
     const L = frames[first].f.entities[i];
     out.push({
-      severity: 'warning', code: 'W_OFFSCREEN', line: e.line, col: e.col,
+      severity: 'warning', code: 'W_OFFSCREEN', line: e.line, col: e.col, id: e.id,
       message: `对象 "${e.id}" 在 ${r2(frames[first].t)}s 时跑出了画布并一直留在外面 (${Math.round(L.x + L.ox)}, ${Math.round(L.y + L.oy)})`,
     });
   });
@@ -86,7 +86,7 @@ export function lint(scene, step = 0.1) {
           if (seen.has(e.id)) continue;
           seen.add(e.id);
           out.push({
-            severity: 'warning', code: 'W_OVERFLOW', line: e.line, col: e.col,
+            severity: 'warning', code: 'W_OVERFLOW', line: e.line, col: e.col, id: e.id,
             message: `对象 "${e.id}" 超出了画布边界（包围盒 [${Math.round(b.l)},${Math.round(b.t)}]~[${Math.round(b.r)},${Math.round(b.b)}]，画布 ${scene.width}×${scene.height}）`,
           });
         }
@@ -118,7 +118,7 @@ export function lint(scene, step = 0.1) {
           if (dx > minW * 0.25 && dy > minH * 0.25) {
             seen.add(key);
             out.push({
-              severity: 'warning', code: 'W_OVERLAP', line: B.e.line, col: B.e.col,
+              severity: 'warning', code: 'W_OVERLAP', line: B.e.line, col: B.e.col, ids: [A.e.id, B.e.id],
               message: `"${A.e.id}" 与 "${B.e.id}" 重叠了（在 ${r2(t)}s 的画面里）`,
             });
           }

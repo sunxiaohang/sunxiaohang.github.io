@@ -130,6 +130,14 @@ export function createEntity(node, ctx, opts = {}) {
       init.width = r.len('width', 0, { min: 0 });
       init.text = r.str('text', '');
       break;
+    case 'icon':
+      init.size = r.len('size', 48, { min: 1 });
+      init.w = 0;
+      init.fill = r.color('fill', col('#ffffff'));
+      init.stroke = r.color('stroke', NONE);
+      init.width = r.len('width', 0, { min: 0 });
+      init.text = r.str('text', '');
+      break;
     case 'ring':
       init.size = r.len('size', Math.min(U, 96), { min: 1 });
       init.stroke = r.color('stroke', col('#ff5c7a'));

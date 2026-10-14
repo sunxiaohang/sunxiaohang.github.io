@@ -1,9 +1,9 @@
 import { EASE_NAMES } from '../util/ease.js';
 import { FUNCTION_DOCS, CONST_NAMES } from './expr.js';
 
-export const ENTITY_TYPES = ['circle', 'ellipse', 'rect', 'triangle', 'star', 'text', 'line', 'arrow', 'ring', 'note', 'grid'];
+export const ENTITY_TYPES = ['circle', 'ellipse', 'rect', 'triangle', 'star', 'text', 'icon', 'line', 'arrow', 'ring', 'note', 'grid'];
 export const SOLID = new Set(['circle', 'ellipse', 'rect', 'triangle', 'star']);
-export const POSITIONAL = new Set(['circle', 'ellipse', 'rect', 'triangle', 'star', 'text', 'ring', 'note']);
+export const POSITIONAL = new Set(['circle', 'ellipse', 'rect', 'triangle', 'star', 'text', 'icon', 'ring', 'note']);
 export const SEGMENTED = new Set(['line', 'arrow']);
 /** 有 w/h 两个独立尺寸的类型 */
 export const BOXED = new Set(['rect', 'ellipse']);
@@ -81,6 +81,7 @@ export const ENTITY_ATTRS = {
   triangle: SHAPE,
   star: [...SHAPE, 'points'],
   text: [...BASE, 'at', 'px', 'size', 'fill', 'rot', 'text', 'w', 'stroke', 'width'],
+  icon: [...BASE, 'at', 'px', 'size', 'fill', 'rot', 'text'],
   ring: [...BASE, 'at', 'px', 'size', 'stroke', 'width', 'rot'],
   line: [...BASE, 'from', 'to', 'stroke', 'width', 'dash'],
   arrow: [...BASE, 'from', 'to', 'stroke', 'width', 'dash', 'head'],
@@ -97,6 +98,7 @@ const ENTITY_DOC = {
   triangle: '三角形',
   star: '五角星',
   text: '文字',
+  icon: '图标：emoji / 符号（如 text="🎯"），零资源、跨平台',
   line: '线段（color 用 stroke）',
   arrow: '箭头',
   ring: '圆环，用来圈出重点',

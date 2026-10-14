@@ -97,6 +97,7 @@ function buildItem(scene, e, L, alpha, measure) {
         shadow: buildShadow(scene, e, L),
       };
     case 'text':
+    case 'icon':
       return buildText(scene, e, L, alpha, measure);
     case 'ring':
       return {

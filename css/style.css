@@ -26,7 +26,7 @@ body {
 }
 
 .top {
-  display: flex; align-items: center; gap: 10px; padding: 0 16px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px 16px;
   border-bottom: 1px solid var(--line);
   background: rgba(13, 14, 24, .7); backdrop-filter: blur(10px);
 }
@@ -130,6 +130,7 @@ main {
 /* 舞台 */
 .right { display: flex; flex-direction: column; }
 .stagewrap {
+  position: relative;
   flex: 1; min-height: 0; display: grid; place-items: center; padding: 16px;
   background:
     linear-gradient(45deg, #0c0d17 25%, transparent 25%, transparent 75%, #0c0d17 75%) 0 0 / 20px 20px,
@@ -195,6 +196,62 @@ dialog {
   box-shadow: 0 30px 80px rgba(0, 0, 0, .6);
 }
 dialog::backdrop { background: rgba(5, 6, 12, .65); backdrop-filter: blur(4px); }
+
+/* 欢迎引导 */
+.welcome { width: min(560px, 92vw); text-align: center; }
+.welcome-box { padding: 34px 40px 28px; }
+.welcome-logo { margin-bottom: 18px; }
+.welcome-logo .logo { width: 44px; height: 44px; border-radius: 12px; }
+.welcome h1 { margin: 0 0 10px; font-size: 24px; letter-spacing: .5px; }
+.welcome-sub { color: var(--muted); margin: 0 0 22px; font-size: 14px; line-height: 1.6; }
+.welcome-features { display: flex; gap: 10px; margin-bottom: 22px; }
+.welcome-features > div { flex: 1; background: rgba(255, 255, 255, .03); border: 1px solid var(--line); border-radius: 10px; padding: 12px 8px; }
+.welcome-features b { display: block; font-size: 13px; margin-bottom: 4px; color: var(--accent2); }
+.welcome-features span { font-size: 12px; color: var(--muted); }
+.welcome-try { display: flex; gap: 8px; justify-content: center; margin-bottom: 18px; flex-wrap: wrap; }
+.welcome .wide { width: 100%; padding: 10px; font-size: 15px; }
+.welcome-hint { color: var(--muted); font-size: 12px; margin: 14px 0 0; }
+
+/* 素材面板 */
+.assets-body { padding: 8px 18px 18px; max-height: calc(86vh - 56px); overflow: auto; }
+.assets-group { margin: 12px 0 0; }
+.assets-group h4 { margin: 0 0 8px; color: var(--accent2); font-size: 13px; letter-spacing: 1px; }
+.assets-grid { display: flex; flex-wrap: wrap; gap: 4px; }
+.assets-grid button {
+  width: 34px; height: 34px; padding: 0; font-size: 20px; line-height: 1;
+  background: transparent; border: 1px solid transparent; border-radius: 8px; cursor: pointer;
+}
+.assets-grid button:hover { background: rgba(124, 108, 255, .15); border-color: var(--line); }
+
+/* 分享库 */
+.library { width: min(880px, 92vw); }
+.library-body {
+  padding: 6px 18px 18px; max-height: calc(86vh - 56px); overflow: auto;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px;
+}
+.lib-cat { grid-column: 1 / -1; margin: 12px 0 0; color: var(--accent2); font-size: 13px; letter-spacing: 1px; }
+.lib-card { background: rgba(255, 255, 255, .03); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+.lib-name { font-size: 14px; font-weight: 600; }
+.lib-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.lib-tag { font-size: 11px; color: var(--muted); background: rgba(255, 255, 255, .05); padding: 1px 6px; border-radius: 4px; }
+.lib-actions { display: flex; gap: 6px; margin-top: auto; }
+.lib-actions button { flex: 1; padding: 5px; font-size: 12px; }
+
+/* 对象属性面板（WYSIWYG inspector） */
+.inspector {
+  position: absolute; top: 24px; right: 24px; width: 220px; z-index: 5;
+  background: rgba(19, 20, 34, .96); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .5); overflow: hidden;
+}
+.insp-head { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; border-bottom: 1px solid var(--line); }
+.insp-title { font-size: 13px; font-weight: 600; }
+.insp-head .icon { padding: 2px 6px; }
+.insp-body { padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow: auto; }
+.insp-field { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.insp-field label { flex: 0 0 52px; color: var(--muted); }
+.insp-field input { flex: 1; min-width: 0; font: 12px var(--mono); color: var(--text); background: #141527; border: 1px solid var(--line); border-radius: 6px; padding: 5px 7px; }
+.insp-field input[readonly] { opacity: .55; cursor: not-allowed; }
+.insp-hint { font-size: 11px; color: var(--muted); margin: 2px 0 0; line-height: 1.5; }
 .docs-head { display: flex; justify-content: space-between; align-items: center; margin: 0; padding: 12px 18px; border-bottom: 1px solid var(--line); }
 .docs-body { padding: 4px 18px 18px; overflow: auto; max-height: calc(86vh - 56px); font-size: 13px; }
 .docs-body h4 { margin: 18px 0 6px; color: var(--accent2); font-size: 13px; letter-spacing: 1px; }

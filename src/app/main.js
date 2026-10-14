@@ -11,7 +11,32 @@ import { TimelineView } from './timeline-view.js';
 
 const $ = (id) => document.getElementById(id);
 const STORAGE_KEY = 'gridmotion.src.v4';
+const PROJECTS_KEY = 'gridmotion.projects.v1';
+const CURRENT_KEY = 'gridmotion.current.v1';
+const WELCOME_KEY = 'gridmotion.welcome.v1';
 const hash = new URLSearchParams(location.hash.slice(1));
+
+// ---- 多场景（本地项目列表）----
+let projects = [];
+let currentId = null;
+
+// 分享链接：脚本用 URL-safe base64 压缩，比 percent-encoding 紧凑，能容纳更长脚本
+const encodeShare = (src) => {
+  const bytes = new TextEncoder().encode(src);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
+const decodeShare = (code) => {
+  const b64 = code.replace(/-/g, '+').replace(/_/g, '/');
+  if (/^[A-Za-z0-9+/]*={0,2}$/.test(b64)) {
+    try {
+      const pad = '='.repeat((4 - (b64.length % 4)) % 4);
+      return new TextDecoder().decode(Uint8Array.from(atob(b64 + pad), (c) => c.charCodeAt(0)));
+    } catch { /* 不是合法 base64，退回原文 */ }
+  }
+  return code;
+};
 
 const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg>';
 const ICON_PAUSE = '<svg viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>';
@@ -37,6 +62,81 @@ const timeline = new TimelineView({
 const scrub = { resume: false };
 let exporting = null;
 
+// ---------- 多场景（本地项目） ----------
+function loadProjects() {
+  try { projects = JSON.parse(localStorage.getItem(PROJECTS_KEY) || '[]'); }
+  catch { projects = []; }
+  if (!Array.isArray(projects)) projects = [];
+  // 迁移旧单场景草稿
+  if (!projects.length) {
+    try {
+      const old = localStorage.getItem(STORAGE_KEY);
+      if (old) projects.push({ id: 'p1', name: '我的场景', src: old, updatedAt: Date.now() });
+    } catch { /* ignore */ }
+  }
+  if (!projects.length) projects.push({ id: 'p1', name: '未命名', src: '', updatedAt: Date.now() });
+  currentId = localStorage.getItem(CURRENT_KEY);
+  if (!currentId || !projects.some((p) => p.id === currentId)) currentId = projects[0].id;
+}
+function saveProjects() {
+  try { localStorage.setItem(PROJECTS_KEY, JSON.stringify(projects)); } catch { /* ignore */ }
+}
+const currentProject = () => projects.find((p) => p.id === currentId) || projects[0];
+function persistCurrent() {
+  const p = currentProject();
+  if (p) { p.src = editor.value; p.updatedAt = Date.now(); saveProjects(); }
+  try { localStorage.setItem(STORAGE_KEY, editor.value); } catch { /* ignore */ }
+}
+function renderProjects() {
+  const sel = $('projects');
+  sel.innerHTML = '';
+  for (const p of projects) {
+    const o = document.createElement('option');
+    o.value = p.id;
+    o.textContent = p.name;
+    sel.appendChild(o);
+  }
+  const add = document.createElement('option');
+  add.value = '__new__'; add.textContent = '＋ 新建场景';
+  sel.appendChild(add);
+  const del = document.createElement('option');
+  del.value = '__del__'; del.textContent = '－ 删除当前';
+  sel.appendChild(del);
+  sel.value = currentId;
+}
+function switchProject(id) {
+  persistCurrent();
+  currentId = id;
+  try { localStorage.setItem(CURRENT_KEY, id); } catch { /* ignore */ }
+  editor.value = currentProject().src;
+  recompile(false);
+  renderProjects();
+}
+function newProject() {
+  const p = {
+    id: 'p' + Date.now(), name: '未命名', updatedAt: Date.now(),
+    src: '<scene width="800" height="600" grid="4x3">\n  <circle id="a" at="1,1" fill="#7c6cff" sound="pop"/>\n  <step say="你好！" dur=".6">\n    <a at="3,3" pulse=".1"/>\n  </step>\n</scene>\n',
+  };
+  persistCurrent();
+  projects.push(p);
+  currentId = p.id;
+  try { localStorage.setItem(CURRENT_KEY, p.id); } catch { /* ignore */ }
+  saveProjects();
+  editor.value = p.src;
+  recompile(false);
+  renderProjects();
+}
+function deleteProject() {
+  if (projects.length <= 1) { alert('至少保留一个场景'); renderProjects(); return; }
+  projects = projects.filter((p) => p.id !== currentId);
+  currentId = projects[0].id;
+  try { localStorage.setItem(CURRENT_KEY, currentId); } catch { /* ignore */ }
+  saveProjects();
+  editor.value = currentProject().src;
+  recompile(false);
+  renderProjects();
+}
+
 // ---------- 编译：脚本 → 场景 → 各视图 ----------
 let baseDir = new URL('.', location.href).href; // 用于解析 <import src> 的相对路径
 const loader = async (p) => {
@@ -47,7 +147,7 @@ const loader = async (p) => {
 let recompileToken = 0;
 async function recompile(keepTime) {
   const src = editor.value;
-  try { localStorage.setItem(STORAGE_KEY, src); } catch { /* 隐私模式等：忽略 */ }
+  persistCurrent();
   const token = ++recompileToken;
   const res = await compileWithImports(src, loader);
   if (token !== recompileToken) return; // 已有更新的编辑，丢弃过期结果
@@ -55,7 +155,14 @@ async function recompile(keepTime) {
   const known = res.scene ? { ids: new Set(res.scene.entities.map((e) => e.id)), defs: new Set(res.scene.defNames) } : undefined;
   editor.setDiagnostics(diagnostics, known);
   con.render({ scene: res.scene, diagnostics });
-  if (!res.scene) return;
+  if (!res.scene) { stage.setIssues([]); return; }
+  // 诊断对象 → 画布红框高亮
+  const issues = new Set();
+  for (const d of diagnostics) {
+    if (d.id) issues.add(d.id);
+    if (d.ids) d.ids.forEach((id) => issues.add(id));
+  }
+  stage.setIssues(issues);
   stage.setScene(res.scene);
   timeline.build(res.scene);
   player.setScene(res.scene, { keepTime });
@@ -118,8 +225,10 @@ document.addEventListener('keydown', (e) => {
 
 // ---------- 示例：从 manifest 加载，按分类分组 ----------
 const examples = new Map();
+let manifest = { categories: [], examples: [] };
 async function loadManifest() {
   const m = await (await fetch('./examples/manifest.json')).json();
+  manifest = m;
   const sel = $('examples');
   sel.innerHTML = '<option value="" disabled selected>示例…</option>';
   for (const cat of m.categories) {
@@ -211,6 +320,243 @@ btnWebm.addEventListener('click', async () => {
   btnWebm.textContent = '导出 WebM';
 });
 
+// ---------- 分享 ----------
+const btnShare = $('btnShare');
+btnShare.addEventListener('click', async () => {
+  const params = new URLSearchParams();
+  params.set('code', encodeShare(editor.value));
+  const step = player.stepIndex;
+  if (step >= 0) params.set('step', String(step + 1));
+  const url = `${location.origin}${location.pathname}#${params.toString()}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    btnShare.textContent = '已复制';
+    setTimeout(() => { btnShare.textContent = '分享'; }, 1600);
+  } catch {
+    window.prompt('复制分享链接（Ctrl+C）：', url);
+  }
+});
+
+// ---------- 场景管理 / 导入导出 ----------
+$('projects').addEventListener('change', () => {
+  const v = $('projects').value;
+  if (v === '__new__') newProject();
+  else if (v === '__del__') deleteProject();
+  else switchProject(v);
+});
+$('btnExport').addEventListener('click', () => {
+  persistCurrent();
+  const name = (currentProject()?.name || 'scene').replace(/[\\/:*?"<>|]/g, '_') + '.xml';
+  download(new Blob([editor.value], { type: 'application/xml;charset=utf-8' }), name);
+});
+const fileInput = document.createElement('input');
+fileInput.type = 'file';
+fileInput.accept = '.xml,text/xml,application/xml';
+$('btnImport').addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', async () => {
+  const f = fileInput.files?.[0];
+  if (!f) return;
+  const text = await f.text();
+  const name = f.name.replace(/\.xml$/i, '');
+  if (!editor.value.trim()) currentProject().name = name; // 空场景直接落当前
+  else {
+    const p = { id: 'p' + Date.now(), name, src: text, updatedAt: Date.now() };
+    projects.push(p);
+    currentId = p.id;
+    try { localStorage.setItem(CURRENT_KEY, p.id); } catch { /* ignore */ }
+    saveProjects();
+  }
+  editor.value = text;
+  recompile(false);
+  renderProjects();
+  fileInput.value = '';
+});
+
+// ---------- WYSIWYG：点选 + 属性面板 ----------
+const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const fmtNum = (v) => (Number.isInteger(v) ? String(v) : String(+v.toFixed(2)));
+const cssHex = (c) => '#' + c.slice(0, 3).map((x) => Math.round(x).toString(16).padStart(2, '0')).join('');
+
+/** 在 XML 源里定位 id="xxx" 的标签并改写属性；找不到（模板/循环生成）返回 null */
+function setEntityAttr(src, id, attr, value) {
+  const m = new RegExp(`id="${escapeRe(id)}"`).exec(src);
+  if (!m) return null;
+  const tagStart = src.lastIndexOf('<', m.index);
+  const tagEnd = src.indexOf('>', m.index);
+  if (tagStart < 0 || tagEnd < 0) return null;
+  const tag = src.slice(tagStart, tagEnd + 1);
+  const attrRe = new RegExp(`(${attr}=")[^"]*(")`);
+  let newTag;
+  if (attrRe.test(tag)) newTag = tag.replace(attrRe, `$1${value}$2`);
+  else {
+    const selfClose = tag.endsWith('/>');
+    const at = tag.length - (selfClose ? 2 : 1);
+    newTag = tag.slice(0, at) + ` ${attr}="${value}"` + tag.slice(at);
+  }
+  return src.slice(0, tagStart) + newTag + src.slice(tagEnd + 1);
+}
+
+let selectedEntity = null;
+const hasExplicitId = (id) => new RegExp(`id="${escapeRe(id)}"`).test(editor.value);
+
+function addField(body, label, value, editable, onCommit) {
+  const row = document.createElement('div');
+  row.className = 'insp-field';
+  const lab = document.createElement('label');
+  lab.textContent = label;
+  const input = document.createElement('input');
+  input.value = value;
+  if (!editable) input.readOnly = true;
+  input.addEventListener('change', () => onCommit(input.value));
+  row.append(lab, input);
+  body.appendChild(row);
+}
+
+async function commitAttr(e, attr, value) {
+  const next = setEntityAttr(editor.value, e.id, attr, value);
+  if (next == null) { alert('无法写回：该对象由模板/循环生成，请在代码里修改'); return; }
+  editor.value = next;
+  await recompile(false);
+  // scene 已重建，引用失效，按 id 重新选中
+  const ent = player.scene?.byId.get(e.id) || null;
+  selectedEntity = ent;
+  stage.selection = ent;
+  renderInspector();
+}
+
+function renderInspector() {
+  const box = $('inspector');
+  const e = selectedEntity;
+  if (!e) { box.hidden = true; return; }
+  box.hidden = false;
+  $('inspTitle').textContent = `${e.id} · ${e.type}`;
+  const body = $('inspBody');
+  body.innerHTML = '';
+  const sc = player.scene;
+  const cell = [(e.init.x - sc.ax) / sc.cw + 0.5, (e.init.y - sc.ay) / sc.ch + 0.5];
+  const editable = hasExplicitId(e.id);
+  addField(body, '位置', `${fmtNum(cell[0])},${fmtNum(cell[1])}`, editable, (v) => commitAttr(e, 'at', v));
+  addField(body, '颜色', cssHex(e.init.fill), editable, (v) => commitAttr(e, 'fill', v));
+  if (e.type === 'text') addField(body, '字号', fmtNum(e.init.size), editable, (v) => commitAttr(e, 'size', v));
+  else addField(body, '尺寸', fmtNum(e.init.size), editable, (v) => commitAttr(e, 'size', v));
+  if (e.type === 'text') addField(body, '文字', e.init.text, editable, (v) => commitAttr(e, 'text', v));
+  if (!editable) {
+    const hint = document.createElement('p');
+    hint.className = 'insp-hint';
+    hint.textContent = '该对象由模板/循环生成，请在代码里修改。';
+    body.appendChild(hint);
+  }
+}
+
+function selectEntity(ent) {
+  selectedEntity = ent;
+  stage.selection = ent;
+  stage.render();
+  renderInspector();
+}
+
+stage.canvas.addEventListener('click', (ev) => {
+  if (!player.scene) return;
+  const rect = stage.canvas.getBoundingClientRect();
+  const sx = ((ev.clientX - rect.left) / rect.width) * player.scene.width;
+  const sy = ((ev.clientY - rect.top) / rect.height) * player.scene.height;
+  selectEntity(stage.pick(sx, sy) || null);
+});
+$('inspClose').addEventListener('click', () => selectEntity(null));
+
+// ---------- 首次引导 ----------
+function closeWelcome() {
+  $('welcome').close();
+  try { localStorage.setItem(WELCOME_KEY, '1'); } catch { /* ignore */ }
+}
+$('welcomeStart').addEventListener('click', closeWelcome);
+$('welcome').addEventListener('cancel', closeWelcome); // ESC 也视为已看过
+document.querySelectorAll('#welcome [data-ex]').forEach((b) => {
+  b.addEventListener('click', async () => {
+    if (await openExample(b.dataset.ex)) { player.seek(0); player.play(); }
+    closeWelcome();
+  });
+});
+
+// ---------- 素材 ----------
+const ASSET_GROUPS = [
+  ['动物', '🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🐔🐧🐦🦆🦉🐴🦄🐝🐞🦋🐢🐍🐬🐳🐙🦀'],
+  ['水果', '🍎🍊🍋🍌🍉🍇🍓🍒🍑🥭🍍🥥🥝'],
+  ['表情', '😀😃😄😁😆😅😂🤣😊😍🥰😘😎🤔😴😮😲😭😡👍👎👏🙌💪'],
+  ['符号', '✅❌⭐✨🔥💡🎯🏆🎨🚀🌍❤️💚💙💛🎵🎶'],
+  ['天气', '☀️🌤️☁️🌧️❄️🌈⚡'],
+  ['交通', '🚗🚕🚌🚲✈️🚢'],
+];
+const graphemes = (s) => (typeof Intl.Segmenter === 'function'
+  ? [...new Intl.Segmenter().segment(s)].map((x) => x.segment)
+  : [...s]);
+$('assetsBody').innerHTML = ASSET_GROUPS.map(([name, chars]) =>
+  `<div class="assets-group"><h4>${name}</h4><div class="assets-grid">${graphemes(chars).map((c) => `<button>${c}</button>`).join('')}</div></div>`).join('');
+$('assetsBody').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  editor.insert(`<icon at="2,2" text="${btn.textContent}" size=".5c"/>\n`);
+  $('assets').close();
+});
+$('btnAssets').addEventListener('click', () => $('assets').showModal());
+
+// ---------- 分享库：参考 + 一键复制 ----------
+const catName = (id) => manifest.categories.find((c) => c.id === id)?.name || id;
+
+function renderLibrary() {
+  const body = $('libraryBody');
+  body.innerHTML = '';
+  let lastCat = null;
+  for (const ex of manifest.examples) {
+    if (ex.category !== lastCat) {
+      body.insertAdjacentHTML('beforeend', `<div class="lib-cat">${catName(ex.category)}</div>`);
+      lastCat = ex.category;
+    }
+    const card = document.createElement('div');
+    card.className = 'lib-card';
+    card.innerHTML = `
+      <div class="lib-name">${ex.name}</div>
+      <div class="lib-tags">${(ex.covers || []).map((t) => `<span class="lib-tag">${t}</span>`).join('')}</div>
+      <div class="lib-actions">
+        <button data-act="preview" data-id="${ex.id}">预览</button>
+        <button data-act="copy" data-id="${ex.id}">复制到我的</button>
+      </div>`;
+    body.appendChild(card);
+  }
+}
+
+$('libraryBody').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button[data-act]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.act === 'preview') {
+    if (await openExample(id)) { player.seek(0); player.play(); }
+    $('library').close();
+  } else {
+    await copyExample(id);
+    btn.textContent = '已复制';
+    setTimeout(() => { btn.textContent = '复制到我的'; }, 1200);
+  }
+});
+
+async function copyExample(id) {
+  const ex = examples.get(id);
+  if (!ex) return;
+  const src = await (await fetch(`./examples/${ex.file}`)).text();
+  persistCurrent();
+  const p = { id: 'p' + Date.now(), name: ex.name, src, updatedAt: Date.now() };
+  projects.push(p);
+  currentId = p.id;
+  try { localStorage.setItem(CURRENT_KEY, p.id); } catch { /* ignore */ }
+  saveProjects();
+  editor.value = src;
+  baseDir = new URL(`./examples/${ex.file}`, location.href).href;
+  await recompile(false);
+  renderProjects();
+}
+
+$('btnLibrary').addEventListener('click', () => { renderLibrary(); $('library').showModal(); });
+
 // ---------- 文档 ----------
 $('docsBody').innerHTML = buildDocs(schema());
 $('btnDocs').addEventListener('click', () => $('docs').showModal());
@@ -218,15 +564,18 @@ $('btnDocs').addEventListener('click', () => $('docs').showModal());
 // ---------- 启动 ----------
 (async () => {
   await loadManifest();
-  let saved = null;
-  try { saved = localStorage.getItem(STORAGE_KEY); } catch { /* ignore */ }
-  if (hash.has('code')) { editor.value = hash.get('code'); recompile(false); }
+  loadProjects();
+  renderProjects();
+  if (hash.has('code')) { editor.value = decodeShare(hash.get('code')); recompile(false); }
   else if (hash.has('ex') && (await openExample(hash.get('ex')))) { /* 已打开 */ }
-  else if (saved) { editor.value = saved; recompile(false); }
+  else if (currentProject()?.src?.trim()) { editor.value = currentProject().src; recompile(false); }
   else await openExample('gomoku');
 
   if (hash.get('grid') === '1') { stage.showGuide = true; $('chkGrid').checked = true; }
   if (hash.has('step')) player.goStep((parseInt(hash.get('step'), 10) || 1) - 1);
   else if (hash.has('t')) { player.seek(Math.max(0, parseFloat(hash.get('t')) || 0)); player.pause(); }
   else if (!hash.has('pause')) player.play();
+
+  // 首次打开显示引导
+  try { if (!localStorage.getItem(WELCOME_KEY)) $('welcome').showModal(); } catch { /* ignore */ }
 })();

@@ -52,7 +52,7 @@ test('composeFrame：产出有序 IR，含投影/折行/字幕，且为纯数据
 });
 
 test('draw：无头画布下整帧可跑通、不抛异常', () => {
-  const r = compile(wrap('<circle id="a" at="1,1"/><rect id="b" at="2,2" w="80" h="40"/><line id="l" from="1,1" to="3,3"/><step say="ok"><a at="2,2" walk/></step>'));
+  const r = compile(wrap('<circle id="a" at="1,1"/><rect id="b" at="2,2" w="80" h="40"/><line id="l" from="1,1" to="3,3"/><icon id="i" at="2,1" text="🎯" size="48"/><step say="ok"><a at="2,2" walk/></step>'));
   assert.ok(r.scene, JSON.stringify(r.diagnostics));
   const frame = evaluate(r.scene, r.scene.steps[0].freeze);
   assert.doesNotThrow(() => draw(mockCtx(), r.scene, frame, { pixelRatio: 2, grid: true }));

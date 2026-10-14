@@ -40,6 +40,13 @@ export class CodeEditor {
   set value(v) { this.ta.value = v; this.refresh(); }
   get focused() { return document.activeElement === this.ta; }
 
+  /** 在光标处插入文本（素材面板等使用），插入后触发一次 onChange */
+  insert(text) {
+    this.ta.setRangeText(text, this.ta.selectionStart, this.ta.selectionEnd, 'end');
+    this.refresh();
+    this.onChange?.(this.value);
+  }
+
   /** diagnostics: [{line, severity}]；known: {ids, defs} 用于给用户自己的 id 上色 */
   setDiagnostics(diags, known) {
     this.marks = new Map();
