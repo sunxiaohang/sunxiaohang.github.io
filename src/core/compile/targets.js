@@ -115,6 +115,8 @@ export function compileEffects(ctx, node, r, ent, st, start, opts = {}) {
 
   if (r.has('pulse')) add(explicit ?? 0.5, FX.pulseFn(r.numOr('pulse', 0.25)));
   if (r.has('shake')) add(explicit ?? 0.5, FX.shakeFn(r.lenOr('shake', U * 0.12), 8));
+  if (r.has('flash')) add(explicit ?? 0.5, FX.flashFn(r.numOr('flash', 3)));
+  if (r.has('wobble')) add(explicit ?? 0.6, FX.wobbleFn(r.numOr('wobble', 12), 3));
   if (r.has('jump') && !opts.skipJump) add(explicit ?? 0.8, FX.jumpFn(r.lenOr('jump', U * 0.7, { min: 0 }), half));
   if (r.has('spin')) {
     const dur = explicit ?? 1, from = st.rot, to = from + rad(r.numOr('spin', 360)), ease = r.ease('ease', 'soft');
@@ -246,7 +248,10 @@ export function compileTarget(node, ent, ctx, stepDur, base, viaChange) {
       } else scalar('size', v, 'transform');
     }
   }
-  if (has('w') && BOXED.has(ent.type)) scalar('w', r.len('w', null, { min: 1 }) ?? NaN, 'transform');
+  if (has('w')) {
+    if (BOXED.has(ent.type)) scalar('w', r.len('w', null, { min: 1 }) ?? NaN, 'transform');
+    else if (ent.type === 'text') scalar('w', r.len('w', null, { min: 0 }) ?? NaN, 'transform');
+  }
   if (has('h') && BOXED.has(ent.type)) scalar('h', r.len('h', null, { min: 1 }) ?? NaN, 'transform');
   if (has('rot')) scalar('rot', rad(r.num('rot', 0)), 'transform');
   if (has('alpha')) scalar('alpha', r.num('alpha', 1, { min: 0, max: 1 }), 'style');
@@ -264,8 +269,9 @@ export function compileTarget(node, ent, ctx, stepDur, base, viaChange) {
     st[prop] = v;
   }
   if (has('z')) {
+    // z 作为排序键可直接补间：数值连续变化让遮挡序平滑过渡，而非瞬间跳变
     const v = r.num('z', 0);
-    mk('discrete', ['z'], (L) => { L.z = v; }, { dur: 0 });
+    scalar('z', v, 'transform');
     st.z = v;
   }
 

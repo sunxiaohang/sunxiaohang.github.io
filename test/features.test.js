@@ -173,3 +173,64 @@ test('def 模板：参数名拼错给出警告，并提示可用参数', () => {
   const d = r.diagnostics.find((x) => x.code === 'W_UNKNOWN_ATTR');
   assert.ok(d && /a/.test(d.hint));
 });
+
+// ---------------- z 补间 ----------------
+test('z：对象与图层的 z 可补间，遮挡序平滑过渡而非瞬间跳变', () => {
+  const r = compile(wrap('<circle id="a" z="0"/><step dur="1"><a z="10" ease="linear"/></step>'));
+  assert.ok(r.ok, JSON.stringify(r.diagnostics));
+  near(live(r, 0.5, 'a').z, 5, 1e-3);
+  near(live(r, r.scene.duration, 'a').z, 10);
+  const r2 = compile(wrap('<layer name="fg" z="0"><circle id="b"/></layer><step dur="1"><fg z="20" ease="linear"/></step>'));
+  assert.ok(r2.ok, JSON.stringify(r2.diagnostics));
+  near(live(r2, 0.5, 'fg').z, 10, 1e-3);
+});
+
+// ---------------- 音效 ----------------
+test('sound：实体登场与步骤开始时收集音效事件，未知音色给出警告', () => {
+  const r = compile(wrap('<circle id="a" sound="pop"/><step sound="ding" dur="1"><circle id="b" sound="tick"/></step>'));
+  assert.ok(r.ok, JSON.stringify(r.diagnostics));
+  assert.equal(r.scene.sounds.length, 3);
+  assert.ok(r.scene.sounds.some((s) => s.name === 'pop' && s.at === 0));
+  assert.ok(r.scene.sounds.some((s) => s.name === 'ding' && s.at === 0));
+  assert.ok(r.scene.sounds.some((s) => s.name === 'tick'));
+  assert.ok(codes(compile(wrap('<circle id="a" sound="nope"/>'))).includes('W_BAD_VALUE'));
+  assert.ok(codes(compile(wrap('<step sound="nope"><circle/></step>'))).includes('W_BAD_VALUE'));
+});
+
+// ---------------- 扩充缓动 ----------------
+test('缓动：扩充曲线可被 ease 属性与 ease() 接受，端点正确', () => {
+  const r = compile(wrap('<circle id="a"/><step dur="1"><a at="3,3" ease="quadOut"/></step>'));
+  assert.ok(r.ok, JSON.stringify(r.diagnostics));
+  assert.ok(!codes(r).includes('W_BAD_EASE'));
+  const r2 = compile(wrap('<let x="{ease(\'sine\', 0.5)}"/><circle id="v{round(x*100)}"/>'));
+  assert.ok(r2.ok, JSON.stringify(r2.diagnostics));
+  assert.equal(r2.scene.entities[0].id, 'v50'); // sine(0.5) = 0.5
+  const r3 = compile(wrap('<let a="{ease(\'quadOut\', 0.5)}" b="{ease(\'backIn\', 1)}" c="{ease(\'elasticOut\', 1)}"/>'));
+  assert.ok(r3.ok, JSON.stringify(r3.diagnostics));
+});
+
+// ---------------- 新效果 flash / wobble ----------------
+test('效果：flash 与 wobble 可编译，中途生效、结束回到原状', () => {
+  const r = compile(wrap('<circle id="a" at="1,1"/><step dur="1"><a flash wobble="15"/></step>'));
+  assert.ok(r.ok, JSON.stringify(r.diagnostics));
+  assert.notEqual(live(r, r.scene.steps[0].t0 + 0.25, 'a').orot, 0, 'wobble 中途改变旋转');
+  near(live(r, r.scene.duration, 'a').orot, 0, 1e-6);
+  assert.ok(!codes(r).includes('W_BAD_VALUE'));
+});
+
+// ---------------- text 描边 / star 角数 ----------------
+test('text：支持描边 stroke/width', () => {
+  const r = compile(wrap('<text id="t" at="2,2" text="你好" stroke="#000000" width="3"/>'));
+  assert.ok(r.ok, JSON.stringify(r.diagnostics));
+  const st = r.scene.byId.get('t').init;
+  assert.deepEqual(st.stroke.slice(0, 3), [0, 0, 0]);
+  near(st.width, 3);
+});
+
+test('star：支持 points 角数，越界自动修正到 [3,24]', () => {
+  const r = compile(wrap('<star id="s" at="2,2" points="6"/>'));
+  assert.ok(r.ok, JSON.stringify(r.diagnostics));
+  assert.equal(r.scene.byId.get('s').points, 6);
+  assert.equal(compile(wrap('<star points="2"/>')).scene.entities[0].points, 3);
+  assert.equal(compile(wrap('<star points="40"/>')).scene.entities[0].points, 24);
+});

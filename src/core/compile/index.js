@@ -74,6 +74,7 @@ export function compile(src) {
   const segs = ctx.segs.sort((a, b) => a.t0 - b.t0 || a.order - b.order);
   detectConflicts(segs, diag);
   scene.segments = segs;
+  scene.sounds.sort((a, b) => a.at - b.at);
   scene.duration = Math.max(0.1, ctx.cursor, ...segs.map((s) => s.t0 + s.dur));
   return { ok: !diag.list.some((d) => d.severity === 'error'), scene, diagnostics: diag.list };
 }

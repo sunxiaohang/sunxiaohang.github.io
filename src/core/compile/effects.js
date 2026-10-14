@@ -37,6 +37,17 @@ export const shakeFn = (amp, freq = 8) => (L, p) => {
   L.ox += amp * Math.sin(p * freq * Math.PI * 2) * (1 - p);
 };
 
+/** 闪烁：透明度快速明暗几次，结束回到原状。参数 = 闪烁次数（默认 3） */
+export const flashFn = (times = 3) => (L, p) => {
+  const k = 0.5 + 0.5 * Math.cos(p * Math.PI * 2 * times);
+  L.ma *= 0.3 + 0.7 * k;
+};
+
+/** 摆动：绕中心左右摇摆并衰减（像不倒翁）。参数 = 摆角（度，默认 12） */
+export const wobbleFn = (deg = 12, freq = 3) => (L, p) => {
+  L.orot += ((deg * Math.PI) / 180) * Math.sin(p * Math.PI * 2 * freq) * (1 - p);
+};
+
 /** 行走时的一步一跳：与位置补间使用同一条缓动，脚步随位移均匀分布 */
 export function hopFn(steps, hop, half, ease) {
   return (L, p) => {

@@ -141,6 +141,7 @@ main {
 .transport { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--line); }
 .icon { width: 34px; height: 34px; padding: 0; display: grid; place-items: center; border-radius: 50%; }
 .icon svg { width: 16px; height: 16px; fill: var(--text); }
+.icon.muted { opacity: .45; }
 .icon.big { width: 40px; height: 40px; background: linear-gradient(135deg, var(--accent), #5a8bff); border: none; }
 .icon.big svg { width: 18px; height: 18px; }
 .time { font: 12px var(--mono); color: var(--muted); min-width: 150px; }

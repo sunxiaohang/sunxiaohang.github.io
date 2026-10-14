@@ -9,11 +9,12 @@ function drawShadow(ctx, scene, e, L, a) {
   if (L.fill[3] < 0.9) return;
   const boxed = e.type === 'rect' || e.type === 'ellipse';
   const half = (boxed ? L.h : L.size) / 2;
+  // 投影只锚定"设定位置 + 原始尺寸"：跳起/抖动/压扁都不会把影子带走或带缩
   const lift = Math.max(0, -L.oy);
   const k = Math.min(1, lift / (L.size * 1.6 + 1));
-  const rx = (boxed ? L.w : L.size) * 0.5 * L.sx * (1 - k * 0.4);
+  const rx = (boxed ? L.w : L.size) * 0.5 * (1 - k * 0.4);
   ctx.save();
-  ctx.translate(L.x + L.ox, L.y + half * L.sy + (L.oy > 0 ? L.oy : 0));
+  ctx.translate(L.x, L.y + half);
   ctx.scale(1, 0.2);
   ctx.fillStyle = `rgba(0,0,0,${0.3 * a * (1 - k * 0.6)})`;
   ctx.beginPath();
@@ -69,6 +70,11 @@ export function draw(ctx, scene, frame, opts = {}) {
   const pr = opts.pixelRatio ?? 1;
   ctx.setTransform(pr, 0, 0, pr, 0, 0);
   ctx.clearRect(0, 0, scene.width, scene.height);
+  // 裁剪到场景范围内，避免大字号/长文本/标签/光晕溢出舞台
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, scene.width, scene.height);
+  ctx.clip();
   drawBackground(ctx, scene);
   if (opts.grid) drawGuide(ctx, scene);
 
@@ -82,4 +88,5 @@ export function draw(ctx, scene, frame, opts = {}) {
   }
 
   if (opts.captions !== false) for (const c of frame.captions) drawCaption(ctx, scene, c.text, c.k);
+  ctx.restore();
 }

@@ -49,7 +49,7 @@ export function buildScene(root, diag) {
     hold: r.num('hold', 0.6, { min: 0.05 }),
     read: r.num('read', 0, { min: 0, max: 30 }),
     overlapCheck: r.bool('overlap', true),
-    entities: [], byId: new Map(), groups: new Map(), segments: [], steps: [], anims: new Map(), duration: 0.1,
+    entities: [], byId: new Map(), groups: new Map(), segments: [], steps: [], anims: new Map(), sounds: [], duration: 0.1,
   };
 }
 

@@ -1,7 +1,7 @@
 import { Reader, checkAttrs, suggest } from '../lang/reader.js';
 import { RESERVED_TAGS } from '../lang/expand.js';
 import {
-  ENTITY_ATTRS, LAYER_ATTRS, GROUP_ATTRS, POSITIONAL, SEGMENTED, BOXED, TIMING, EFFECTS,
+  ENTITY_ATTRS, LAYER_ATTRS, GROUP_ATTRS, POSITIONAL, SEGMENTED, BOXED, TIMING, EFFECTS, SOUND_NAMES,
 } from '../lang/schema.js';
 import { clamp } from '../util/ease.js';
 import { col, NONE, cellToXY, warnOutside, register } from './scene.js';
@@ -120,10 +120,14 @@ export function createEntity(node, ctx, opts = {}) {
       init.color = r.color('color', col('rgba(255,255,255,0.96)'));
       ent.flat = r.flag('flat');
       if (type === 'rect') ent.radius = r.len('radius', -1);
+      if (type === 'star') ent.points = r.num('points', 5, { min: 3, max: 24 });
       break;
     case 'text':
       init.size = r.len('size', 36, { min: 1 });
+      init.w = r.len('w', 0, { min: 0 });
       init.fill = r.color('fill', col('#ffffff'));
+      init.stroke = r.color('stroke', NONE);
+      init.width = r.len('width', 0, { min: 0 });
       init.text = r.str('text', '');
       break;
     case 'ring':
@@ -179,6 +183,12 @@ export function createEntity(node, ctx, opts = {}) {
   ent.init = init;
   register(ctx, ent);
   for (const gn of groups) scene.groups.get(gn).members.push(ent.index);
+
+  const sound = r.str('sound', '').trim();
+  if (sound) {
+    if (!SOUND_NAMES.includes(sound)) diag.warn('W_BAD_VALUE', `sound 只能是 ${SOUND_NAMES.join(' / ')}，实际是 "${sound}"`, r.at('sound'));
+    else scene.sounds.push({ at: opts.birth ?? 0, name: sound });
+  }
   return ent;
 }
 

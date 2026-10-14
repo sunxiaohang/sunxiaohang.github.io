@@ -1,5 +1,5 @@
 import { toCss, shade } from '../core/util/color.js';
-import { FONT, roundRectPath } from './util.js';
+import { FONT, roundRectPath, wrapText } from './util.js';
 
 /** 实心图形的轮廓路径；返回需要额外描边的"倒角"宽度（让尖角更圆润） */
 function outline(ctx, e, L) {
@@ -24,10 +24,11 @@ function outline(ctx, e, L) {
       return s * 0.12;
     }
     case 'star': {
+      const n = Math.max(3, e.points || 5);
       const R = s * 0.46, r = R * 0.46;
       ctx.beginPath();
-      for (let i = 0; i < 10; i++) {
-        const a = -Math.PI / 2 + (i * Math.PI) / 5, rr = i % 2 ? r : R;
+      for (let i = 0; i < n * 2; i++) {
+        const a = -Math.PI / 2 + (i * Math.PI) / n, rr = i % 2 ? r : R;
         if (i) ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); else ctx.moveTo(Math.cos(a) * rr, Math.sin(a) * rr);
       }
       ctx.closePath();
@@ -113,5 +114,15 @@ export function drawText(ctx, scene, L, pr) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = toCss(L.fill);
-  ctx.fillText(L.text, 0, 0);
+  const text = String(L.text ?? '');
+  const lines = L.w > 0 ? wrapText(ctx, text, L.w) : [text];
+  const lh = L.size * 1.25;
+  const top = -(lines.length - 1) * lh / 2;
+  const hasStroke = L.stroke[3] > 0 && L.width > 0;
+  if (hasStroke) { ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; ctx.lineJoin = 'round'; ctx.lineWidth = L.width; ctx.strokeStyle = toCss(L.stroke); }
+  lines.forEach((ln, i) => {
+    const y = top + i * lh;
+    if (hasStroke) ctx.strokeText(ln, 0, y);
+    ctx.fillText(ln, 0, y);
+  });
 }

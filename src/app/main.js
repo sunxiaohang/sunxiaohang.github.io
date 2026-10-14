@@ -1,4 +1,5 @@
 import { compile, lint, schema } from '../core/index.js';
+import { SoundEngine } from '../audio/sound.js';
 import { Player } from '../player/player.js';
 import { renderStoryboard } from '../export/storyboard.js';
 import { startWebmRecording, download } from '../export/webm.js';
@@ -13,9 +14,12 @@ const hash = new URLSearchParams(location.hash.slice(1));
 
 const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg>';
 const ICON_PAUSE = '<svg viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>';
+const ICON_SOUND_ON = '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>';
+const ICON_SOUND_OFF = '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
 
 // ---------- 装配 ----------
 const player = new Player();
+const sound = new SoundEngine();
 const stage = new StageView({ canvas: $('stage'), wrap: $('stagewrap') });
 const con = new Console({ el: $('console'), status: $('status'), onJump: (l, c) => editor.goto(l, c) });
 const editor = new CodeEditor({
@@ -61,26 +65,45 @@ player.on('pause', syncPlayBtn);
 player.on('end', () => { if (exporting) exporting.stop(); });
 player.on('scene', syncPlayBtn);
 
+// 播放推进时触发跨越时间点的音效；seek / 上一步 / 下一步不触发，避免跳转时噪音
+function triggerSounds(from, to) {
+  const list = player.scene?.sounds;
+  if (!list?.length || !sound.enabled) return;
+  for (const s of list) {
+    if (s.at >= from && s.at < to) sound.play(s.name);
+    else if (to < from && (s.at >= from || s.at < to)) sound.play(s.name); // 循环回绕
+  }
+}
+
 let last = performance.now();
 (function loop(now) {
-  player.tick((now - last) / 1000);
+  const before = player.time;
+  const advanced = player.tick((now - last) / 1000);
   last = now;
+  if (advanced) triggerSounds(before, player.time);
   requestAnimationFrame(loop);
 })(last);
 
 // ---------- 控件 ----------
-$('btnPlay').addEventListener('click', () => player.toggle());
+$('btnPlay').addEventListener('click', () => { sound.ensure()?.resume(); player.toggle(); });
 $('btnNext').addEventListener('click', () => player.next());
 $('btnPrev').addEventListener('click', () => player.prev());
 $('chkGrid').addEventListener('change', (e) => { stage.showGuide = e.target.checked; stage.render(); });
 $('chkLoop').addEventListener('change', (e) => { player.loop = e.target.checked; });
 $('speed').addEventListener('change', (e) => { player.speed = +e.target.value; });
+const syncSound = () => {
+  $('btnSound').innerHTML = sound.enabled ? ICON_SOUND_ON : ICON_SOUND_OFF;
+  $('btnSound').classList.toggle('muted', !sound.enabled);
+};
+$('btnSound').addEventListener('click', () => { sound.enabled = !sound.enabled; syncSound(); });
+syncSound();
 document.addEventListener('keydown', (e) => {
   const tag = document.activeElement.tagName;
   if (editor.focused || tag === 'SELECT' || !player.scene) return;
   if (e.code === 'Space' && tag !== 'BUTTON') { e.preventDefault(); player.toggle(); }
   else if (e.code === 'ArrowRight') { e.preventDefault(); player.next(); }
   else if (e.code === 'ArrowLeft') { e.preventDefault(); player.prev(); }
+  else if (e.code === 'KeyM' && tag !== 'BUTTON') { sound.enabled = !sound.enabled; syncSound(); }
 });
 
 // ---------- 示例：从 manifest 加载，按分类分组 ----------

@@ -55,6 +55,34 @@ export const EASINGS = {
 EASINGS.soft = EASINGS.inOut;
 EASINGS.snap = EASINGS.out;
 
+// ---- 幂次缓动家族（quad/quart/quint 的 in/out/inOut）----
+for (const [name, n] of [['quad', 2], ['quart', 4], ['quint', 5]]) {
+  EASINGS[`${name}In`] = (p) => p ** n;
+  EASINGS[`${name}Out`] = (p) => 1 - (1 - p) ** n;
+  EASINGS[name] = (p) => (p < 0.5 ? 2 ** (n - 1) * p ** n : 1 - (-2 * p + 2) ** n / 2);
+}
+
+// ---- 三角 / 指数 / 圆形 ----
+EASINGS.sineIn = (p) => 1 - Math.cos((p * Math.PI) / 2);
+EASINGS.sineOut = (p) => Math.sin((p * Math.PI) / 2);
+EASINGS.sine = (p) => (1 - Math.cos(Math.PI * p)) / 2;
+EASINGS.expoIn = (p) => (p === 0 ? 0 : 2 ** (10 * (p - 1)));
+EASINGS.expoOut = (p) => (p === 1 ? 1 : 1 - 2 ** (-10 * p));
+EASINGS.expo = (p) => (p === 0 ? 0 : p === 1 ? 1 : p < 0.5 ? 2 ** (20 * p - 10) / 2 : (2 - 2 ** (-20 * p + 10)) / 2);
+EASINGS.circIn = (p) => 1 - Math.sqrt(1 - p * p);
+EASINGS.circOut = (p) => Math.sqrt(1 - (p - 1) ** 2);
+EASINGS.circ = (p) => (p < 0.5 ? (1 - Math.sqrt(1 - (2 * p) ** 2)) / 2 : (Math.sqrt(1 - (-2 * p + 2) ** 2) + 1) / 2);
+
+// ---- 反向变体：现有 back / elastic 是 out 方向，补上 in / inOut ----
+EASINGS.backOut = EASINGS.back;
+EASINGS.backIn = (p) => { const c = 1.70158; return c * p * p * p - c * p * p; };
+EASINGS.backInOut = (p) => {
+  const c = 1.70158 * 1.525;
+  return p < 0.5 ? ((2 * p) ** 2 * ((c + 1) * 2 * p - c)) / 2 : ((2 * p - 2) ** 2 * ((c + 1) * (p * 2 - 2) + c) + 2) / 2;
+};
+EASINGS.elasticOut = EASINGS.elastic;
+EASINGS.elasticIn = (p) => (p === 0 ? 0 : p === 1 ? 1 : -(2 ** (10 * (p - 1))) * Math.sin((p * 10 - 10.75) * ((2 * Math.PI) / 3)));
+
 export const EASE_NAMES = Object.keys(EASINGS);
 
 const CUBIC = /^cubic\(\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)\s*\)$/;

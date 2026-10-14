@@ -9,9 +9,11 @@ export const SEGMENTED = new Set(['line', 'arrow']);
 export const BOXED = new Set(['rect', 'ellipse']);
 
 export const TIMING = ['dur', 'delay', 'ease'];
-export const EFFECTS = ['pulse', 'shake', 'jump', 'spin', 'do', 'loop', 'yoyo'];
+export const EFFECTS = ['pulse', 'shake', 'jump', 'spin', 'flash', 'wobble', 'do', 'loop', 'yoyo'];
+/** 内置音色（src/audio/sound.js 实现，无音频文件） */
+export const SOUND_NAMES = ['pop', 'tick', 'ding', 'snap', 'whoosh', 'wobble', 'success', 'spring'];
 /** 只能在创建时设置、不能在步骤里动画的属性 */
-export const STATIC_ATTRS = new Set(['id', 'layer', 'group', 'flat', 'in', 'dash', 'head', 'side', 'gap', 'style', 'dots', 'labels', 'radius']);
+export const STATIC_ATTRS = new Set(['id', 'layer', 'group', 'flat', 'in', 'dash', 'head', 'side', 'gap', 'style', 'dots', 'labels', 'radius', 'points']);
 
 const B = (doc, def) => ({ doc, ...(def !== undefined && { default: def }) });
 
@@ -20,9 +22,10 @@ export const ATTR = {
   at: B('位置：格子坐标 "列,行"（从 1 起，格子中心），也可写 H8；小数表示格内位置，如 1.5,2'),
   px: B('位置：像素坐标 "x,y"（与 at 二选一）'),
   size: B('尺寸（px 或 1.5c）。圆=直径；文字=字号；矩形/椭圆=同时设置 w 和 h'),
-  w: B('矩形/椭圆宽度'),
+  w: B('矩形/椭圆宽度；text 时为折行宽度（超过则自动换行）'),
   h: B('矩形/椭圆高度'),
   radius: B('圆角半径（矩形）/ 棋盘底板圆角（grid）'),
+  points: B('星形角数（3~24，默认 5）'),
   fill: B('填充色；none 为不填充。文字的颜色也是 fill'),
   stroke: B('描边色 / 线条色；none 为无'),
   width: B('描边或线条粗细（px 或 0.1c）'),
@@ -59,13 +62,16 @@ export const ATTR = {
   shake: B('左右抖动并衰减，可写 shake="0.2c"（幅度）'),
   jump: B('跳起，可写 jump="1c"（高度）；与 at 同写则是"跳到那里"'),
   spin: B('相对旋转，可写 spin="180"（度，默认 360）'),
+  flash: B('闪烁：明暗几次，可写 flash="3"（次数，默认 3）'),
+  wobble: B('摆动：左右摇摆并衰减，可写 wobble="12"（摆角，度）'),
   do: B('播放自定义关键帧动画（<anim> 里定义的名字）'),
   loop: B('do 动画重复次数', 1),
   yoyo: B('do 动画循环时来回播放（缺省属性）'),
   name: B('图层 / 分组名'),
+  sound: B(`触发时播放的音效：${SOUND_NAMES.join(' / ')}`),
 };
 
-const BASE = ['id', 'alpha', 'z', 'layer', 'group', 'in'];
+const BASE = ['id', 'alpha', 'z', 'layer', 'group', 'in', 'sound'];
 const SHAPE = [...BASE, 'at', 'px', 'size', 'fill', 'stroke', 'width', 'rot', 'label', 'color', 'flat'];
 
 export const ENTITY_ATTRS = {
@@ -73,8 +79,8 @@ export const ENTITY_ATTRS = {
   ellipse: [...SHAPE, 'w', 'h'],
   rect: [...SHAPE, 'w', 'h', 'radius'],
   triangle: SHAPE,
-  star: SHAPE,
-  text: [...BASE, 'at', 'px', 'size', 'fill', 'rot', 'text'],
+  star: [...SHAPE, 'points'],
+  text: [...BASE, 'at', 'px', 'size', 'fill', 'rot', 'text', 'w', 'stroke', 'width'],
   ring: [...BASE, 'at', 'px', 'size', 'stroke', 'width', 'rot'],
   line: [...BASE, 'from', 'to', 'stroke', 'width', 'dash'],
   arrow: [...BASE, 'from', 'to', 'stroke', 'width', 'dash', 'head'],
@@ -129,6 +135,7 @@ export const STEP_ATTRS = {
   dur: B('这一步里补间动画的默认时长（秒）', 0.7),
   hold: B('这一步结束后的停顿（秒）；显式写了就不再按字幕长度自动延长'),
   stagger: B('步内子节点依次错开的间隔（秒）', 0),
+  sound: B(`这一步开始时的音效：${SOUND_NAMES.join(' / ')}`),
 };
 
 export const PROGRAMMING = {

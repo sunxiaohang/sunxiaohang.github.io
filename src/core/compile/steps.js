@@ -1,5 +1,5 @@
 import { Reader, checkAttrs, suggest } from '../lang/reader.js';
-import { ENTITY_TYPES, STEP_ATTRS, modAttrs } from '../lang/schema.js';
+import { ENTITY_TYPES, STEP_ATTRS, modAttrs, SOUND_NAMES } from '../lang/schema.js';
 import { EPS } from './scene.js';
 import { createEntity } from './entities.js';
 import { compileIntro, compileEffects, compileTarget } from './targets.js';
@@ -72,6 +72,11 @@ export function compileStep(node, ctx) {
   const dur = r.num('dur', 0.7, { min: 0 });
   const stagger = r.num('stagger', 0, { min: 0 });
   const say = r.str('say', '');
+  const sound = r.str('sound', '').trim();
+  if (sound) {
+    if (!SOUND_NAMES.includes(sound)) diag.warn('W_BAD_VALUE', `sound 只能是 ${SOUND_NAMES.join(' / ')}，实际是 "${sound}"`, r.at('sound'));
+    else scene.sounds.push({ at: t0, name: sound });
+  }
   // 显式 hold 优先；否则取"全局停顿下限"与"读完字幕所需时间"的较大者
   const readTime = scene.read > 0 ? [...say.replace(/\\n|\|/g, '')].length / scene.read : 0;
   const hold = r.has('hold') ? r.num('hold', scene.hold, { min: 0.05 }) : Math.max(scene.hold, readTime);
