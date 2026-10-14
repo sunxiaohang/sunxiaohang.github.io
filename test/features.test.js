@@ -158,6 +158,19 @@ test('lint：飞出画布但已淡出视为正常退场，不报出界', () => {
   assert.ok(lint(stay.scene).some((d) => d.code === 'W_OFFSCREEN'));
 });
 
+// ---------------- lint：真实尺寸（文字超框 / 文字重叠） ----------------
+test('lint：长文本真实宽度超出画布边界报 W_OVERFLOW（不再用字号当宽度）', () => {
+  const r = compile('<scene width="300" height="200" grid="1x1"><text id="t" at="1,1" text="这是一段特别特别特别特别长的标题文字" size="40"/><step say="x"/></scene>');
+  assert.ok(lint(r.scene).some((d) => d.code === 'W_OVERFLOW'));
+});
+
+test('lint：文字与文字、文字与实心图形的重叠都能被检测', () => {
+  const textText = compile('<scene width="400" height="300" grid="2x1"><text id="a" at="1,1" text="重" size="100"/><text id="b" at="1,1" text="叠" size="100"/><step say="x"/></scene>');
+  assert.ok(lint(textText.scene).some((d) => d.code === 'W_OVERLAP'));
+  const rectText = compile('<scene width="400" height="300" grid="1x1"><rect id="r" at="1,1" w="200" h="200"/><text id="t" at="1,1" text="压" size="120"/><step say="x"/></scene>');
+  assert.ok(lint(rectText.scene).some((d) => d.code === 'W_OVERLAP'));
+});
+
 // ---------------- def 模板 ----------------
 test('def 模板：嵌套 for / 表达式参数 / group="{id}" 组合，生成的对象都归到该实例的组', () => {
   const r = compile(wrap(

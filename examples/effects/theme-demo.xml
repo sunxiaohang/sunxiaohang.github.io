@@ -1,25 +1,24 @@
-<scene width="900" height="640" grid="4x3">
+<scene width="900" height="640" grid="4x4" pad="40 30 130 30">
   <import src="../themes/dark.xml"/>
   <import src="../lib/cards.xml"/>
 
-  <卡牌 at="1,1" fill="accent"/>
-  <卡牌 at="2,1" fill="text"/>
-  <卡牌 at="3,1" fill="warn"/>
-  <卡牌 at="4,1" fill="good"/>
+  <卡牌 at="1,2" fill="accent"/>
+  <卡牌 at="2,2" fill="text"/>
+  <卡牌 at="3,2" fill="warn"/>
+  <卡牌 at="4,2" fill="good"/>
 
-  <text id="t1" at="2,2" text="语义色" fill="accent" size=".45c"/>
-  <text id="t2" at="3,2" text="一键换肤" fill="text" size=".45c"/>
-  <圆片 id="dot" at="2,3" fill="bad" size=".6c"/>
+  <text id="t1" at="2,3" text="语义色" fill="accent" size=".42c"/>
+  <text id="t2" at="3,3" text="一键换肤" fill="text" size=".42c"/>
 
   <step say="import 引入主题与组件库，卡牌是跨文件复用的组件">
     <t1 pulse=".1"/>
     <t2 pulse=".1"/>
   </step>
   <step say="fill 引用语义色 accent / text / warn / good">
-    <dot at="3,3" size=".9c"/>
+    <t1 fill="warn"/>
   </step>
   <step say="换一个 import 的主题文件，整场就换了配色">
-    <t1 fill="warn"/>
+    <t1 fill="accent"/>
     <t2 fill="good"/>
   </step>
 </scene>

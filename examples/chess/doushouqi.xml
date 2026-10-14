@@ -60,7 +60,7 @@
   </step>
 
   <step say="只有鼠才能下水：红鼠从河里游过去，绕开岸上的猫（黄线是它走过的路）" dur="1.8">
-    <r鼠 path="1,7 2.5,5 4,3.2 2,1.4" smooth trail="#ffd166" ease="soft"/>
+    <r鼠 path="1,7 2.5,5 4,3.2 2,1" smooth trail="#ffd166" ease="soft"/>
   </step>
 
   <step say="红鼠扑向蓝象，把它吃掉了" dur=".8">

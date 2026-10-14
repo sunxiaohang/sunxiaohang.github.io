@@ -2,19 +2,43 @@ import { evaluate } from '../runtime/evaluate.js';
 import { SOLID, POSITIONAL, BOXED } from '../lang/schema.js';
 
 const r2 = (v) => Math.round(v * 100) / 100;
-const radius = (e, L) => (BOXED.has(e.type) ? Math.min(L.w, L.h) : L.size) / 2;
 const effAlpha = (L) => L.alpha * L.ma;
 
-const offscreen = (scene, L) => {
-  const x = L.x + L.ox, y = L.y + L.oy, m = (L.size || 0) * 0.5;
-  return x < -m || x > scene.width + m || y < -m || y > scene.height + m;
+const isCJK = (ch) => /[\u2e80-\ua4cf\uac00-\ud7a3\uf900-\ufaff\uff00-\uffef]/.test(ch);
+
+/** 估算文本宽度：中文方块字 ≈ 1 个字号，拉丁/数字 ≈ 0.56 个字号 */
+function textWidth(text, size) {
+  let w = 0;
+  for (const ch of String(text ?? '')) w += (isCJK(ch) ? 1 : 0.56) * size;
+  return w;
+}
+
+/** 实体的真实包围盒（世界坐标，含缩放）。text 用估算宽度，形状用 w/h/size；三角/星形按实际几何而非外接正方形。 */
+function aabb(e, L) {
+  const x = L.x + L.ox, y = L.y + L.oy;
+  let w, h;
+  if (e.type === 'text') { w = textWidth(e.init.text, L.size); h = L.size; }
+  else if (BOXED.has(e.type)) { w = L.w; h = L.h; }
+  else if (e.type === 'triangle') { w = L.size * 0.92; h = L.size * 0.8; }
+  else if (e.type === 'star') { w = L.size * 0.92; h = L.size * 0.92; }
+  else { w = L.size; h = L.size; } // circle
+  const hw = (w * L.sx) / 2, hh = (h * L.sy) / 2;
+  return { l: x - hw, r: x + hw, t: y - hh, b: y + hh };
+}
+
+const offscreen = (scene, e, L) => {
+  const b = aabb(e, L);
+  return b.r < 0 || b.l > scene.width || b.b < 0 || b.t > scene.height;
 };
+
+/** 参与重叠检测的类型：实心图形 + 文字 */
+const OVERLAPPABLE = new Set([...SOLID, 'text']);
 
 /**
  * 采样检查：
  *  - 对象"跑出画布并留在外面"：出界后直到结束（或下一次回到画布）都还可见才报。
  *    飞出去并最终淡出 / 退场，是明确的退场意图，不报。
- *  - 每一步"冻结画面"里，同一图层的实心图形互相重叠（教程画面会因此失真）
+ *  - 每一步"冻结画面"里，同一图层、不同分组的实心图形 / 文字互相重叠（用真实包围盒）
  */
 export function lint(scene, step = 0.1) {
   const out = [];
@@ -26,17 +50,16 @@ export function lint(scene, step = 0.1) {
   }
   scene.entities.forEach((e, i) => {
     if (!POSITIONAL.has(e.type)) return;
-    // 找到第一次"出界且可见"的时刻，再确认之后是否一直留在界外并保持可见到某个静帧/结束
     let first = -1;
     for (let k = 0; k < frames.length; k++) {
       const L = frames[k].f.entities[i];
-      if (!L.hidden && effAlpha(L) >= 0.02 && offscreen(scene, L)) { first = k; break; }
+      if (!L.hidden && effAlpha(L) >= 0.02 && offscreen(scene, e, L)) { first = k; break; }
     }
     if (first < 0) return;
     for (let k = first; k < frames.length; k++) {
       const L = frames[k].f.entities[i];
-      const stillOut = !L.hidden && effAlpha(L) >= 0.02 && offscreen(scene, L);
-      if (!stillOut) return; // 之后消失或回到画布：属于"飞出去再退场"，不报
+      const stillOut = !L.hidden && effAlpha(L) >= 0.02 && offscreen(scene, e, L);
+      if (!stillOut) return;
     }
     const L = frames[first].f.entities[i];
     out.push({
@@ -45,28 +68,58 @@ export function lint(scene, step = 0.1) {
     });
   });
 
-  const solids = scene.entities.filter((e) => SOLID.has(e.type));
-  if (scene.overlapCheck && solids.length && solids.length <= 400) {
+  // ---- 静帧检查时刻：每一步的 freeze；没有 step 时也检查 t=0 ----
+  const checks = scene.steps.length ? scene.steps.map((s) => s.freeze) : [0];
+
+  // ---- 超框：静帧里元素包围盒明显超出画布边界 ----
+  {
     const seen = new Set();
-    for (const s of scene.steps) {
-      const frame = evaluate(scene, s.freeze);
-      const vis = solids
-        .map((e) => ({ e, L: frame.entities[e.index] }))
+    for (const t of checks) {
+      const frame = evaluate(scene, t);
+      for (const e of scene.entities) {
+        if (!POSITIONAL.has(e.type)) continue;
+        const L = frame.entities[e.index];
+        if (L.hidden || effAlpha(L) < 0.02) continue;
+        const b = aabb(e, L);
+        const M = 4; // 容差：贴边不算
+        if (b.l < -M || b.r > scene.width + M || b.t < -M || b.b > scene.height + M) {
+          if (seen.has(e.id)) continue;
+          seen.add(e.id);
+          out.push({
+            severity: 'warning', code: 'W_OVERFLOW', line: e.line, col: e.col,
+            message: `对象 "${e.id}" 超出了画布边界（包围盒 [${Math.round(b.l)},${Math.round(b.t)}]~[${Math.round(b.r)},${Math.round(b.b)}]，画布 ${scene.width}×${scene.height}）`,
+          });
+        }
+      }
+    }
+  }
+
+  // ---- 重叠：同一图层、不同分组的实心图形 / 文字互相重叠（真实包围盒） ----
+  const items = scene.entities.filter((e) => OVERLAPPABLE.has(e.type));
+  if (scene.overlapCheck && items.length && items.length <= 400) {
+    const seen = new Set();
+    for (const t of checks) {
+      const frame = evaluate(scene, t);
+      const vis = items
+        .map((e) => ({ e, L: frame.entities[e.index], b: aabb(e, frame.entities[e.index]) }))
         .filter(({ L }) => !L.hidden && effAlpha(L) > 0.5);
       for (let a = 0; a < vis.length; a++) {
         for (let b = a + 1; b < vis.length; b++) {
           const A = vis[a], B = vis[b];
           if (A.e.layer !== B.e.layer) continue;
-          // 同属一个分组的图形是"拼在一起"的整体（如用几何拼成的房子），重叠是故意的
           if (A.e.groups.some((g) => B.e.groups.includes(g))) continue;
           const key = `${A.e.id}|${B.e.id}`;
           if (seen.has(key)) continue;
-          const d = Math.hypot(A.L.x + A.L.ox - (B.L.x + B.L.ox), A.L.y + A.L.oy - (B.L.y + B.L.oy));
-          if (d < (radius(A.e, A.L) + radius(B.e, B.L)) * 0.6) {
+          // 相交深度须超过较小边长的 25%，视为"明显重叠"（贴边/轻微接触不算）
+          const dx = Math.min(A.b.r, B.b.r) - Math.max(A.b.l, B.b.l);
+          const dy = Math.min(A.b.b, B.b.b) - Math.max(A.b.t, B.b.t);
+          const minW = Math.min(A.b.r - A.b.l, B.b.r - B.b.l);
+          const minH = Math.min(A.b.b - A.b.t, B.b.b - B.b.t);
+          if (dx > minW * 0.25 && dy > minH * 0.25) {
             seen.add(key);
             out.push({
               severity: 'warning', code: 'W_OVERLAP', line: B.e.line, col: B.e.col,
-              message: `第 ${s.index + 1} 步的画面里，"${A.e.id}" 与 "${B.e.id}" 重叠了`,
+              message: `"${A.e.id}" 与 "${B.e.id}" 重叠了（在 ${r2(t)}s 的画面里）`,
             });
           }
         }
