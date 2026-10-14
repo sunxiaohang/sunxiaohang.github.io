@@ -1,0 +1,75 @@
+<scene width="640" height="860" grid="7x9" pad="30 30 120 30" bg="#10200f" bg2="#1d3a1a" hold="0.8" read="4">
+  <!-- 斗兽棋：7x9 方格。地形全是 flat（平面）：河流是两块水域，各占 3 列×2 行，中间留一条陆路；
+       兽穴在两端中间，陷阱围在兽穴周围。动物是带字的圆，按大小排序。 -->
+  <let animals="{['象','狮','虎','豹','狼','狗','猫','鼠']}"/>
+
+  <def name="兽" is="circle" size=".84c" stroke="#ffffff" width="3" layer="pieces"/>
+  <def name="水" is="rect" fill="#3aa0e0" radius="14" flat="" layer="map"/>
+
+  <layer name="map" z="0"/>
+  <layer name="marks" z="3"/>
+  <layer name="pieces" z="10"/>
+  <layer name="top" z="20"/>
+
+  <grid style="cell" fill="#7fb85a" stroke="#d6f0c0" width="2" layer="map" radius="14"/>
+  <!-- 两片水域：左边 列 2-3，右边 列 5-6；行 4-6。块中心取 2.5 / 5.5，行中心 5 -->
+  <水 id="河左" at="2.5,5" w="2c" h="3c" in="fade"/>
+  <水 id="河右" at="5.5,5" w="2c" h="3c" in="fade"/>
+  <!-- 兽穴（黑色小门）与陷阱（带叉的格子） -->
+  <rect id="蓝穴" at="4,1" w=".7c" h=".7c" fill="#1e293b" radius="10" flat="" layer="marks" in="fade"/>
+  <rect id="红穴" at="4,9" w=".7c" h=".7c" fill="#1e293b" radius="10" flat="" layer="marks" in="fade"/>
+  <for var="t" in="{[[3,1],[5,1],[4,2],[3,9],[5,9],[4,8]]}">
+    <text at="{t[0]},{t[1]}" text="✕" size=".5c" fill="#475569" layer="marks"/>
+  </for>
+
+  <group name="蓝方">
+    <兽 id="b象" at="1,1" label="象" fill="#3b82f6"/>
+    <兽 id="b鼠" at="7,1" label="鼠" fill="#3b82f6"/>
+    <兽 id="b猫" at="2,2" label="猫" fill="#3b82f6"/>
+  </group>
+  <group name="红方">
+    <兽 id="r象" at="7,9" label="象" fill="#ef4444"/>
+    <兽 id="r鼠" at="1,9" label="鼠" fill="#ef4444"/>
+    <兽 id="r猫" at="6,8" label="猫" fill="#ef4444"/>
+  </group>
+
+  <step say="斗兽棋：中间有两条河，两端各有一个兽穴，谁先走进对方的兽穴谁就赢">
+    <蓝方 pulse=".15"/>
+    <红方 pulse=".15" delay=".2"/>
+  </step>
+
+  <step say="每个动物都有大小，大的能吃小的。我们按顺序排出来" stagger=".14" dur=".5">
+    <蓝方 alpha=".3"/>
+    <红方 alpha=".3"/>
+    <for var="a" index="i" in="{animals}">
+      <circle id="rank{i}" at="{1 + i*0.8},5" size=".62c" fill="{hsl(220 - i*28, 70, 56)}" label="{a}" layer="top"/>
+    </for>
+  </step>
+
+  <step say="大小顺序：象 > 狮 > 虎 > 豹 > 狼 > 狗 > 猫 > 鼠" dur=".6" stagger=".08">
+    <for var="i" in="0..6">
+      <arrow id="ar{i}" from="{1 + i*0.8},5.9" to="{1 + (i+1)*0.8},5.9" stroke="#ffd166" width="3" head="12" layer="top"/>
+    </for>
+  </step>
+
+  <step say="但有一个例外：最小的「鼠」可以吃最大的「象」！" dur=".6">
+    <change id="rank*" out/>
+    <change id="ar*" out/>
+    <蓝方 alpha="1"/>
+    <红方 alpha="1"/>
+  </step>
+
+  <step say="只有鼠才能下水：红鼠从河里游过去，绕开岸上的猫（黄线是它走过的路）" dur="1.8">
+    <r鼠 path="1,7 2.5,5 4,3.2 2,1.4" smooth trail="#ffd166" ease="soft"/>
+  </step>
+
+  <step say="红鼠扑向蓝象，把它吃掉了" dur=".8">
+    <r鼠 at="1,1" jump=".5c"/>
+    <b象 out delay=".4"/>
+    <ring at="1,1" size="1.2c" stroke="#ffd166" layer="top"/>
+  </step>
+
+  <step say="记住：这条规则叫「鼠克象」。反过来，象不能吃鼠" dur=".7">
+    <note id="rule" at="1,1" text="鼠克象" side="right" layer="top"/>
+  </step>
+</scene>

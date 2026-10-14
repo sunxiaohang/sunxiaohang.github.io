@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>GridMotion Gallery</title>
+<style>
+  body { margin: 0; background: #0b0c15; color: #e8eaf6; font: 14px system-ui, "Microsoft YaHei UI", sans-serif; padding: 20px; }
+  h1 { font-size: 18px; } h2 { margin: 28px 0 6px; font-size: 16px; color: #7fe3d3; }
+  .meta { color: #8a8fa8; font-size: 12px; margin-bottom: 8px; }
+  .strip { display: flex; flex-wrap: wrap; gap: 10px; }
+  figure { margin: 0; } figcaption { font-size: 11px; color: #8a8fa8; max-width: 260px; margin-top: 3px; }
+  canvas { border-radius: 6px; box-shadow: 0 0 0 1px #22243a; width: 260px; display: block; }
+  .bad { color: #ff6b8a; }
+</style></head><body>
+<h1>GridMotion Gallery</h1><div id="root"></div>
+<script type="module">
+import { compile, evaluate, lint } from './src/core/index.js';
+import { draw } from './src/render/canvas2d.js';
+const manifest = {"categories":[{"id":"chess","name":"棋类教程","desc":"棋盘、棋子、棋谱：压测网格、分组、图层、箭头标注、模板与表达式"},{"id":"kids","name":"幼儿启蒙","desc":"识字、识图、数数、四则运算、九九表：压测大字号、循环生成、变量驱动、字幕阅读时长"},{"id":"effects","name":"效果展示","desc":"缓动、轨道、关键帧、颜色与文字：压测补间与效果的多样性"}],"examples":[{"id":"gomoku","category":"chess","file":"chess/gomoku.xml","name":"五子棋教程","covers":["layer","def","for","if","line","note","ring","grid","label"]},{"id":"xiangqi","category":"chess","file":"chess/xiangqi.xml","name":"中国象棋","covers":["group","path","arrow","text","jump","out","read"]},{"id":"doushouqi","category":"chess","file":"chess/doushouqi.xml","name":"斗兽棋","covers":["group","for","change","wildcard","smooth","cell-grid"]},{"id":"wolf-sheep","category":"chess","file":"chess/wolf-sheep.xml","name":"狼吃羊","covers":["group","triangle","jump","out","line","note"]},{"id":"tictactoe","category":"chess","file":"chess/tictactoe.xml","name":"井字棋","covers":["def-template","group-attr","cell-grid","line","ring"]},{"id":"literacy","category":"kids","file":"kids/literacy.xml","name":"识字：八个汉字","covers":["def-template","for","index","hsl","text","read"]},{"id":"pictures","category":"kids","file":"kids/pictures.xml","name":"识图：几何拼图","covers":["def-template","ellipse","triangle","star","cos/sin","group"]},{"id":"counting","category":"kids","file":"kids/counting.xml","name":"数数 1 到 10","covers":["for","text-change","pulse","def-template"]},{"id":"addition","category":"kids","file":"kids/addition.xml","name":"加法 3 + 2","covers":["let","range-expr","ring","wildcard","text-change"]},{"id":"subtraction","category":"kids","file":"kids/subtraction.xml","name":"减法 7 - 3","covers":["range-expr","alpha-fade","by","def-template"]},{"id":"multiplication","category":"kids","file":"kids/multiplication.xml","name":"乘法 3 × 4","covers":["let","range-expr","ring","wildcard"]},{"id":"division","category":"kids","file":"kids/division.xml","name":"除法 12 ÷ 3","covers":["let","range-expr","mod","floor","label"]},{"id":"times-table","category":"kids","file":"kids/times-table.xml","name":"九九乘法表","covers":["nested-for","group","change","cell-grid","label"]},{"id":"easing-gallery","category":"effects","file":"effects/easing-gallery.xml","name":"缓动展览","covers":["ease","cubic","per-prop-ease","label"]},{"id":"orbits","category":"effects","file":"effects/orbits.xml","name":"轨道","covers":["expr","path","smooth","ring","wildcard"]}]};
+const root = document.getElementById('root');
+const only = new URLSearchParams(location.hash.slice(1)).get('only');
+for (const ex of manifest.examples) {
+  if (only && ex.id !== only) continue;
+  const src = await (await fetch('./examples/' + ex.file)).text();
+  const r = compile(src);
+  const diags = r.scene ? [...r.diagnostics, ...lint(r.scene)] : r.diagnostics;
+  const h = document.createElement('div');
+  h.innerHTML = '<h2>' + ex.name + '</h2><div class="meta">' + ex.id + ' · ' + (r.scene ? r.scene.steps.length + ' 步 · ' + r.scene.duration.toFixed(1) + 's' : '编译失败') +
+    (diags.length ? ' · <span class="bad">' + diags.length + ' 条诊断</span>' : ' · 零诊断') + '</div>';
+  root.appendChild(h);
+  if (!r.scene) continue;
+  const strip = document.createElement('div'); strip.className = 'strip'; h.appendChild(strip);
+  const sc = r.scene;
+  sc.steps.forEach((s, i) => {
+    const fig = document.createElement('figure');
+    const c = document.createElement('canvas'); c.width = sc.width; c.height = sc.height;
+    draw(c.getContext('2d'), sc, evaluate(sc, s.freeze), { pixelRatio: 1 });
+    const cap = document.createElement('figcaption'); cap.textContent = (i + 1) + '. ' + (s.say || '');
+    fig.append(c, cap); strip.appendChild(fig);
+  });
+}
+document.title = 'ready';
+</script></body></html>

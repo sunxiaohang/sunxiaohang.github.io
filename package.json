@@ -1,0 +1,17 @@
+{
+  "name": "gridmotion",
+  "version": "0.2.0",
+  "description": "用 XML 脚本驱动的几何动画引擎：核心(lang/compile/runtime/analysis) + 渲染 + 播放控制 + 导出 + 编辑器",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "test:core": "node --test test/core.test.js test/features.test.js",
+    "test:player": "node --test test/player.test.js",
+    "test:examples": "node --test test/examples.test.js",
+    "check": "node cli/check.js",
+    "gallery": "node tools/gallery.mjs"
+  }
+}

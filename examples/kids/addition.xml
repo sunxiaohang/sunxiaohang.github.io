@@ -1,0 +1,45 @@
+<scene width="800" height="620" grid="8x3" pad="100 20 120 20" bg="#e3f2fd" bg2="#bbdefb" hold="0.6" read="3" shadow="false" glow="false">
+  <!-- 加法：3 + 2 = 5。红球和蓝球各一堆，合并时蓝球飞到红球后面，最后变成同一种颜色（总数）。
+       a、b 是两个变量，改这两个数就能出别的题（总数超过 8 会被格子限制） -->
+  <let a="3"/>
+  <let b="2"/>
+
+  <layer name="balls" z="5"/>
+  <layer name="txt" z="10"/>
+
+  <text id="算式" at="4.5,1" size=".7c" fill="#1565c0" text="" layer="txt" px="400,70"/>
+
+  <step say="看，左边有 {a} 个红球" dur=".4" stagger=".1">
+    <for var="i" in="1..a">
+      <circle id="r{i}" at="{i},2" size=".7c" fill="#ef5350" layer="balls"/>
+    </for>
+    <算式 text="{a}"/>
+  </step>
+
+  <step say="右边有 {b} 个蓝球" dur=".4" stagger=".1">
+    <for var="i" in="1..b">
+      <circle id="b{i}" at="{7 - b + i},2" size=".7c" fill="#42a5f5" layer="balls"/>
+    </for>
+    <算式 text="{a} + {b}"/>
+  </step>
+
+  <step say="把它们放到一起" dur=".9" stagger=".1">
+    <for var="i" in="1..b">
+      <change id="b{i}" at="{a + i},2" ease="soft"/>
+    </for>
+  </step>
+
+  <step say="一共有几个？我们数一数" dur=".3" stagger=".25" hold="0.4">
+    <for var="i" in="1..a">
+      <ring id="cr{i}" at="{i},2" size=".9c" stroke="#ffd54f" layer="txt"/>
+    </for>
+    <for var="i" in="1..b">
+      <ring id="cb{i}" at="{a + i},2" size=".9c" stroke="#ffd54f" layer="txt"/>
+    </for>
+  </step>
+
+  <step say="{a} 加 {b} 等于 {a + b}" dur=".7">
+    <算式 text="{a} + {b} = {a + b}" pulse=".3"/>
+    <change id="r* b*" fill="#66bb6a"/>
+  </step>
+</scene>

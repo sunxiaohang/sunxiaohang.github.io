@@ -1,0 +1,66 @@
+<scene width="720" height="800" grid="5x5" pad="30 30 130 30" bg="#101a14" bg2="#1c3324" hold="0.8" read="4">
+  <!-- 狼吃羊：1 只狼追 4 只羊，狼的目标是吃羊、羊的目标是围住狼。5x5 交叉点棋盘 -->
+  <def name="狼" is="triangle" size=".86c" fill="#9aa3b2" stroke="#f1f5f9" width="3" layer="pieces"/>
+  <def name="羊" is="circle" size=".72c" fill="#fffaf0" stroke="#d9cdb4" width="3" layer="pieces"/>
+
+  <layer name="board" z="0"/>
+  <layer name="pieces" z="10"/>
+  <layer name="marks" z="20"/>
+
+  <grid fill="#caa86a" stroke="#6b4e1f" width="2" layer="board" radius="22" dots="3,3"/>
+  <!-- 斜线让棋盘更有变化：对角线是合法的走法 -->
+  <line from="1,1" to="5,5" stroke="#6b4e1f" width="1.6" layer="board" in="none"/>
+  <line from="5,1" to="1,5" stroke="#6b4e1f" width="1.6" layer="board" in="none"/>
+
+  <text id="狼字" text="狼" at="3,3" size=".5c" fill="#fff" layer="marks" alpha="0" in="none"/>
+
+  <group name="羊群">
+    <羊 id="s1" at="1,5" label="羊" color="#6b4e1f"/>
+    <羊 id="s2" at="2,5" label="羊" color="#6b4e1f"/>
+    <羊 id="s3" at="4,5" label="羊" color="#6b4e1f"/>
+    <羊 id="s4" at="5,5" label="羊" color="#6b4e1f"/>
+  </group>
+  <狼 id="wolf" at="3,1" label="狼" color="#111827"/>
+
+  <step say="狼吃羊：一只狼，四只羊，轮流走一步，可以走横、竖、斜">
+    <羊群 pulse=".18"/>
+    <wolf pulse=".2" delay=".2"/>
+  </step>
+
+  <step say="羊每次只能往前（向上）走一格，不能后退">
+    <s2 at="2,4"/>
+    <arrow id="a1" from="2,5" to="2,4" stroke="#ffd166" width="4" layer="marks" delay=".1"/>
+  </step>
+
+  <step say="狼可以向任意方向走一格：它走到了羊的上面" dur=".6">
+    <a1 out/>
+    <wolf at="2,3" trail="#cbd5e1"/>
+  </step>
+
+  <step say="如果狼的前面隔着一只羊、羊的后面有空位，狼就能跳过去吃掉它" dur=".9">
+    <ring id="target" at="2,4" size="1.15c" stroke="#ff6b6b" layer="marks"/>
+    <ring id="landing" at="2,5" size="1.15c" stroke="#7dd3a8" layer="marks" delay=".2"/>
+    <note id="why" at="2,4" text="羊后面是空位" side="right" layer="marks" delay=".4"/>
+  </step>
+
+  <step say="狼跳过去，把羊吃掉了" dur=".9">
+    <target out/>
+    <landing out/>
+    <why out/>
+    <wolf at="2,5" jump=".5c" ease="snap"/>
+    <s2 out delay=".5"/>
+  </step>
+
+  <step say="羊要保护好自己：把羊并排站在一起，后面就没有空位，狼就跳不过去了" dur=".9">
+    <s1 at="1,4"/>
+    <s3 at="3,4" delay=".2"/>
+    <wolf at="2,3" delay=".2" dur=".6"/>
+    <line id="wall" from="1,4" to="3,4" stroke="#7dd3a8" width="5" layer="marks" delay=".5"/>
+  </step>
+
+  <step say="羊把狼围住、让它无路可走，羊就赢了！" dur=".9">
+    <wall out/>
+    <s4 at="3,3" jump=".4c"/>
+    <note id="win" at="2,3" text="围住了！" side="top" layer="marks" delay=".5"/>
+  </step>
+</scene>

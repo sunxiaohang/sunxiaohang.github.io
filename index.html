@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>GridMotion · 用 XML 写几何动画与教程</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="brand"><span class="logo"></span><b>GridMotion</b><i>XML 几何动画引擎</i></div>
+    <div class="spacer"></div>
+    <select id="examples" title="示例"></select>
+    <button id="btnDocs" class="ghost">语法速查</button>
+    <button id="btnPng" class="ghost">导出当前帧</button>
+    <button id="btnBoard" class="ghost">导出分镜</button>
+    <button id="btnWebm" class="primary">导出 WebM</button>
+  </header>
+
+  <main>
+    <section class="pane editor">
+      <div class="pane-title"><span>场景脚本</span><span id="status" class="status"></span></div>
+      <div class="code">
+        <div class="gutter"><div id="gutter"></div></div>
+        <div class="codewrap">
+          <div id="hl" aria-hidden="true"></div>
+          <textarea id="src" spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off"></textarea>
+        </div>
+      </div>
+      <div id="console" class="console"></div>
+    </section>
+
+    <section class="pane right">
+      <div class="stagewrap" id="stagewrap"><canvas id="stage"></canvas></div>
+
+      <div class="transport">
+        <button id="btnPrev" class="icon" title="上一步（←）">
+          <svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg>
+        </button>
+        <button id="btnPlay" class="icon big" title="播放 / 暂停（空格）"></button>
+        <button id="btnNext" class="icon" title="下一步（→）">
+          <svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
+        </button>
+        <span id="time" class="time">0.00 / 0.00s</span>
+        <div class="spacer"></div>
+        <label class="chk"><input id="chkGrid" type="checkbox"><span>坐标参考</span></label>
+        <label class="chk"><input id="chkLoop" type="checkbox" checked><span>循环</span></label>
+        <select id="speed" title="播放速度">
+          <option value="0.25">0.25×</option>
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+        </select>
+      </div>
+
+      <div class="lanes" id="lanes">
+        <div class="lane ruler-row"><div class="lane-name">时间</div><div class="lane-track" id="ruler"></div></div>
+        <div class="lane steps-row"><div class="lane-name">步骤</div><div class="lane-track" id="stepTrack"></div></div>
+        <div id="laneRows"></div>
+        <div class="overlay"><div class="playhead" id="playhead"></div></div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="docs">
+    <form method="dialog" class="docs-head"><b>语法速查</b><button class="ghost">关闭</button></form>
+    <div class="docs-body" id="docsBody"></div>
+  </dialog>
+
+  <script type="module" src="src/app/main.js"></script>
+</body>
+</html>

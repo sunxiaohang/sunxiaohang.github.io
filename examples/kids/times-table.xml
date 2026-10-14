@@ -1,0 +1,42 @@
+<scene width="800" height="800" grid="9x9" pad="70 20 110 60" bg="#fffde7" bg2="#fff59d" hold="0.5" read="4" shadow="false" glow="false">
+  <!-- 九九乘法表：9x9 格，第 r 行第 c 列放 r×c（只显示 c≤r 的下三角，和课本一样）。
+       嵌套 for 一次生成 45 个方块；颜色按行着色；逐行点亮并读出口诀 -->
+  <layer name="cells" z="1"/>
+  <layer name="txt" z="10"/>
+
+  <grid id="表格" style="cell" stroke="#d4c06a" width="2" layer="cells"/>
+
+  <step say="九九乘法表：横着看、竖着看，都有规律" hold="0.8"/>
+
+  <step say="每一行从 1 乘到那一行的数" dur=".3" stagger=".012">
+    <for var="r" in="1..9">
+      <for var="c" in="1..r">
+        <rect id="t{r}_{c}" at="{c},{r}" w=".88c" h=".88c" fill="{hsl(r * 38, 75, 78)}" radius="10" layer="cells"
+              label="{c * r}" color="#4a3b00" group="row{r}"/>
+      </for>
+    </for>
+  </step>
+
+  <!-- 口诀按课本读法：一一得一、一二得二……、二二得四。第 r 行就是「r 的口诀」，从 一r 读到 r r。
+       数字读音用数组 cn 查表；乘积 < 10 时课本写"得 X"，>= 10 时写"X 十 Y"，这里直接写阿拉伯数字最清楚。 -->
+  <let cn="{['零','一','二','三','四','五','六','七','八','九']}"/>
+  <for var="r" in="1..9">
+    <step say="第 {r} 行：{cn[1]}{cn[r]}得{r}，{cn[2]}{cn[r]}得{r * 2}，……，{cn[r]}{cn[r]}得{r * r}" dur=".4" stagger=".04">
+      <change id="row{r}" pulse=".18"/>
+    </step>
+  </for>
+
+  <step say="看对角线：1×1、2×2、3×3……都是「平方数」" dur=".5" stagger=".08">
+    <for var="k" in="1..9">
+      <change id="t{k}_{k}" fill="#ef5350" color="#ffffff" pulse=".3"/>
+    </for>
+  </step>
+
+  <step say="九九表一共有 45 个口诀，你都背熟了吗？" dur=".6" stagger=".01">
+    <for var="r" in="1..9">
+      <for var="c" in="1..r">
+        <change id="t{r}_{c}" jump=".12c"/>
+      </for>
+    </for>
+  </step>
+</scene>

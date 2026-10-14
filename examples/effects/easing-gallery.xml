@@ -1,0 +1,40 @@
+<scene width="800" height="860" grid="10x8" pad="40 40 140 40" bg="#0e1020" bg2="#1c2040" hold="0.9" read="4" overlap="off">
+  <!-- 缓动展览：每种缓动一行（共 8 行）。"过程"本来看不见，所以用表达式 ease(name, t) 把它画成残影：
+       每行 11 个点，位置 = 起点 + (终点-起点) * ease(t)。点稀疏的地方跑得快，点挤在一起的地方跑得慢；
+       冻结画面里就能直接读出"这条缓动是先慢后快，还是会过冲"。
+       讲到哪一行，就用一个半透明的圆角框把那一行框出来 —— 静帧里持久可见，比 pulse 一闪而过更有用。
+       过冲的缓动（back / spring / elastic）会超出终点，所以终点 x1 留出了余量。
+       缓动在终点附近本来就让点堆叠，所以关掉重叠检查（overlap="off"）。 -->
+  <let names="{['linear','soft','snap','in','back','spring','bounce','elastic']}"/>
+  <let says="{['linear 匀速：点间距处处相等', 'soft 两头慢、中间快：两端的点密，中间的点疏', 'snap 起步快、收尾慢：点先稀后密', 'in 起步慢、越走越快：点先密后稀', 'back 先向后退一点蓄力，再冲过终点后回来', 'spring 在终点附近来回弹，幅度逐渐减小', 'bounce 像球落地，一次比一次弹得低', 'elastic 像橡皮筋，在终点附近高频抖动']}"/>
+  <let n="10"/>
+  <let x0="2.3"/>
+  <let x1="8.4"/>
+
+  <layer name="focus" z="0"/>
+  <layer name="rail" z="1"/>
+  <layer name="trace" z="3"/>
+
+  <for var="k" index="i" in="{names}">
+    <line from="{x0},{i + 1}" to="{x1},{i + 1}" stroke="rgba(255,255,255,.1)" width="2" in="none" layer="rail"/>
+    <text id="nm{i}" at="1.3,{i + 1}" text="{k}" size=".22c" fill="#9aa0bd" layer="rail" in="fade"/>
+  </for>
+
+  <step say="缓动 = 速度的变化方式。每行 11 个点，是相同时间间隔下球所在的位置" dur=".4" stagger=".012" hold="1.2">
+    <for var="k" index="i" in="{names}">
+      <for var="j" in="0..n">
+        <circle id="t{i}_{j}" at="{x0 + (x1 - x0) * ease(k, j / n)},{i + 1}" size=".2c"
+                fill="{hsl(i * 44, 80, 64)}" layer="trace" alpha="{0.3 + 0.7 * j / n}"/>
+      </for>
+    </for>
+  </step>
+
+  <!-- 逐行讲解：框 = 当前讲的那一行；上一行的框退场 -->
+  <for var="k" index="i" in="{names}">
+    <step say="{says[i]}" dur=".45">
+      <if test="i > 0"><change id="hl{i - 1}" out/></if>
+      <rect id="hl{i}" at="5.4,{i + 1}" w="8.2c" h=".78c" fill="rgba(255,255,255,.07)" stroke="{hsl(i * 44, 80, 64)}"
+            width="3" radius="18" layer="focus"/>
+    </step>
+  </for>
+</scene>

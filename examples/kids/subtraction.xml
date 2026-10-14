@@ -1,0 +1,41 @@
+<scene width="800" height="620" grid="8x3" pad="100 20 120 20" bg="#fff8e1" bg2="#ffecb3" hold="0.6" read="3" shadow="false" glow="false">
+  <!-- 减法：7 - 3 = 4。小鸟站成一排，飞走 3 只，剩下的就是答案 -->
+  <let total="7"/>
+  <let gone="3"/>
+
+  <layer name="birds" z="5"/>
+  <layer name="txt" z="10"/>
+
+  <def name="小鸟" cx="1" cy="2" tint="#42a5f5">
+    <ellipse id="{id}_b" at="{cx},{cy}" w=".56c" h=".42c" fill="{tint}" layer="birds" group="{id}"/>
+    <circle id="{id}_h" at="{cx + 0.22},{cy - 0.2}" size=".26c" fill="{tint}" layer="birds" group="{id}"/>
+    <triangle id="{id}_k" at="{cx + 0.4},{cy - 0.2}" size=".14c" fill="#ffa726" rot="90" layer="birds" group="{id}"/>
+    <circle id="{id}_e" at="{cx + 0.26},{cy - 0.23}" size=".05c" fill="#ffffff" layer="birds" group="{id}"/>
+  </def>
+
+  <text id="算式" px="400,70" size=".7c" fill="#ef6c00" text="" layer="txt"/>
+
+  <step say="树上站着 {total} 只小鸟" dur=".4" stagger=".1">
+    <for var="i" in="1..total">
+      <小鸟 id="n{i}" cx="{i}" cy="2" tint="{hsl(200 + i*6, 80, 60)}"/>
+    </for>
+    <算式 text="{total}"/>
+  </step>
+
+  <step say="飞走了 {gone} 只" dur=".8" stagger=".12" hold="0.8">
+    <for var="i" in="{total - gone + 1}..{total}">
+      <change id="n{i}" by="3,-2.6" alpha="0" ease="in"/>
+    </for>
+    <算式 text="{total} - {gone}"/>
+  </step>
+
+  <step say="还剩几只？我们数一数" dur=".3" stagger=".25" hold="0.4">
+    <for var="i" in="1..(total - gone)">
+      <ring id="c{i}" at="{i},2" size=".9c" stroke="#ffd54f" layer="txt"/>
+    </for>
+  </step>
+
+  <step say="{total} 减 {gone} 等于 {total - gone}" dur=".7">
+    <算式 text="{total} - {gone} = {total - gone}" pulse=".3"/>
+  </step>
+</scene>
