@@ -1,7 +1,8 @@
 import { parseXML } from '../lang/parser.js';
-import { expand } from '../lang/expand.js';
+import { expand, RESERVED_TAGS } from '../lang/expand.js';
 import { Diagnostics, suggest } from '../lang/reader.js';
 import { ENTITY_TYPES } from '../lang/schema.js';
+import { parseData } from '../lang/csv.js';
 import { buildScene, MAX_SEGMENTS } from './scene.js';
 import { createEntity, createLayer, createGroup } from './entities.js';
 import { compileStep } from './steps.js';
@@ -54,13 +55,33 @@ export function compile(src) {
   const { root, diagnostics } = parseXML(String(src ?? ''));
   for (const d of diagnostics) diag.add(d.severity, d.code, d.message, d, d.hint);
   if (!root) return { ok: false, scene: null, diagnostics: diag.list };
+  return compileRoot(root, diag);
+}
+
+/** 从已解析的 AST 编译（resolveImports 合并 import 后走这里）；dataSources 为 <data src> 预加载结果 */
+export function compileRoot(root, diag, dataSources = {}) {
   if (root.tag !== 'scene') {
     diag.error('E_ROOT', '根节点必须是 <scene>', root);
     return { ok: false, scene: null, diagnostics: diag.list };
   }
 
-  const { root: ex, anims, defNames } = expand(root, diag);
-  const scene = buildScene(ex, diag);
+  // 内联 <data name="…">（无 src）：同步解析为全局变量
+  const data = { ...dataSources };
+  const children = [];
+  for (const n of root.children) {
+    if (n.tag !== 'data') { children.push(n); continue; }
+    const name = (n.attrs.name || '').trim();
+    if (!name) { diag.error('E_MISSING_ATTR', '<data> 需要 name="变量名"', n); continue; }
+    if (RESERVED_TAGS.has(name)) { diag.error('E_BAD_ID', `数据名 "${name}" 是内置标签，请换一个`, n); continue; }
+    const format = (n.attrs.format || 'csv').toLowerCase();
+    if (n.attrs.src) { diag.error('E_DATA', `<data src="${n.attrs.src}"> 需要异步加载（用 compileWithImports）`, n); continue; }
+    try { data[name] = parseData(n.text ?? '', format); }
+    catch (e) { diag.error('E_DATA', `<data name="${name}"> 解析失败：${e?.message || e}`, n); }
+  }
+  root.children = children;
+
+  const { root: ex, anims, defNames, theme } = expand(root, diag, data);
+  const scene = buildScene(ex, diag, theme);
   scene.anims = anims;
   scene.defNames = defNames;
 

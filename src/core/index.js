@@ -7,7 +7,8 @@
  *   runtime/   运行：evaluate(scene, t) 纯函数求值
  *   analysis/  分析：lint（出界/重叠）、describe（给 AI 的摘要）
  */
-export { compile, MAX_SEGMENTS } from './compile/index.js';
+export { compile, compileRoot, MAX_SEGMENTS } from './compile/index.js';
+export { compileWithImports } from './imports.js';
 export { evaluate } from './runtime/evaluate.js';
 export { lint, describe } from './analysis/lint.js';
 export { parseXML } from './lang/parser.js';

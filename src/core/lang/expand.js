@@ -9,7 +9,7 @@ const IDENT = /^[\p{L}_][\p{L}\p{N}_]*$/u;
 const NUM = /^\s*-?(?:\d+\.?\d*|\.\d+)\s*$/;
 const RANGE = /^\s*(-?\d+(?:\.\d+)?)\s*\.\.\s*(-?\d+(?:\.\d+)?)\s*$/;
 export const RESERVED_TAGS = new Set([
-  ...ENTITY_TYPES, 'scene', 'step', 'layer', 'group', 'let', 'set', 'for', 'if', 'elseif', 'else', 'def', 'anim', 'change', 'k',
+  ...ENTITY_TYPES, 'scene', 'step', 'layer', 'group', 'let', 'set', 'for', 'if', 'elseif', 'else', 'def', 'anim', 'change', 'k', 'theme', 'import', 'data',
 ]);
 
 function makeRng(seed) {
@@ -49,14 +49,17 @@ function findClose(s, from) {
  * 展开编程语法（let/set/for/if/def/anim），输出只含 step / 对象 / layer / change 的普通节点树。
  * 所有属性值已完成 {表达式} 插值。
  */
-export function expand(root, diag) {
+export function expand(root, diag, dataSources = {}) {
   const seedRaw = root.attrs.seed;
   const seed = seedRaw !== undefined && Number.isFinite(Number(seedRaw)) ? Number(seedRaw) : 1;
   const cx = { rng: makeRng(seed) };
   const budget = { nodes: 0, loops: 0, over: false };
   const defs = new Map();
   const anims = new Map();
+  const theme = {};
   const global = new Scope();
+  // 数据源（<data>）：作为全局变量注入，供 <for in="{rows}"> 引用
+  for (const [k, v] of Object.entries(dataSources)) global.declare(k, v);
   const posOf = (node, name) => (name && node.attrPos?.[name]) || node;
 
   const overBudget = (node, what) => {
@@ -228,6 +231,7 @@ export function expand(root, diag) {
       switch (n.tag) {
         case 'def':
         case 'anim':
+        case 'theme':
           if (!n.hoisted) diag.error('E_DEF_PLACE', `<${n.tag}> 只能写在 <scene> 的最外层`, n);
           chain = null;
           break;
@@ -352,10 +356,17 @@ export function expand(root, diag) {
   for (const n of root.children) {
     if (n.tag === 'def') registerDef(n);
     else if (n.tag === 'anim') registerAnim(n);
+    else if (n.tag === 'theme') {
+      n.hoisted = true;
+      for (const [k, v] of Object.entries(n.attrs)) {
+        if (k === 'name') continue; // name 仅作文档标注，非语义色
+        theme[k] = toStr(interp(v, global, posOf(n, k), false));
+      }
+    }
   }
 
   const out = { tag: 'scene', attrs: {}, attrPos: root.attrPos, children: [], line: root.line, col: root.col };
   for (const [k, v] of Object.entries(root.attrs)) out.attrs[k] = toStr(interp(v, global, posOf(root, k), false));
   expandChildren(root.children, global, out.children, 0);
-  return { root: out, anims, defNames: [...defs.keys()] };
+  return { root: out, anims, defNames: [...defs.keys()], theme };
 }

@@ -1,0 +1,5 @@
+<lib>
+  <def name="卡牌" is="rect" w="1.4c" h="1.9c" radius=".12c" flat="" fill="#ffffff"/>
+  <def name="圆片" is="circle" size=".62c" flat=""/>
+  <def name="徽章" is="rect" w="1.2c" h=".5c" radius=".25c" flat=""/>
+</lib>

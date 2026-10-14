@@ -176,6 +176,21 @@ export function schema() {
     entities: {
       ...Object.fromEntries(ENTITY_TYPES.map((t) => [t, { doc: ENTITY_DOC[t], attrs: attrs(ENTITY_ATTRS[t]) }])),
       layer: { doc: '图层：<layer name="marks" z="20">…子对象…</layer>；z 越大越靠上；可在步骤里用图层名改 alpha', attrs: attrs(LAYER_ATTRS) },
+      theme: {
+        doc: '主题（语义色）：<theme accent="#7c6cff" text="#e8eaf6" bg="#0f1020"/>，之后对象里写 fill="accent" 引用。' +
+          '配合 <import> 引入主题文件即可一键换肤',
+        attrs: attrs([]),
+      },
+      import: {
+        doc: '引入外部库文件：<import src="lib/pieces.xml"/> 或 <import src="themes/dark.xml" as="dk"/>。' +
+          '库文件里放 <def>/<anim>/<theme>；带 as 时给定义加命名空间（dk.棋子）',
+        attrs: attrs([]),
+      },
+      data: {
+        doc: '数据源：内联 <data name="rows">表头,列2\\n值1,值2</data> 或外部 <data name="rows" src="data.csv" format="csv"/>。' +
+          'CSV 第一行是表头（纯数字自动转 number），JSON 用 format="json"。之后 <for var="row" in="{rows}"> 逐行渲染，{row.列名} 取字段',
+        attrs: attrs([]),
+      },
       group: {
         doc: '分组（纯逻辑，不改变坐标）：<group name="红方">…</group>，组内对象自动属于该组；' +
           '步骤里写组名就是对组内全部对象做同一个修改，如 <红方 pulse/>、<棋盘 out/>；组可嵌套',

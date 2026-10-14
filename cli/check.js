@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { compile, describe, lint, evaluate, schema } from '../src/core/index.js';
+import { resolve, dirname } from 'node:path';
+import { compileWithImports, describe, lint, evaluate, schema } from '../src/core/index.js';
 
 const args = process.argv.slice(2);
 const flag = (name) => {
@@ -24,7 +25,9 @@ if (!file) {
 }
 
 const src = file === '-' ? readFileSync(0, 'utf8') : readFileSync(file, 'utf8');
-const res = compile(src);
+const baseDir = file === '-' ? process.cwd() : dirname(resolve(file));
+const loader = async (p) => readFileSync(resolve(baseDir, p), 'utf8');
+const res = await compileWithImports(src, loader);
 const out = { ok: res.ok, diagnostics: res.diagnostics };
 if (res.scene) {
   out.diagnostics = [...res.diagnostics, ...lint(res.scene)];

@@ -13,8 +13,17 @@ const cssBox = (v) =>
       : v.length === 3 ? [v[0], v[1], v[2], v[1]] : v;
 
 /** 场景：画布尺寸、格子、留白、背景、全局开关 */
-export function buildScene(root, diag) {
-  const r = new Reader(root, diag);
+export function buildScene(root, diag, themeRaw) {
+  // 语义色表：<theme accent="#…"> → { accent: [r,g,b,a] }，对象里 fill="accent" 引用
+  const theme = {};
+  if (themeRaw) {
+    for (const [k, v] of Object.entries(themeRaw)) {
+      const c = parseColor(String(v));
+      if (c) theme[k] = c;
+      else diag.warn('W_BAD_VALUE', `<theme> 的 "${k}" 不是合法颜色："${v}"`, root);
+    }
+  }
+  const r = new Reader(root, diag, undefined, theme);
   checkAttrs(root, Object.keys(SCENE_ATTRS), diag);
   const width = r.num('width', 800, { min: 50, max: 8000 });
   const height = r.num('height', 600, { min: 50, max: 8000 });
@@ -49,6 +58,7 @@ export function buildScene(root, diag) {
     hold: r.num('hold', 0.6, { min: 0.05 }),
     read: r.num('read', 0, { min: 0, max: 30 }),
     overlapCheck: r.bool('overlap', true),
+    theme,
     entities: [], byId: new Map(), groups: new Map(), segments: [], steps: [], anims: new Map(), sounds: [], duration: 0.1,
   };
 }

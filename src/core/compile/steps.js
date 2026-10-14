@@ -6,11 +6,11 @@ import { compileIntro, compileEffects, compileTarget } from './targets.js';
 
 /** 在步骤里新建对象：登场动画 + 登场时附带的效果 */
 function createInStep(node, ctx, base) {
-  const r0 = new Reader(node, ctx.diag, ctx.scene.unit);
+  const r0 = new Reader(node, ctx.diag, ctx.scene.unit, ctx.scene.theme);
   const start = base + r0.num('delay', 0, { min: 0 });
   const ent = createEntity(node, ctx, { birth: start, groups: ctx.curGroups });
   if (!ent) return base;
-  const r = new Reader(node, ctx.diag, ctx.scene.unit);
+  const r = new Reader(node, ctx.diag, ctx.scene.unit, ctx.scene.theme);
   const st = ctx.state.get(ent.id);
   const introEnd = compileIntro(ent, node, r, start, ctx);
   return Math.max(introEnd, compileEffects(ctx, node, r, ent, st, introEnd));
@@ -65,7 +65,7 @@ function modifyAll(node, targets, ctx, dur, nextBase, viaChange, batch) {
 export function compileStep(node, ctx) {
   const { scene, diag } = ctx;
   checkAttrs(node, Object.keys(STEP_ATTRS), diag);
-  const r = new Reader(node, diag, scene.unit);
+  const r = new Reader(node, diag, scene.unit, scene.theme);
   const index = scene.steps.length;
   ctx.curStep = index;
   const t0 = ctx.cursor;
@@ -99,7 +99,7 @@ export function compileStep(node, ctx) {
       }
       ctx.curGroups = saved;
     } else if (ch.tag === 'change') {
-      const rr = new Reader(ch, diag, scene.unit);
+      const rr = new Reader(ch, diag, scene.unit, scene.theme);
       const spec = rr.str('id', '');
       if (!spec.trim()) { diag.error('E_MISSING_ATTR', '<change> 需要 id="对象名"（可写多个、组名或 c* 通配）', ch); continue; }
       const targets = resolveTargets(spec, ch, ctx);

@@ -20,7 +20,7 @@ const html = `<!doctype html>
 </style></head><body>
 <h1>GridMotion Gallery</h1><div id="root"></div>
 <script type="module">
-import { compile, evaluate, lint } from './src/core/index.js';
+import { compileWithImports, evaluate, lint } from './src/core/index.js';
 import { draw } from './src/render/canvas2d.js';
 const manifest = ${JSON.stringify(manifest)};
 const root = document.getElementById('root');
@@ -28,7 +28,9 @@ const only = new URLSearchParams(location.hash.slice(1)).get('only');
 for (const ex of manifest.examples) {
   if (only && ex.id !== only) continue;
   const src = await (await fetch('./examples/' + ex.file)).text();
-  const r = compile(src);
+  const base = new URL('./examples/' + ex.file, location.href);
+  const loader = async (p) => { const r = await fetch(new URL(p, base).href); if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); };
+  const r = await compileWithImports(src, loader);
   const diags = r.scene ? [...r.diagnostics, ...lint(r.scene)] : r.diagnostics;
   const h = document.createElement('div');
   h.innerHTML = '<h2>' + ex.name + '</h2><div class="meta">' + ex.id + ' · ' + (r.scene ? r.scene.steps.length + ' 步 · ' + r.scene.duration.toFixed(1) + 's' : '编译失败') +

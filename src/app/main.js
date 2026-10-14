@@ -1,8 +1,9 @@
-import { compile, lint, schema } from '../core/index.js';
+import { compileWithImports, lint, schema } from '../core/index.js';
 import { SoundEngine } from '../audio/sound.js';
 import { Player } from '../player/player.js';
 import { renderStoryboard } from '../export/storyboard.js';
 import { startWebmRecording, download } from '../export/webm.js';
+import { exportWebm, webCodecsSupported } from '../export/encode.js';
 import { CodeEditor, Console } from '../editor/code-editor.js';
 import { buildDocs } from '../editor/docs.js';
 import { StageView } from './stage-view.js';
@@ -37,10 +38,19 @@ const scrub = { resume: false };
 let exporting = null;
 
 // ---------- 编译：脚本 → 场景 → 各视图 ----------
-function recompile(keepTime) {
+let baseDir = new URL('.', location.href).href; // 用于解析 <import src> 的相对路径
+const loader = async (p) => {
+  const r = await fetch(new URL(p, baseDir).href);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.text();
+};
+let recompileToken = 0;
+async function recompile(keepTime) {
   const src = editor.value;
   try { localStorage.setItem(STORAGE_KEY, src); } catch { /* 隐私模式等：忽略 */ }
-  const res = compile(src);
+  const token = ++recompileToken;
+  const res = await compileWithImports(src, loader);
+  if (token !== recompileToken) return; // 已有更新的编辑，丢弃过期结果
   const diagnostics = [...res.diagnostics, ...(res.scene ? lint(res.scene) : [])];
   const known = res.scene ? { ids: new Set(res.scene.entities.map((e) => e.id)), defs: new Set(res.scene.defNames) } : undefined;
   editor.setDiagnostics(diagnostics, known);
@@ -130,6 +140,7 @@ async function openExample(id) {
   const ex = examples.get(id);
   if (!ex) return false;
   editor.value = await (await fetch(`./examples/${ex.file}`)).text();
+  baseDir = new URL(`./examples/${ex.file}`, location.href).href; // import 相对示例文件所在目录
   $('examples').value = id;
   recompile(false);
   return true;
@@ -151,7 +162,33 @@ $('btnBoard').addEventListener('click', () => {
 });
 
 const btnWebm = $('btnWebm');
+let offlineBusy = false;
 btnWebm.addEventListener('click', async () => {
+  const scene = player.scene;
+  if (!scene) return;
+
+  // 优先离线导出：WebCodecs 逐帧编码，快、精确、可带音轨
+  if (webCodecsSupported()) {
+    if (offlineBusy) return;
+    offlineBusy = true;
+    btnWebm.classList.add('busy');
+    try {
+      const blob = await exportWebm(scene, {
+        fps: 30, scale: 1, withAudio: true,
+        onProgress: (r) => { btnWebm.textContent = `离线导出 ${Math.round(r * 100)}%`; },
+      });
+      download(blob, 'gridmotion.webm');
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      offlineBusy = false;
+      btnWebm.classList.remove('busy');
+      btnWebm.textContent = '导出 WebM';
+    }
+    return;
+  }
+
+  // 降级：实时录制（旧浏览器）
   if (exporting) { exporting.stop(); return; }
   let rec;
   const unlock = stage.lock(2);

@@ -1,14 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { compile, evaluate, lint, describe } from '../src/core/index.js';
-import { examples, manifest, near } from './helpers.js';
+import { compileWithImports, evaluate, lint, describe } from '../src/core/index.js';
+import { examples, manifest, near, makeLoader } from './helpers.js';
 
 /**
  * 示例套件：每个示例都是一份"语言兼容性 + 效果多样性"的回归用例。
  * 这里只做机器能判断的部分（编译、静帧语义、数值）；"好不好看"靠 tools/gallery.mjs 肉眼复核。
  */
 
-const compiled = new Map(examples.map((e) => [e.id, compile(e.src)]));
+const compiled = new Map();
+for (const e of examples) compiled.set(e.id, await compileWithImports(e.src, makeLoader(e.file)));
 const ids = (id) => compiled.get(id).scene.entities.filter((e) => !e.internal).map((e) => e.id);
 const frameAt = (id, step) => {
   const { scene } = compiled.get(id);

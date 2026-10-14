@@ -57,7 +57,11 @@ export function parseXML(src) {
         i = n;
         break;
       }
-      if (lt > i && src.slice(i, lt).trim()) warn('W_TEXT', '节点之外的文本会被忽略', i);
+      if (lt > i && src.slice(i, lt).trim()) {
+        // 收集节点内文本（<data> 的内联数据依赖它）；根节点之外的文本仍告警
+        if (stack.length) stack[stack.length - 1].text = (stack[stack.length - 1].text ?? '') + decode(src.slice(i, lt));
+        else warn('W_TEXT', '节点之外的文本会被忽略', i);
+      }
       i = lt;
 
       if (src.startsWith('<!--', i)) {

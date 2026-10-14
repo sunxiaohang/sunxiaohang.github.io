@@ -77,10 +77,11 @@ export function checkAttrs(node, allowed, diag) {
 
 /** 读取节点属性并做类型校验；出错时写入诊断并回退到默认值。 */
 export class Reader {
-  constructor(node, diag, unit = 1) {
+  constructor(node, diag, unit = 1, theme = null) {
     this.node = node;
     this.diag = diag;
     this.unit = unit;
+    this.theme = theme; // 语义色表 { accent: [r,g,b,a], ... }
   }
 
   at(name) { return this.node.attrPos[name] || this.node; }
@@ -172,9 +173,12 @@ export class Reader {
 
   color(name, def) {
     if (!this.has(name)) return def;
-    const c = parseColor(this.raw(name));
+    const raw = this.raw(name).trim();
+    // 语义色优先：fill="accent" 命中 theme 里声明的 accent
+    if (this.theme && Object.hasOwn(this.theme, raw)) return this.theme[raw];
+    const c = parseColor(raw);
     if (!c) {
-      this.diag.error('E_BAD_COLOR', `无法识别的颜色 "${this.raw(name)}"`, this.at(name), '支持 #rgb / #rrggbb / rgb() / hsl() / 常用色名 / none');
+      this.diag.error('E_BAD_COLOR', `无法识别的颜色 "${this.raw(name)}"`, this.at(name), '支持 #rgb / #rrggbb / rgb() / hsl() / 常用色名 / none / 语义色');
       return def;
     }
     return c;

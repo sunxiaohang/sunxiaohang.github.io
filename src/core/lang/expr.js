@@ -280,6 +280,7 @@ function ev(n, sc, cx) {
     case 'mem': {
       const base = ev(n.a, sc, cx);
       if (n.name === 'length' && (Array.isArray(base) || typeof base === 'string')) return base.length;
+      if (base != null && typeof base === 'object' && Object.hasOwn(base, n.name)) return base[n.name];
       throw new ExprError(`不支持 .${n.name}`, n.i);
     }
   }

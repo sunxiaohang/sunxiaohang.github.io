@@ -1,18 +1,18 @@
 import { toCss } from '../core/util/color.js';
-import { FONT, roundRectPath, wrapText } from './util.js';
+import { FONT, roundRectPath } from './util.js';
 
-export function drawBackground(ctx, scene) {
-  const { width: W, height: H } = scene;
+export function drawBackground(ctx, ir) {
+  const { width: W, height: H } = ir;
   const g = ctx.createRadialGradient(W * 0.5, H * 0.42, 0, W * 0.5, H * 0.5, Math.hypot(W, H) * 0.62);
-  g.addColorStop(0, toCss(scene.bg2));
-  g.addColorStop(1, toCss(scene.bg));
+  g.addColorStop(0, toCss(ir.background.inner));
+  g.addColorStop(1, toCss(ir.background.outer));
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, W, H);
 }
 
 /** 编辑器用的坐标参考（不属于场景内容，导出时不画） */
-export function drawGuide(ctx, scene) {
-  const { ax, ay, cols, rows, cw, ch, unit } = scene;
+export function drawGuide(ctx, ir) {
+  const { ax, ay, cols, rows, cw, ch, unit } = ir.guide;
   ctx.save();
   if (cols * rows <= 400) {
     ctx.lineWidth = 1;
@@ -39,22 +39,17 @@ export function drawGuide(ctx, scene) {
   ctx.restore();
 }
 
-export function drawCaption(ctx, scene, text, k) {
-  if (k <= 0.01) return;
-  const W = scene.width, H = scene.height;
-  const fs = Math.max(14, Math.min(26, W * 0.03));
+export function drawCaption(ctx, cap) {
+  if (cap.k <= 0.01) return;
+  const { fs, padX, padY, lh } = cap.layout;
+  const { x, y, w, h, r } = cap.box;
   ctx.save();
   ctx.font = `600 ${fs}px ${FONT}`;
-  const lines = wrapText(ctx, text, W - 80);
-  const lh = fs * 1.5, padX = fs * 1.1, padY = fs * 0.7;
-  const w = Math.min(W - 24, Math.max(...lines.map((l) => ctx.measureText(l).width)) + padX * 2);
-  const h = lines.length * lh + padY * 2 - (lh - fs);
-  const x = (W - w) / 2, y = H - 18 - h + (1 - k) * 10;
-  ctx.globalAlpha = k;
+  ctx.globalAlpha = cap.k;
   ctx.shadowColor = 'rgba(0,0,0,.45)';
   ctx.shadowBlur = 18;
   ctx.fillStyle = 'rgba(8,10,24,.84)';
-  roundRectPath(ctx, x, y, w, h, fs * 0.8);
+  roundRectPath(ctx, x, y, w, h, r);
   ctx.fill();
   ctx.shadowColor = 'transparent';
   ctx.strokeStyle = 'rgba(255,255,255,.12)';
@@ -63,6 +58,7 @@ export function drawCaption(ctx, scene, text, k) {
   ctx.fillStyle = '#f4f6ff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  lines.forEach((l, i) => ctx.fillText(l, W / 2, y + padY + lh / 2 + i * lh - (lh - fs) / 2));
+  const cx = x + w / 2;
+  cap.lines.forEach((l, i) => ctx.fillText(l, cx, y + padY + lh / 2 + i * lh - (lh - fs) / 2));
   ctx.restore();
 }

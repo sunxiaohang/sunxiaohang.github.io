@@ -146,7 +146,7 @@ export function compileEffects(ctx, node, r, ent, st, start, opts = {}) {
 export function compileTarget(node, ent, ctx, stepDur, base, viaChange) {
   const { scene, diag } = ctx;
   const names = modAttrs(ent.type);
-  const r = new Reader(node, diag, scene.unit);
+  const r = new Reader(node, diag, scene.unit, scene.theme);
   const start = base + r.num('delay', 0, { min: 0 });
   if (ent.death !== Infinity && start >= ent.death - EPS) {
     // 通过组名/通配批量修改时，已退场的成员静默跳过；直接点名才算错误

@@ -23,7 +23,7 @@ function readPlace(r, ctx) {
 export function createLayer(node, ctx) {
   const { scene, diag } = ctx;
   checkAttrs(node, LAYER_ATTRS, diag);
-  const r = new Reader(node, diag, scene.unit);
+  const r = new Reader(node, diag, scene.unit, scene.theme);
   const name = (r.str('name', '') || r.str('id', '')).trim();
   if (!name) { diag.error('E_MISSING_ATTR', '<layer> 需要 name="图层名"', node); return null; }
   if (RESERVED_TAGS.has(name) || scene.byId.has(name) || scene.groups.has(name)) {
@@ -43,7 +43,7 @@ export function createLayer(node, ctx) {
 export function createGroup(node, ctx, parentGroups) {
   const { scene, diag } = ctx;
   checkAttrs(node, GROUP_ATTRS, diag);
-  const r = new Reader(node, diag, scene.unit);
+  const r = new Reader(node, diag, scene.unit, scene.theme);
   const name = r.str('name', '').trim();
   if (!name) { diag.error('E_MISSING_ATTR', '<group> 需要 name="组名"', node); return null; }
   if (RESERVED_TAGS.has(name) || scene.byId.has(name) || scene.groups.has(name)) {
@@ -59,7 +59,7 @@ export function createEntity(node, ctx, opts = {}) {
   const { scene, diag } = ctx;
   const type = node.tag, U = scene.unit;
   checkAttrs(node, [...ENTITY_ATTRS[type], ...TIMING, ...EFFECTS], diag);
-  const r = new Reader(node, diag, U);
+  const r = new Reader(node, diag, U, scene.theme);
 
   let id = r.str('id', '').trim();
   if (id && RESERVED_TAGS.has(id)) { diag.error('E_BAD_ID', `id "${id}" 是内置标签名，请换一个`, r.at('id')); id = ''; }

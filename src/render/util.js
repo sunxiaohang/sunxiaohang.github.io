@@ -11,13 +11,16 @@ export function roundRectPath(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-/** 按宽度逐字折行（兼容中文）；| 与 \n 表示强制换行 */
-export function wrapText(ctx, text, maxW) {
+/**
+ * 按宽度逐字折行（兼容中文）；| 与 \n 表示强制换行。
+ * measure(text) 返回宽度（字体已由调用方预设），让布局逻辑不依赖具体画布。
+ */
+export function wrapText(measure, text, maxW) {
   const out = [];
   for (const para of String(text).split(/\\n|\|/)) {
     let line = '';
     for (const ch of para) {
-      if (ctx.measureText(line + ch).width > maxW && line) { out.push(line); line = ch; }
+      if (measure(line + ch) > maxW && line) { out.push(line); line = ch; }
       else line += ch;
     }
     out.push(line);

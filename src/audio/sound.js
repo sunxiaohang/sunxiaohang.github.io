@@ -44,7 +44,7 @@ function wobble(ctx, t, base, depth, rate, dur, peak, type = 'sine') {
   lfo.stop(t + dur + 0.03);
 }
 
-const PRESETS = {
+export const PRESETS = {
   // 登场 / 弹跳：圆润的"啵"
   pop: (ctx, t) => tone(ctx, { type: 'sine', from: 560, to: 180, t, dur: 0.13, peak: 0.5 }),
   // 步进 / 点击：清脆短促

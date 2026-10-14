@@ -21,6 +21,8 @@
     { "id": "times-table", "category": "kids", "file": "kids/times-table.xml", "name": "九九乘法表", "covers": ["nested-for", "group", "change", "cell-grid", "label"] },
 
     { "id": "easing-gallery", "category": "effects", "file": "effects/easing-gallery.xml", "name": "缓动展览", "covers": ["ease", "cubic", "per-prop-ease", "label"] },
-    { "id": "orbits", "category": "effects", "file": "effects/orbits.xml", "name": "轨道", "covers": ["expr", "path", "smooth", "ring", "wildcard"] }
+    { "id": "orbits", "category": "effects", "file": "effects/orbits.xml", "name": "轨道", "covers": ["expr", "path", "smooth", "ring", "wildcard"] },
+    { "id": "theme-demo", "category": "effects", "file": "effects/theme-demo.xml", "name": "主题与组件", "covers": ["import", "theme", "def", "semantic-color"] },
+    { "id": "data-demo", "category": "effects", "file": "effects/data-demo.xml", "name": "数据驱动", "covers": ["data", "csv", "for", "member-access"] }
   ]
 }
