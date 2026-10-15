@@ -7,6 +7,7 @@
 - **声明式补间**：`<circle at="3,3" fill="red"/>` 加 `<step say="...">` 写「变成什么样」，而不是「怎么变」
 - **编程能力**：`<let>` / `<set>` / `<for>` / `<if>` / `<def>` 模板、`<anim>` 关键帧、表达式，可批量生成内容
 - **面向教学**：步骤 + 字幕 + 逐字朗读节奏，暂停在任意一步画面自带解释
+- **字幕样式**：默认是安静的半透明胶囊，颜色跟随配色；`<scene caption="plain|bar|minimal|accent|classic">` 换样式，`caption-size="small|large|xlarge|22"` 调字号，`caption-pos="top"` 放到上方，`caption="false"` 关闭；编辑器里也有对应下拉框
 - **丰富效果**：20+ 缓动曲线、`pulse`/`shake`/`jump`/`spin`/`flash`/`wobble`、落地投影、文字描边、星形多边形
 - **换肤与复用**：`<theme>` 语义色一键换肤，`<import>` 跨文件引入组件库 / 主题
 - **数据驱动**：CSV / JSON 数据源 → `<for in="{rows}">` 批量渲染（报表、数据可视化）

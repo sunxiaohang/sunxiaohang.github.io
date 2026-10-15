@@ -85,12 +85,11 @@ export function drawSolid(ctx, item, pr) {
   if (item.label) {
     ctx.fillStyle = toCss(item.color);
     const m = boxed ? Math.min(item.w, item.h) : s;
-    const n = [...String(item.label)].length;
-    const fit = n > 1 ? Math.min(0.52, 1.1 / n + 0.06) : 0.52;
-    ctx.font = `700 ${Math.max(10, m * fit)}px ${FONT}`;
+    const fs = item.labelFs || m * 0.4;
+    ctx.font = `700 ${fs}px ${FONT}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(item.label, 0, m * 0.02);
+    ctx.fillText(item.label, 0, fs * 0.04);
   }
 }
 

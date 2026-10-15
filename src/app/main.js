@@ -9,7 +9,7 @@ import { CodeEditor, Console } from '../editor/code-editor.js';
 import { mountChrome } from '../site/chrome.js';
 import { StageView } from './stage-view.js';
 import { TimelineView } from './timeline-view.js';
-import { setScenePalette, getScenePalette } from './scene-src.js';
+import { setScenePalette, getScenePalette, setSceneAttr, getSceneAttr } from './scene-src.js';
 
 mountChrome('editor');
 
@@ -155,6 +155,7 @@ async function recompile(keepTime) {
   const res = await compileWithImports(src, loader);
   if (token !== recompileToken) return; // 已有更新的编辑，丢弃过期结果
   if (typeof syncPaletteMenu === 'function') syncPaletteMenu();
+  if (typeof syncCaptionMenus === 'function') syncCaptionMenus();
   const diagnostics = [...res.diagnostics, ...(res.scene ? lint(res.scene) : [])];
   const known = res.scene ? { ids: new Set(res.scene.entities.map((e) => e.id)), defs: new Set(res.scene.defNames) } : undefined;
   editor.setDiagnostics(diagnostics, known);
@@ -290,6 +291,33 @@ paletteSel.addEventListener('change', () => {
   recompile(true);
 });
 
+// ---------- 字幕：样式 / 字号 / 位置，写回 <scene caption="…" caption-size="…"> ----------
+const CAP_STYLES = [['', '字幕：默认'], ['plain', '字幕：描边'], ['bar', '字幕：底条'], ['minimal', '字幕：竖线'], ['accent', '字幕：主色'], ['classic', '字幕：深色'], ['off', '字幕：关闭']];
+const CAP_SIZES = [['', '字号：中'], ['small', '字号：小'], ['large', '字号：大'], ['xlarge', '字号：特大']];
+const capStyleSel = $('capStyle');
+const capSizeSel = $('capSize');
+const fillSel = (sel, items) => { sel.innerHTML = items.map(([v, l]) => `<option value="${v}">${l}</option>`).join(''); };
+fillSel(capStyleSel, CAP_STYLES);
+fillSel(capSizeSel, CAP_SIZES);
+function syncCaptionMenus() {
+  const cap = getSceneAttr(editor.value, 'caption').toLowerCase();
+  const style = ['false', '0', 'no', 'off', 'none'].includes(cap) ? 'off' : (cap === 'soft' || cap === 'true' ? '' : cap);
+  capStyleSel.value = [...capStyleSel.options].some((o) => o.value === style) ? style : '';
+  const size = getSceneAttr(editor.value, 'caption-size').toLowerCase();
+  capSizeSel.value = [...capSizeSel.options].some((o) => o.value === size) ? size : '';
+  capSizeSel.disabled = capStyleSel.value === 'off';
+}
+function applyCaptionAttr(name, value) {
+  const next = setSceneAttr(editor.value, name, value);
+  if (next === null) { alert('找不到 <scene> 根标签'); syncCaptionMenus(); return; }
+  editor.value = next;
+  recompile(true);
+}
+capStyleSel.addEventListener('change', () => {
+  const v = capStyleSel.value;
+  applyCaptionAttr('caption', v === 'off' ? 'false' : v);
+});
+capSizeSel.addEventListener('change', () => applyCaptionAttr('caption-size', capSizeSel.value));
 // ---------- 导出 ----------
 $('btnPng').addEventListener('click', () => {
   stage.render();

@@ -1,9 +1,10 @@
-import { Reader, checkAttrs, suggest } from '../lang/reader.js';
+import { Reader, checkAttrs, suggest, parsePos } from '../lang/reader.js';
 import { RESERVED_TAGS } from '../lang/expand.js';
 import {
   ENTITY_ATTRS, LAYER_ATTRS, GROUP_ATTRS, POSITIONAL, SEGMENTED, BOXED, TIMING, EFFECTS, SOUND_NAMES,
 } from '../lang/schema.js';
 import { clamp } from '../util/ease.js';
+import { linkEndpoints } from '../runtime/links.js';
 import { onColor } from '../util/color.js';
 import { col, NONE, cellToXY, warnOutside, register } from './scene.js';
 
@@ -12,6 +13,7 @@ const PALETTE = ['#ff6b9d', '#4cc9f0', '#ffd166', '#9b8cff', '#06d6a0', '#ff9f68
 const withAlpha = (c, a) => [c[0], c[1], c[2], c[3] * a];
 const SIDES = ['top', 'bottom', 'left', 'right'];
 const rad = (d) => (d * Math.PI) / 180;
+const raw0 = (r, name) => r.raw(name).trim();
 
 function readPlace(r, ctx) {
   const p = r.pos('at');
@@ -107,6 +109,10 @@ export function createEntity(node, ctx, opts = {}) {
 
   if (POSITIONAL.has(type)) {
     [init.x, init.y] = readPlace(r, ctx);
+    // off：在 at 之外再偏移 dx,dy，单位与 size 一致（像素或 .3c）。
+    // at 的小数是“格子”单位（随行高列宽变化），而 size 是 c 单位；在卡片里摆文字时请用 off，两者才不会错位。
+    const off = r.lenPair('off');
+    if (off) { init.x += off[0]; init.y += off[1]; }
     init.rot = rad(r.num('rot', 0));
   }
 
@@ -163,19 +169,40 @@ export function createEntity(node, ctx, opts = {}) {
       break;
     }
     case 'line': case 'arrow': {
-      const f = r.pos('from'), t = r.pos('to');
+      // 端点：对象 id（绑定连线，自动贴到对象边缘并随对象移动）或格子坐标
+      const endOf = (name) => {
+        if (!r.has(name)) return undefined;
+        const raw = r.raw(name).trim();
+        const target = scene.byId.get(raw);
+        if (target && POSITIONAL.has(target.type)) return { ref: target.index, xy: [target.init.x, target.init.y] };
+        const p = parsePos(raw);
+        if (!p) {
+          const hint = suggest(raw, [...scene.byId.keys()].filter((k) => POSITIONAL.has(scene.byId.get(k).type)));
+          diag.error('E_BAD_VALUE', `${name} 需要格子坐标 "列,行"，或已定义的对象 id，实际是 "${raw}"`, r.at(name), hint ? `是不是想写 "${hint}"？（连线引用的对象要先于连线定义）` : '连线引用的对象要先于连线定义');
+          return null;
+        }
+        warnOutside(ctx, p, r.at(name));
+        return { ref: -1, xy: cellToXY(scene, p) };
+      };
+      const f = endOf('from'), t = endOf('to');
       if (!f || !t) {
-        if (f === undefined || t === undefined) diag.error('E_MISSING_ATTR', `<${type}> 需要 from="列,行" 和 to="列,行"`, node);
+        if (f === undefined || t === undefined) diag.error('E_MISSING_ATTR', `<${type}> 需要 from 和 to（格子坐标 "列,行"，或对象 id）`, node);
         return null;
       }
-      warnOutside(ctx, f, r.at('from'));
-      warnOutside(ctx, t, r.at('to'));
-      [init.x1, init.y1] = cellToXY(scene, f);
-      [init.x2, init.y2] = cellToXY(scene, t);
+      if (f.ref >= 0 && f.ref === t.ref) { diag.error('E_BAD_VALUE', `<${type}> 的起点和终点是同一个对象 "${raw0(r, 'from')}"`, r.at('to')); return null; }
       init.stroke = r.color('stroke', scene.theme.text || col('#e8eaf6'));
       init.width = r.len('width', 4, { min: 0 });
       ent.dash = r.flag('dash');
       ent.head = r.len('head', Math.max(12, init.width * 3.2), { min: 1 });
+      [init.x1, init.y1] = f.xy;
+      [init.x2, init.y2] = t.xy;
+      if (f.ref >= 0 || t.ref >= 0) {
+        // 默认与目标留一点间距：箭头尖不贴死在边缘上
+        const gap = r.len('gap', type === 'arrow' ? Math.max(3, U * 0.05) : 0, { min: 0 });
+        const live = (s) => (s.ref >= 0 ? { e: scene.entities[s.ref], L: { ...scene.entities[s.ref].init, ox: 0, oy: 0, sx: 1, sy: 1 } } : s.xy);
+        Object.assign(init, (({ x1, y1, x2, y2 }) => ({ x1, y1, x2, y2 }))(linkEndpoints(live(f), live(t), gap)));
+        ent.link = { from: { ref: f.ref }, to: { ref: t.ref }, gap };
+      }
       break;
     }
     case 'grid': {
@@ -196,6 +223,7 @@ export function createEntity(node, ctx, opts = {}) {
   }
   ent.init = init;
   register(ctx, ent);
+  if (ent.link) scene.links.push({ ent: ent.index, ...ent.link });
   for (const gn of groups) scene.groups.get(gn).members.push(ent.index);
 
   const sound = r.str('sound', '').trim();

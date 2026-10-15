@@ -1,4 +1,5 @@
 import { clamp, EASINGS } from '../util/ease.js';
+import { applyLinks } from './links.js';
 
 export function createLive(e) {
   return { ...e.init, id: e.id, type: e.type, hidden: false, ox: 0, oy: 0, sx: 1, sy: 1, orot: 0, ma: 1 };
@@ -18,6 +19,7 @@ export function evaluate(scene, t) {
     if (t < s.t0) break;
     s.fn(ents[s.ent], s.dur > 0 ? clamp((t - s.t0) / s.dur) : 1);
   }
+  applyLinks(scene, ents); // 绑定连线：端点按对象此刻的位置重新算
 
   const steps = scene.steps;
   let step = -1;

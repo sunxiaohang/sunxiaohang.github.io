@@ -1,6 +1,6 @@
 <scene width="960" height="520" grid="9x4" pad="0 0 84 0" palette="aurora" shadow="false" glow="false" overlap="off" hold=".8" read="4">
   <!-- 请求流程图：浏览器 → 网关 → 服务 → 数据库。节点是带副标题的卡片，数据包沿同一条水平线走过去，再原路返回；
-       每个连接上标着耗时，最后汇总成总耗时。节点、连线、标签都用 for 按序号排开。 -->
+       每个连接上标着耗时，最后汇总成总耗时。节点、连线、标签都用 for 按序号排开。连线用 from="n0" to="n1" 绑定节点，不用手算端点坐标。 -->
   <let nodes="{['浏览器', '网关', '服务', '数据库']}"/>
   <let subs="{['Client', 'Gateway', 'Service', 'Database']}"/>
   <let ms="{['12 ms', '38 ms', '9 ms']}"/>
@@ -12,14 +12,14 @@
   <step say="一次请求要穿过四层" dur=".5" stagger=".14">
     <for var="n" index="i" in="{nodes}">
       <rect id="n{i}" at="{i * 2.3 + 1.65},1.55" w="1.6c" h="1.45c" radius="20" fill="bg2" stroke="sub" width="1.5" flat="" layer="nodes"/>
-      <text id="nt{i}" at="{i * 2.3 + 1.65},1.38" text="{n}" size=".32c" fill="text" layer="nodes"/>
-      <text id="ns{i}" at="{i * 2.3 + 1.65},1.85" text="{subs[i]}" size=".2c" fill="sub" layer="nodes"/>
+      <text id="nt{i}" at="{i * 2.3 + 1.65},1.55" off="0,-.17c" text="{n}" size=".32c" fill="text" layer="nodes"/>
+      <text id="ns{i}" at="{i * 2.3 + 1.65},1.55" off="0,.3c" text="{subs[i]}" size=".2c" fill="sub" layer="nodes"/>
     </for>
   </step>
 
-  <step say="节点之间用箭头连起来，表示请求的方向" dur=".5" stagger=".15">
+  <step say="节点之间用箭头连起来：from / to 直接写节点的 id，箭头自动贴在边缘上" dur=".5" stagger=".15">
     <for var="i" in="0..2">
-      <arrow id="a{i}" from="{i * 2.3 + 2.55},1.55" to="{i * 2.3 + 3.75},1.55" stroke="sub" width="2.5" layer="links"/>
+      <arrow id="a{i}" from="n{i}" to="n{i + 1}" stroke="sub" width="2.5" layer="links"/>
     </for>
   </step>
 

@@ -1,4 +1,5 @@
 import { toCss } from '../core/util/color.js';
+import { tracePoints } from '../core/util/path.js';
 import { FONT, roundRectPath } from './util.js';
 
 export function drawLine(ctx, item, pr) {
@@ -36,13 +37,10 @@ export function drawLine(ctx, item, pr) {
   }
 }
 
-/** 尾迹：按 draw 进度画出折线的前一段（按弧长计） */
+/** 尾迹：按 draw 进度画出折线的前一段；笔尖与所属对象的圆心是同一个点（见 util/path.js） */
 export function drawTrace(ctx, item, pr) {
-  const pts = item.pts;
-  if (!pts || pts.length < 2 || item.draw <= 0) return;
-  const lens = [0];
-  for (let i = 1; i < pts.length; i++) lens.push(lens[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
-  const target = lens[lens.length - 1] * Math.min(1, item.draw);
+  const part = tracePoints(item.pts, item.draw);
+  if (part.length < 2) return;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.strokeStyle = toCss(item.stroke);
@@ -50,13 +48,8 @@ export function drawTrace(ctx, item, pr) {
   ctx.shadowColor = toCss(item.stroke, 0.5);
   ctx.shadowBlur = 4 * pr;
   ctx.beginPath();
-  ctx.moveTo(pts[0][0], pts[0][1]);
-  for (let i = 1; i < pts.length; i++) {
-    if (lens[i] <= target) { ctx.lineTo(pts[i][0], pts[i][1]); continue; }
-    const u = (target - lens[i - 1]) / Math.max(1e-9, lens[i] - lens[i - 1]);
-    ctx.lineTo(pts[i - 1][0] + (pts[i][0] - pts[i - 1][0]) * u, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * u);
-    break;
-  }
+  ctx.moveTo(part[0][0], part[0][1]);
+  for (let i = 1; i < part.length; i++) ctx.lineTo(part[i][0], part[i][1]);
   ctx.stroke();
 }
 

@@ -2,46 +2,14 @@ import { Reader, checkAttrs } from '../lang/reader.js';
 import { POSITIONAL, SEGMENTED, BOXED, TIMING, EFFECTS, modAttrs } from '../lang/schema.js';
 import { lerp, clamp, EASINGS } from '../util/ease.js';
 import { mix } from '../util/color.js';
+import { buildPath, trailSamples } from '../util/path.js';
 import * as FX from './effects.js';
 import { EPS, cellToXY, warnOutside, seg } from './scene.js';
 
 const rad = (d) => (d * Math.PI) / 180;
 
 // ---------------- 路径 ----------------
-function polyLen(pts) {
-  let t = 0;
-  for (let i = 1; i < pts.length; i++) t += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
-  return t;
-}
-
-/** 折线按弧长匀速；smooth 时用 Catmull-Rom 过每个点 */
-function makePath(pts, smooth) {
-  if (pts.length === 2 || !smooth) {
-    const lens = [0];
-    for (let i = 1; i < pts.length; i++) lens.push(lens[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
-    const total = lens[lens.length - 1];
-    return (q) => {
-      if (total < 1e-9) return pts[0];
-      const d = q * total;
-      let i = 1;
-      while (i < pts.length - 1 && d > lens[i]) i++;
-      const span = lens[i] - lens[i - 1];
-      // 首段允许 u<0、末段允许 u>1：这样 back/spring/elastic 等过冲缓动在起终点处能真的冲出去，而不是被钳死
-      let u = span > 1e-9 ? (d - lens[i - 1]) / span : 1;
-      if (i > 1 && u < 0) u = 0;
-      if (i < pts.length - 1 && u > 1) u = 1;
-      return [lerp(pts[i - 1][0], pts[i][0], u), lerp(pts[i - 1][1], pts[i][1], u)];
-    };
-  }
-  const n = pts.length - 1;
-  return (q) => {
-    const u = q * n;
-    const i = Math.min(n - 1, Math.floor(u)), t = u - i;
-    const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(n, i + 2)];
-    const f = (k) => 0.5 * ((2 * p1[k]) + (-p0[k] + p2[k]) * t + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * t * t + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * t * t * t);
-    return [f(0), f(1)];
-  };
-}
+// 路径与尾迹统一用 util/path.js 的“按弧长参数化”实现：圆心与尾迹笔尖用同一个参数，永远重合。
 
 const halfOf = (ent, st) => (BOXED.has(ent.type) ? st.h : st.size) / 2;
 
@@ -49,16 +17,16 @@ const halfOf = (ent, st) => (BOXED.has(ent.type) ? st.h : st.size) / 2;
  * 尾迹：沿移动路径采样出一条折线，随进度"长出来"，走完保留在画面上。
  * 它是一个由编译器创建的内部对象（type='trace'），不能被脚本引用，也不参与重叠检查。
  */
-function makeTrail(ctx, ent, node, pathFn, dur, start, ease, r) {
+function makeTrail(ctx, ent, node, path, dur, start, ease, r) {
   const { scene } = ctx;
   const st = ctx.state.get(ent.id);
   const color = r.has('trail') && r.raw('trail').trim() ? r.color('trail', st.fill) : st.fill;
-  const N = 48, pts = [];
-  for (let i = 0; i <= N; i++) pts.push(pathFn(i / N));
+  // 采样点按弧长均匀分布、间距约 2px：折线本身已是光滑曲线，draw 进度 = 弧长比例 = 圆心位置
+  const pts = path.sample(trailSamples(path.length));
   const id = `${ent.id}~trail${++ctx.auto}`;
   const trace = {
     index: scene.entities.length, id, type: 'trace', line: node.line, col: node.col,
-    layer: ent.layer, groups: [], birth: start, death: Infinity, pts, internal: true,
+    layer: ent.layer, groups: [], birth: start, death: Infinity, pts, internal: true, owner: ent.index,
     init: {
       x: 0, y: 0, size: 0, w: 0, h: 0, rot: 0, fill: [0, 0, 0, 0], stroke: color,
       width: Math.max(3, Math.min(ent.init.size * 0.1, 8)), color: [255, 255, 255, 1],
@@ -202,10 +170,12 @@ export function compileTarget(node, ent, ctx, stepDur, base, viaChange) {
           L.y = acy + rad * Math.sin(a);
         }, { dur });
         if (r.has('trail')) {
-          makeTrail(ctx, ent, node, (q) => {
-            const a = fromAngle + turns * Math.PI * 2 * q;
-            return [acx + rad * Math.cos(a), acy + rad * Math.sin(a)];
-          }, dur, start, ease, r);
+          const arc = {
+            length: Math.abs(turns) * Math.PI * 2 * rad,
+            at: (q) => { const a = fromAngle + turns * Math.PI * 2 * q; return [acx + rad * Math.cos(a), acy + rad * Math.sin(a)]; },
+          };
+          arc.sample = (n) => Array.from({ length: n + 1 }, (_, i) => arc.at(i / n));
+          makeTrail(ctx, ent, node, arc, dur, start, ease, r);
         }
       } else {
         diag.error('E_MISSING_ATTR', 'orbit 需要 around="圆心坐标"', r.at('orbit'));
@@ -227,13 +197,14 @@ export function compileTarget(node, ent, ctx, stepDur, base, viaChange) {
       }
     }
     if (pts) {
-      const fn = makePath(pts, r.flag('smooth'));
-      const total = polyLen(pts);
+      const path = buildPath(pts, r.flag('smooth'));
+      const fn = path.at;
+      const total = path.length;
       const jumpOn = r.has('jump'), walkOn = r.has('walk');
       let mdur = dur, ease = easeOf(keys[0]);
       if (jumpOn) { mdur = r.has('dur') ? dur : 0.8; ease = FX.jumpWarp; }
       mk('move', ['x', 'y'], (L, p) => { const q = fn(ease(p)); L.x = q[0]; L.y = q[1]; }, { dur: mdur });
-      if (r.has('trail')) makeTrail(ctx, ent, node, fn, mdur, start, ease, r);
+      if (r.has('trail')) makeTrail(ctx, ent, node, path, mdur, start, ease, r);
       const last = pts[pts.length - 1];
       if (jumpOn) {
         mk('effect', [], FX.jumpFn(r.lenOr('jump', scene.unit * 0.7, { min: 0 }), halfOf(ent, st)), { mode: 'add', dur: mdur });
@@ -255,6 +226,10 @@ export function compileTarget(node, ent, ctx, stepDur, base, viaChange) {
   }
   for (const [attr, px, py] of [['from', 'x1', 'y1'], ['to', 'x2', 'y2']]) {
     if (!has(attr) || !SEGMENTED.has(ent.type)) continue;
+    if (scene.byId.has(r.raw(attr).trim())) {
+      diag.error('E_BAD_VALUE', `步骤里不能把线条端点改成对象 id "${r.raw(attr).trim()}"`, r.at(attr), '对象 id 只能在创建连线时写；步骤里请写格子坐标，或新建一条连线');
+      continue;
+    }
     const p = r.pos(attr);
     if (!p) continue;
     warnOutside(ctx, p, r.at(attr));

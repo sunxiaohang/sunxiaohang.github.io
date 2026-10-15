@@ -147,6 +147,17 @@ export class Reader {
     return p;
   }
 
+  /** "dx,dy"：两个长度（像素或 .3c），用于与 size 同单位的偏移 */
+  lenPair(name) {
+    if (!this.has(name)) return undefined;
+    const parts = this.raw(name).trim().split(/[\s,，;；]+/).filter(Boolean).map((p) => parseLen(p, this.unit));
+    if (parts.length !== 2 || parts.some((v) => v === null || !Number.isFinite(v))) {
+      this.diag.error('E_BAD_VALUE', `属性 ${name} 需要两个长度 "dx,dy"（如 0,.3c 或 12,-8），实际是 "${this.raw(name)}"`, this.at(name));
+      return null;
+    }
+    return parts;
+  }
+
   pos(name) {
     if (!this.has(name)) return undefined;
     const p = parsePos(this.raw(name));

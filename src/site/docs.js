@@ -2,6 +2,9 @@ import { schema } from '../core/index.js';
 import { PALETTES } from '../core/palettes.js';
 import { buildDocs } from '../editor/docs.js';
 import { highlightLines } from '../editor/highlight.js';
+import { compile, evaluate } from '../core/index.js';
+import { draw } from '../render/canvas2d.js';
+import { currentTheme } from './theme.js';
 import { mountChrome } from './chrome.js';
 
 mountChrome('docs');
@@ -58,6 +61,29 @@ const FAQ = [
   ['脚本报错了怎么办？', '编辑器会在出错的行上标出红色波浪线，并给出“是不是想写……”的提示；也可以用命令行 node cli/check.js 检查一个脚本。'],
 ];
 $('docFaq').innerHTML = FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('');
+// ---- 字幕样式：每种一张实时预览 ----
+const CAPS = [
+  ['soft', '默认', '半透明胶囊，颜色取自配色，不抢画面'],
+  ['plain', '无底描边', '只有文字和一圈同色描边，最接近影视字幕'],
+  ['bar', '通栏底条', '贴着画面底边的整行，适合内容多的讲解'],
+  ['minimal', '左对齐竖线', '一道主色细竖线加文字，像一段引文'],
+  ['accent', '主色胶囊', '整颗胶囊用主色，需要强调时用'],
+  ['classic', '深色胶囊', '旧版样式：深色底，对比最强'],
+];
+const capScene = (style) => `<scene width="440" height="275" grid="4x3" palette="${currentTheme() === 'dark' ? 'graphite' : 'porcelain'}" caption="${style}" caption-size="large" shadow="false" glow="false"><circle id="a" at="2,1.7" size="1.5c" fill="accent" flat=""/><rect id="b" at="3.2,1.7" w="1.2c" h="1.2c" radius="22" fill="c2" flat=""/><step say="只写目标，过程交给引擎"><a pulse=".1"/></step></scene>`;
+function paintCaps() {
+  document.querySelectorAll('.cap-card canvas').forEach((cv) => {
+    const sc = compile(capScene(cv.dataset.style)).scene;
+    if (!sc) return;
+    const ctx = cv.getContext('2d');
+    draw(ctx, sc, evaluate(sc, sc.steps[0].freeze), { pixelRatio: cv.width / sc.width });
+  });
+}
+$('capGrid').innerHTML = CAPS.map(([id, name, desc]) => `<div class="cap-card"><canvas width="880" height="550" data-style="${id}"></canvas><div class="cap-meta"><b>${esc(name)}</b><code>caption="${id}"</code><p>${esc(desc)}</p></div></div>`).join('');
+$('capSizes').innerHTML = [['small', '小'], ['medium', '中（默认）'], ['large', '大'], ['xlarge', '特大'], ['22', '像素值']]
+  .map(([v, l]) => `<div class="ease-item"><code>${v}</code><span>caption-size · ${l}</span></div>`).join('');
+paintCaps();
+addEventListener('gm-theme', paintCaps);
 $('refBody').innerHTML = buildDocs(schema());
 
 // 目录：一级固定项 + 参考里的各个 h4
@@ -68,6 +94,7 @@ $('toc').innerHTML = [
   '<a href="#sec-quick">快速开始</a>',
   '<a href="#sec-recipes">常用配方</a>',
   '<a href="#sec-palette">配色模板</a>',
+  '<a href="#sec-caption">字幕样式</a>',
   '<a href="#sec-ease">缓动速查</a>',
   '<span class="grp">参考</span>',
   ...refHeads.map((h) => `<a href="#${h.id}">${esc(h.textContent)}</a>`),

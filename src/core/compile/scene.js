@@ -1,6 +1,6 @@
 import { parseColor, shade, luminance } from '../util/color.js';
 import { Reader, checkAttrs } from '../lang/reader.js';
-import { SCENE_ATTRS } from '../lang/schema.js';
+import { SCENE_ATTRS, CAPTION_STYLES, CAPTION_SIZES } from '../lang/schema.js';
 
 export const EPS = 1e-6;
 export const MAX_SEGMENTS = 60000;
@@ -12,6 +12,31 @@ const cssBox = (v) =>
     : v.length === 2 ? [v[0], v[1], v[0], v[1]]
       : v.length === 3 ? [v[0], v[1], v[2], v[1]] : v;
 
+/** 字幕设置：caption（开关或样式名）、caption-size（预设或像素）、caption-pos */
+function readCaption(r, diag, width) {
+  let on = true, style = 'soft';
+  if (r.has('caption')) {
+    const v = r.raw('caption').trim().toLowerCase();
+    if (['false', '0', 'no', 'off', 'none'].includes(v)) on = false;
+    else if (['', 'true', '1', 'yes', 'on'].includes(v)) { /* 默认样式 */ }
+    else if (CAPTION_STYLES.includes(v)) style = v;
+    else diag.error('E_BAD_VALUE', `caption 需要 false 或样式名，实际是 "${r.raw('caption')}"`, r.at('caption'), `可用：${CAPTION_STYLES.join(' / ')}`);
+  }
+  let fs = Math.max(11, width * CAPTION_SIZES.medium);
+  if (r.has('caption-size')) {
+    const v = r.raw('caption-size').trim().toLowerCase();
+    if (Object.hasOwn(CAPTION_SIZES, v)) fs = Math.max(11, width * CAPTION_SIZES[v]);
+    else if (v !== '' && Number.isFinite(Number(v))) fs = Math.min(120, Math.max(10, Number(v)));
+    else if (v !== '') diag.error('E_BAD_VALUE', `caption-size 需要字号预设或像素数，实际是 "${r.raw('caption-size')}"`, r.at('caption-size'), `可用：${Object.keys(CAPTION_SIZES).join(' / ')} 或 22 这样的数字`);
+  }
+  let pos = 'bottom';
+  if (r.has('caption-pos')) {
+    const v = r.raw('caption-pos').trim().toLowerCase();
+    if (v === 'top' || v === 'bottom') pos = v;
+    else diag.error('E_BAD_VALUE', `caption-pos 只能是 top 或 bottom，实际是 "${r.raw('caption-pos')}"`, r.at('caption-pos'));
+  }
+  return { on, style, fs, pos };
+}
 /** 场景：画布尺寸、格子、留白、背景、全局开关 */
 export function buildScene(root, diag, themeRaw) {
   // 语义色表：<theme accent="#…"> → { accent: [r,g,b,a] }，对象里 fill="accent" 引用
@@ -55,17 +80,19 @@ export function buildScene(root, diag, themeRaw) {
   const series = [];
   for (let i = 1; theme[`c${i}`]; i++) series.push(theme[`c${i}`]);
   const cw = aw / cols, ch = ah / rows;
+  const cap = readCaption(r, diag, width);
   return {
     width, height, cols, rows, pad, ax: pad[3], ay: pad[0], cw, ch, unit: Math.min(cw, ch),
     bg, bg2,
     // 套用了配色 / 主题：图形默认色、文字色、标签对比度改由主题决定
     themed: Object.keys(theme).length > 0, series, dark: luminance(bg) < 0.4,
-    shadow: r.bool('shadow', true), glow: r.bool('glow', true), caption: r.bool('caption', true),
+    shadow: r.bool('shadow', true), glow: r.bool('glow', true),
+    caption: cap.on, captionStyle: cap.style, captionFs: cap.fs, captionPos: cap.pos,
     hold: r.num('hold', 0.6, { min: 0.05 }),
     read: r.num('read', 0, { min: 0, max: 30 }),
     overlapCheck: r.bool('overlap', true),
     theme,
-    entities: [], byId: new Map(), groups: new Map(), segments: [], steps: [], anims: new Map(), sounds: [], duration: 0.1,
+    links: [], entities: [], byId: new Map(), groups: new Map(), segments: [], steps: [], anims: new Map(), sounds: [], duration: 0.1,
   };
 }
 

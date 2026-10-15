@@ -44,22 +44,60 @@ export function drawCaption(ctx, cap) {
   if (cap.k <= 0.01) return;
   const { fs, padX, padY, lh } = cap.layout;
   const { x, y, w, h, r } = cap.box;
+  const st = cap.style;
+  const c = st.colors;
   ctx.save();
-  ctx.font = `600 ${fs}px ${FONT}`;
+  ctx.font = `${st.weight} ${fs}px ${FONT}`;
   ctx.globalAlpha = cap.k;
-  ctx.shadowColor = 'rgba(0,0,0,.45)';
-  ctx.shadowBlur = 18;
-  ctx.fillStyle = 'rgba(8,10,24,.84)';
-  roundRectPath(ctx, x, y, w, h, r);
-  ctx.fill();
-  ctx.shadowColor = 'transparent';
-  ctx.strokeStyle = 'rgba(255,255,255,.12)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-  ctx.fillStyle = '#f4f6ff';
-  ctx.textAlign = 'center';
+  ctx.lineJoin = 'round';
+
+  if (st.panel) {
+    if (c.shadow && c.shadow[3] > 0) {
+      ctx.shadowColor = toCss(c.shadow);
+      ctx.shadowBlur = fs * 0.9;
+      ctx.shadowOffsetY = fs * 0.12;
+    }
+    ctx.fillStyle = toCss(c.fill);
+    roundRectPath(ctx, x, y, w, h, r);
+    ctx.fill();
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetY = 0;
+    if (c.border) {
+      ctx.strokeStyle = toCss(c.border);
+      ctx.lineWidth = 1;
+      if (st.full) {
+        const ly = st.top ? y + h - 0.5 : y + 0.5;
+        ctx.beginPath(); ctx.moveTo(x, ly); ctx.lineTo(x + w, ly); ctx.stroke();
+      } else {
+        roundRectPath(ctx, x, y, w, h, r);
+        ctx.stroke();
+      }
+    }
+  }
+
+  if (st.bar) {
+    ctx.fillStyle = toCss(c.bar);
+    roundRectPath(ctx, x, y + fs * 0.1, Math.max(2, fs * 0.14), h - fs * 0.2, fs * 0.07);
+    ctx.fill();
+  }
+
   ctx.textBaseline = 'middle';
-  const cx = x + w / 2;
-  cap.lines.forEach((l, i) => ctx.fillText(l, cx, y + padY + lh / 2 + i * lh - (lh - fs) / 2));
+  ctx.textAlign = st.left ? 'left' : 'center';
+  const tx = st.left ? x + padX : x + w / 2;
+  const ty = (i) => y + padY + lh / 2 + i * lh - (lh - fs) / 2;
+  if (st.halo && c.shadow) {
+    ctx.shadowColor = toCss(c.shadow);
+    ctx.shadowBlur = fs * 0.5;
+  }
+  if (st.halo) {
+    ctx.strokeStyle = toCss(c.halo);
+    ctx.lineWidth = fs * 0.3;
+    cap.lines.forEach((l, i) => ctx.strokeText(l, tx, ty(i)));
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+  }
+  ctx.fillStyle = toCss(c.text);
+  cap.lines.forEach((l, i) => ctx.fillText(l, tx, ty(i)));
   ctx.restore();
 }

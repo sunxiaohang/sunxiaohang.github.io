@@ -13,7 +13,7 @@ export const EFFECTS = ['pulse', 'shake', 'jump', 'spin', 'flash', 'wobble', 'do
 /** 内置音色（src/audio/sound.js 实现，无音频文件） */
 export const SOUND_NAMES = ['pop', 'tick', 'ding', 'snap', 'whoosh', 'wobble', 'success', 'spring'];
 /** 只能在创建时设置、不能在步骤里动画的属性 */
-export const STATIC_ATTRS = new Set(['id', 'layer', 'group', 'flat', 'in', 'dash', 'head', 'side', 'gap', 'style', 'dots', 'labels', 'radius', 'points', 'after', 'below']);
+export const STATIC_ATTRS = new Set(['off', 'id', 'layer', 'group', 'flat', 'in', 'dash', 'head', 'side', 'gap', 'style', 'dots', 'labels', 'radius', 'points', 'after', 'below']);
 
 const B = (doc, def) => ({ doc, ...(def !== undefined && { default: def }) });
 
@@ -21,6 +21,7 @@ export const ATTR = {
   id: B('对象名。之后的步骤可以直接把它当标签来修改它；省略则自动生成'),
   at: B('位置：格子坐标 "列,行"（从 1 起，格子中心），也可写 H8；小数表示格内位置，如 1.5,2'),
   px: B('位置：像素坐标 "x,y"（与 at 二选一）'),
+  off: B('在 at 的基础上再偏移 "dx,dy"，单位与 size 相同（像素或 .3c）。在卡片 / 面板里摆文字请用它，不要给 at 加小数——at 的小数按行高列宽算，和 c 单位对不齐'),
   size: B('尺寸（px 或 1.5c）。圆=直径；文字=字号；矩形/椭圆=同时设置 w 和 h'),
   w: B('矩形/椭圆宽度；text 时为折行宽度（超过则自动换行）'),
   h: B('矩形/椭圆高度'),
@@ -39,12 +40,12 @@ export const ATTR = {
   in: B('登场动画：pop | fade | drop | draw | none。线条默认 draw，棋盘默认 fade，其余默认 pop'),
   label: B('图形中心的文字（文字颜色用 color，字号随图形大小）'),
   text: B('文字内容；note 与 text 通用'),
-  from: B('线条起点 "列,行"'),
-  to: B('线条终点 "列,行"'),
+  from: B('线条起点：格子坐标 "列,行"，或对象 id（绑定连线：自动贴到对象边缘，对象移动时跟着走）'),
+  to: B('线条终点：格子坐标 "列,行"，或对象 id。例：<arrow from="a" to="b"/>，a、b 要先于连线定义'),
   dash: B('虚线（缺省属性）'),
   head: B('箭头大小'),
   side: B('气泡出现在目标的哪一侧：top | bottom | left | right', 'top'),
-  gap: B('气泡与目标的距离', '0.5c'),
+  gap: B('气泡与目标的距离；绑定连线时是连线端点与对象边缘的间距（箭头默认 0.05c）', '0.5c'),
   style: B('棋盘线风格：line（线穿过格子中心，棋类用）| cell（格子边框）', 'line'),
   dots: B('棋盘星位，如 dots="4,4 12,4 8,8"'),
   labels: B('在棋盘外侧标注坐标 A~ / 1~（缺省属性）'),
@@ -77,7 +78,7 @@ export const ATTR = {
 };
 
 const BASE = ['id', 'alpha', 'z', 'layer', 'group', 'in', 'sound', 'after', 'below', 'gap'];
-const SHAPE = [...BASE, 'at', 'px', 'size', 'fill', 'stroke', 'width', 'rot', 'label', 'color', 'flat'];
+const SHAPE = [...BASE, 'at', 'px', 'off', 'size', 'fill', 'stroke', 'width', 'rot', 'label', 'color', 'flat'];
 
 export const ENTITY_ATTRS = {
   circle: SHAPE,
@@ -85,12 +86,12 @@ export const ENTITY_ATTRS = {
   rect: [...SHAPE, 'w', 'h', 'radius'],
   triangle: SHAPE,
   star: [...SHAPE, 'points'],
-  text: [...BASE, 'at', 'px', 'size', 'fill', 'rot', 'text', 'w', 'stroke', 'width'],
-  icon: [...BASE, 'at', 'px', 'size', 'fill', 'rot', 'text'],
-  ring: [...BASE, 'at', 'px', 'size', 'stroke', 'width', 'rot'],
+  text: [...BASE, 'at', 'px', 'off', 'size', 'fill', 'rot', 'text', 'w', 'stroke', 'width'],
+  icon: [...BASE, 'at', 'px', 'off', 'size', 'fill', 'rot', 'text'],
+  ring: [...BASE, 'at', 'px', 'off', 'size', 'stroke', 'width', 'rot'],
   line: [...BASE, 'from', 'to', 'stroke', 'width', 'dash'],
   arrow: [...BASE, 'from', 'to', 'stroke', 'width', 'dash', 'head'],
-  note: [...BASE, 'at', 'px', 'size', 'fill', 'color', 'text', 'side', 'gap'],
+  note: [...BASE, 'at', 'px', 'off', 'size', 'fill', 'color', 'text', 'side', 'gap'],
   grid: [...BASE, 'style', 'dots', 'labels', 'color', 'fill', 'stroke', 'width', 'radius'],
 };
 export const LAYER_ATTRS = ['name', 'id', 'z', 'alpha'];
@@ -121,6 +122,10 @@ export function modAttrs(type) {
   return s;
 }
 
+/** 字幕样式与字号预设（字号 = 画布宽度的比例） */
+export const CAPTION_STYLES = ['soft', 'plain', 'bar', 'minimal', 'accent', 'classic'];
+export const CAPTION_SIZES = { small: 0.019, medium: 0.024, large: 0.031, xlarge: 0.04 };
+
 export const SCENE_ATTRS = {
   width: B('画布宽度(px)', 800),
   height: B('画布高度(px)', 600),
@@ -134,7 +139,9 @@ export const SCENE_ATTRS = {
   bg2: B('背景色（中心高光），默认由 bg 自动提亮'),
   shadow: B('是否绘制地面投影', true),
   glow: B('是否绘制图形光晕', true),
-  caption: B('是否显示步骤字幕', true),
+  caption: B('步骤字幕：false 关闭；或写样式名 soft（默认，安静的半透明胶囊）/ plain（无底，只有描边字）/ bar（通栏底条）/ minimal（左对齐，一道细竖线）/ accent（主色胶囊）/ classic（深色胶囊）', 'soft'),
+  'caption-size': B('字幕字号：small / medium（默认）/ large / xlarge，或直接写像素数（如 22）', 'medium'),
+  'caption-pos': B('字幕位置：bottom（默认，画面下方）或 top', 'bottom'),
   hold: B('每一步结束后的停顿下限（秒，≥0.05）', 0.6),
   read: B('字幕阅读速度：每秒读多少个字，步骤停顿会自动延长到读完（0 = 不自动延长）。幼儿内容建议 3~4', 0),
   overlap: B('是否检查冻结画面里图形的重叠；数据可视化、粒子等"重叠是故意的"场景写 overlap="off"', true),

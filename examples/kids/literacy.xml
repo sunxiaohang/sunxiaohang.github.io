@@ -1,5 +1,5 @@
 <scene width="800" height="700" grid="4x2" pad="60 20 160 20" palette="champagne" hold="0.8" read="3" shadow="false" glow="false">
-  <!-- 幼儿识字：一字一卡。卡片是 def 模板（白卡 + 大字 + 拼音），用 for 摆出 8 张。
+  <!-- 幼儿识字：一字一卡。卡片是 def 模板（白卡 + 大字 + 拼音），用 for 摆出 8 张。卡片内的位置一律用 off（和 size 同样的 c 单位），内边距两侧相等。
        读到哪个字，那张卡就被"点亮"：卡片变成该字的主题色、字变白——暂停在任意一步，一眼就知道在讲哪个字。
        主题色取自 champagne 的系列色 pal(i)，低饱和，不会花。 -->
   <let chars="{['日','月','山','水','火','木','田','口']}"/>
@@ -10,9 +10,9 @@
   <layer name="txt" z="10"/>
 
   <def name="字卡" col="1" row="1" ch="" py="" tint="accent">
-    <rect id="{id}_bg" at="{col},{row}" w=".92c" h=".96c" fill="bg2" stroke="{tint}" width="3" radius="28" flat="" layer="card" group="{id}"/>
-    <text id="{id}_ch" at="{col},{row - 0.08}" size=".6c" fill="{tint}" text="{ch}" layer="txt" group="{id}"/>
-    <text id="{id}_py" at="{col},{row + 0.34}" size=".17c" fill="sub" text="{py}" layer="txt" group="{id}"/>
+    <rect id="{id}_bg" at="{col},{row}" w=".9c" h="1.15c" fill="bg2" stroke="{tint}" width="3" radius="30" flat="" layer="card" group="{id}"/>
+    <text id="{id}_ch" at="{col},{row}" off="0,-.17c" size=".56c" fill="{tint}" text="{ch}" layer="txt" group="{id}"/>
+    <text id="{id}_py" at="{col},{row}" off="0,.37c" size=".17c" fill="sub" text="{py}" layer="txt" group="{id}"/>
   </def>
 
   <step say="我们来认识八个汉字，一边看一边跟着读" stagger=".12" dur=".4">

@@ -1,4 +1,6 @@
 import { SOLID } from '../core/lang/schema.js';
+import { mix, onColor } from '../core/util/color.js';
+import { labelFontSize } from '../core/util/label.js';
 import { FONT, wrapText } from './util.js';
 
 const clampTo = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -94,6 +96,7 @@ function buildItem(scene, e, L, alpha, measure) {
         radius: e.radius, points: e.points, flat: e.flat,
         fill: L.fill, stroke: L.stroke, strokeWidth: L.width,
         color: L.color, label: L.label, glow: scene.glow,
+        labelFs: L.label ? labelFontSize(e.type, L.w, L.h, L.label, (txt, px) => measure(txt, `700 ${px}px ${FONT}`)) : 0,
         shadow: buildShadow(scene, e, L),
       };
     case 'text':
@@ -121,19 +124,71 @@ function buildItem(scene, e, L, alpha, measure) {
   return null;
 }
 
-function buildCaption(scene, c, measure) {
-  const W = scene.width, H = scene.height;
-  const fs = Math.max(14, Math.min(26, W * 0.03));
-  const font = `600 ${fs}px ${FONT}`;
-  const m = (t) => measure(t, font);
-  const lines = wrapText(m, c.text, W - 80);
-  const lh = fs * 1.5, padX = fs * 1.1, padY = fs * 0.7;
-  const w = Math.min(W - 24, Math.max(...lines.map(m)) + padX * 2);
-  const h = lines.length * lh + padY * 2 - (lh - fs);
-  const x = (W - w) / 2, y = H - 18 - h + (1 - c.k) * 10;
-  return { k: c.k, lines, box: { x, y, w, h, r: fs * 0.8 }, layout: { fs, padX, padY, lh } };
+/**
+ * 字幕样式表。尺寸全部是“字号的倍数”，所以改 caption-size 时整体等比缩放。
+ *  panel：有无底板；pill：单行时是否做成胶囊；full：通栏；left：左对齐；bar：左侧竖线；halo：文字外描边（无底板时保证可读）
+ */
+const CAP = {
+  soft:    { weight: 500, lh: 1.45, padX: 1.0, padY: 0.55, panel: true, pill: true },
+  plain:   { weight: 600, lh: 1.45, padX: 0.2, padY: 0.1, halo: true },
+  bar:     { weight: 500, lh: 1.45, padX: 1.0, padY: 0.8, panel: true, full: true },
+  minimal: { weight: 500, lh: 1.5, padX: 0.95, padY: 0.1, left: true, bar: true },
+  accent:  { weight: 600, lh: 1.45, padX: 1.05, padY: 0.55, panel: true, pill: true },
+  classic: { weight: 600, lh: 1.5, padX: 1.1, padY: 0.7, panel: true, r: 0.8 },
+};
+
+/** 字幕的配色：全部来自场景背景 / 配色模板，所以换配色字幕也跟着换，并保证与背景有足够对比 */
+function captionColors(scene, name) {
+  const dark = scene.dark !== false;
+  const bg = scene.bg;
+  const ink = scene.theme?.text || (dark ? [244, 246, 255, 1] : [27, 29, 46, 1]);
+  const accent = scene.theme?.accent || [124, 108, 255, 1];
+  const a = (c, k) => [c[0], c[1], c[2], k];
+  switch (name) {
+    case 'soft': {
+      const fill = mix(bg, ink, dark ? 0.12 : 0.07);
+      return { fill: a(fill, 0.78), border: a(ink, 0.1), text: a(ink, 0.92), shadow: [0, 0, 0, dark ? 0.35 : 0.1] };
+    }
+    case 'plain':
+      return { halo: a(bg, 0.92), text: a(ink, 1), shadow: [0, 0, 0, dark ? 0.5 : 0.18] };
+    case 'bar':
+      return { fill: a(mix(bg, ink, dark ? 0.06 : 0.04), 0.86), border: a(ink, 0.1), text: a(ink, 0.92) };
+    case 'minimal':
+      return { bar: a(accent, 1), text: a(ink, 0.88), halo: a(bg, 0.7) };
+    case 'accent': {
+      const on = onColor(accent);
+      return { fill: a(accent, 1), text: [on[0], on[1], on[2], 1], shadow: a(accent, 0.35) };
+    }
+    default: // classic：与旧版一致的深色胶囊
+      return { fill: [8, 10, 24, 0.84], border: [255, 255, 255, 0.12], text: [244, 246, 255, 1], shadow: [0, 0, 0, 0.45] };
+  }
 }
 
+function buildCaption(scene, c, measure) {
+  const W = scene.width, H = scene.height;
+  const name = CAP[scene.captionStyle] ? scene.captionStyle : 'soft';
+  const S = CAP[name];
+  const fs = scene.captionFs || Math.max(11, W * 0.024);
+  const font = `${S.weight} ${fs}px ${FONT}`;
+  const m = (t) => measure(t, font);
+  const maxW = S.full ? W - fs * 4 : W - Math.max(80, fs * 4);
+  const lines = wrapText(m, c.text, maxW);
+  const lh = fs * S.lh, padX = fs * S.padX, padY = fs * S.padY;
+  const tw = Math.max(1, ...lines.map(m));
+  const w = S.full ? W : Math.min(W - 24, tw + padX * 2);
+  const h = lines.length * lh + padY * 2 - (lh - fs);
+  const margin = S.full ? 0 : Math.max(14, fs * 0.9);
+  const slide = (1 - c.k) * 10;
+  const top = scene.captionPos === 'top';
+  const x = S.full ? 0 : S.left ? Math.max(20, W * 0.05) : (W - w) / 2;
+  const y = top ? margin - slide : H - margin - h + slide;
+  const r = S.pill ? (lines.length === 1 ? h / 2 : fs * 0.9) : S.full ? 0 : fs * (S.r ?? 0.6);
+  return {
+    k: c.k, lines, box: { x, y, w, h, r },
+    layout: { fs, padX, padY, lh },
+    style: { name, weight: S.weight, panel: !!S.panel, full: !!S.full, left: !!S.left, bar: !!S.bar, halo: !!S.halo, top, colors: captionColors(scene, name) },
+  };
+}
 /**
  * 合成一帧 IR。frame 为 evaluate() 的返回值；measure(text, font) => 宽度。
  */

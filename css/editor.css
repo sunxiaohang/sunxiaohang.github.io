@@ -80,7 +80,10 @@ main { display: grid; grid-template-columns: minmax(380px, 40%) minmax(0, 1fr); 
 .icon.big:hover { background: var(--accent-hover); }
 .icon.big svg { width: 17px; height: 17px; }
 .time { font: 12px var(--mono); color: var(--text-3); min-width: 150px; font-variant-numeric: tabular-nums; }
-.chk { display: flex; align-items: center; gap: 6px; color: var(--text-2); font-size: 12.5px; cursor: pointer; user-select: none; }
+.chk { display: flex; align-items: center; gap: 6px; color: var(--text-2); font-size: 12.5px; cursor: pointer; user-select: none; white-space: nowrap; }
+.transport .select.tb { padding-top: 5px; padding-bottom: 5px; font-size: 12.5px; }
+.transport .select.tb { padding-left: 11px; padding-right: 26px; }
+.transport .time { min-width: 96px; }
 .chk input { accent-color: var(--accent); }
 
 /* 时间轴 */

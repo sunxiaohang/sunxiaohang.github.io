@@ -1,5 +1,6 @@
 import { evaluate } from '../runtime/evaluate.js';
 import { SOLID, POSITIONAL, BOXED } from '../lang/schema.js';
+import { checkLayout } from './layout.js';
 
 const r2 = (v) => Math.round(v * 100) / 100;
 const effAlpha = (L) => L.alpha * L.ma;
@@ -126,6 +127,7 @@ export function lint(scene, step = 0.1) {
       }
     }
   }
+  out.push(...checkLayout(scene, checks, evaluate));
   return out;
 }
 
