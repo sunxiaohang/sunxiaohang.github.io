@@ -1,0 +1,59 @@
+<scene width="960" height="720" grid="12x9" pad="16 16 96 16" palette="porcelain" shadow="false" glow="false" overlap="off" hold=".8" read="4" poster="-1">
+  <!-- 高铁京沪线与京广线：北京 → 济南 → 南京 → 上海，再从北京南下 → 郑州 → 武汉 → 广州。
+       这个示例专门展示“线条可自定义”：
+         · 省界用次要色细线，外轮廓用正文色，全部是语义色，换配色模板整张图跟着换；
+         · 两条线路各自一种颜色（路线、拖尾、车辆同色），线宽也不一样；
+         · 想要虚线省界、不画省界、只画外轮廓，各改一个属性即可（试试 dash="4 3" / border="none"）。 -->
+  <data name="north">城市,dx,dy
+北京,30,-4
+济南,32,-4
+南京,-36,4
+上海,38,6</data>
+  <data name="south">城市,dx,dy
+郑州,-32,-4
+武汉,-32,2
+广州,-32,0</data>
+
+  <layer name="pins" z="4"/>
+  <layer name="names" z="6"/>
+  <layer name="train" z="8"/>
+
+  <map id="地图" border="sub" borderWidth="1" coast="text" coastWidth="1.6" highlight="北京 上海 湖北 广东" color="accent"/>
+
+  <step say="两条高铁干线：京沪线（蓝）与京广线（橙）" dur=".5" stagger=".1">
+    <for var="c" in="{north}">
+      <circle id="n{c.城市}" city="{c.城市}" size="16" fill="accent" stroke="bg" width="3" flat="" layer="pins"/>
+    </for>
+    <for var="c" in="{south}">
+      <circle id="s{c.城市}" city="{c.城市}" size="16" fill="warn" stroke="bg" width="3" flat="" layer="pins"/>
+    </for>
+  </step>
+
+  <step say="标出沿线的主要车站" dur=".4" stagger=".06">
+    <for var="c" in="{north}">
+      <text id="tn{c.城市}" city="{c.城市}" off="{c.dx},{c.dy}" text="{c.城市}" size="16" fill="text" stroke="bg" width="5" layer="names"/>
+    </for>
+    <for var="c" in="{south}">
+      <text id="ts{c.城市}" city="{c.城市}" off="{c.dx},{c.dy}" text="{c.城市}" size="16" fill="text" stroke="bg" width="5" layer="names"/>
+    </for>
+  </step>
+
+  <step say="京沪高铁：北京出发，经济南、南京到上海" dur=".4">
+    <icon id="车A" name="train" city="北京" size="40" fill="accent" stroke="bg" width="4" layer="train"/>
+  </step>
+  <step say="北京到济南到南京到上海，全程约 1300 公里" dur="3.2">
+    <车A path="济南 南京 上海" heading="0" arc=".05" trail="accent" ease="soft"/>
+  </step>
+
+  <step say="京广高铁：另一列车从北京出发向南" dur=".4">
+    <icon id="车B" name="train" city="北京" size="40" fill="warn" stroke="bg" width="4" layer="train"/>
+  </step>
+  <step say="北京到郑州到武汉到广州，全程约 2300 公里" dur="3.6">
+    <车B path="郑州 武汉 广州" heading="0" arc="-.05" trail="warn" ease="soft"/>
+  </step>
+
+  <step say="两条干线把南北方的几大城市群连起来了" dur=".8">
+    <车A pulse=".2"/>
+    <车B pulse=".2"/>
+  </step>
+</scene>

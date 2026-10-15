@@ -1,6 +1,7 @@
 import { parseColor, shade, luminance } from '../util/color.js';
 import { Reader, checkAttrs } from '../lang/reader.js';
 import { SCENE_ATTRS, CAPTION_STYLES, CAPTION_SIZES } from '../lang/schema.js';
+import { resolvePlace } from '../geo/place.js';
 
 export const EPS = 1e-6;
 export const MAX_SEGMENTS = 60000;
@@ -91,12 +92,28 @@ export function buildScene(root, diag, themeRaw) {
     hold: r.num('hold', 0.6, { min: 0.05 }),
     read: r.num('read', 0, { min: 0, max: 30 }),
     overlapCheck: r.bool('overlap', true),
+    poster: Math.round(r.num('poster', 0, { min: -999, max: 999 })),
     theme,
     links: [], entities: [], byId: new Map(), groups: new Map(), segments: [], steps: [], anims: new Map(), sounds: [], duration: 0.1,
   };
 }
 
 export const cellToXY = (sc, [c, r]) => [sc.ax + (c - 0.5) * sc.cw, sc.ay + (r - 0.5) * sc.ch];
+
+/**
+ * 把一个地点写法换算成像素。token 可以是城市名、"经度,纬度"。
+ * 返回 [x, y]；出错时写入诊断并返回 null。必须先写 <map>（它决定投影）。
+ */
+export function placeToXY(ctx, token, at) {
+  const { scene, diag } = ctx;
+  if (!scene.geo) {
+    diag.error('E_NO_MAP', '写了地名或经纬度，但场景里还没有 <map>', at, '先在最前面写一个 <map region="china"/>，之后的对象才能用 city="成都" 这样定位');
+    return null;
+  }
+  const p = resolvePlace(token);
+  if (p.error) { diag.error('E_BAD_PLACE', p.error, at, p.hint); return null; }
+  return scene.geo.project(p.lon, p.lat);
+}
 
 export function warnOutside(ctx, [c, r], at) {
   const { cols, rows } = ctx.scene;

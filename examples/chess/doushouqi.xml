@@ -10,23 +10,23 @@
   <def name="水" is="rect" fill="#3C7BA8" stroke="#7DB4D6" width="2" radius="8" flat="" layer="water"/>
   <!-- 陷阱：比草地略深的一格，不抢棋子 -->
   <def name="阱" cx="1" cy="1">
-    <rect id="{id}" at="{cx},{cy}" w=".94c" h=".94c" radius="8" fill="#2F4F3C" alpha=".7" flat="" layer="map" in="fade"/>
+    <rect id="{id}" at="{cx},{cy}" w=".94c" h=".94c" radius="8" fill="#2F4F3C" alpha=".7" flat="" layer="field" in="fade"/>
     <text id="{id}字" at="{cx},{cy}" text="阱" size=".26c" fill="#8FB59C" layer="marks" in="fade"/>
   </def>
   <!-- 兽穴：深色一格，己方颜色描边，中间写“穴” -->
   <def name="穴" cx="4" cy="1" tint="c1">
-    <rect id="{id}" at="{cx},{cy}" w=".94c" h=".94c" radius="10" fill="#14202A" stroke="{tint}" width="3" flat="" layer="map" in="fade"/>
+    <rect id="{id}" at="{cx},{cy}" w=".94c" h=".94c" radius="10" fill="#14202A" stroke="{tint}" width="3" flat="" layer="field" in="fade"/>
     <text id="{id}字" at="{cx},{cy}" text="穴" size=".34c" fill="{tint}" layer="marks" in="fade"/>
   </def>
 
-  <layer name="map" z="0"/>
+  <layer name="field" z="0"/>
   <layer name="water" z="1"/>
   <layer name="marks" z="3"/>
   <layer name="pieces" z="10"/>
   <layer name="panel" z="18"/>
   <layer name="top" z="20"/>
 
-  <grid style="cell" fill="#4F7F63" stroke="#8DB59A" width="1.5" layer="map" radius="14"/>
+  <grid style="cell" fill="#4F7F63" stroke="#8DB59A" width="1.5" layer="field" radius="14"/>
   <水 id="河左" at="2.5,5" w="2c" h="3c" in="fade"/>
   <水 id="河右" at="5.5,5" w="2c" h="3c" in="fade"/>
   <穴 id="蓝穴" cx="4" cy="1" tint="c1"/>

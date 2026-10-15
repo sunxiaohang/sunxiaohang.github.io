@@ -1,10 +1,12 @@
 import { EASE_NAMES } from '../util/ease.js';
 import { FUNCTION_DOCS, CONST_NAMES } from './expr.js';
 
-export const ENTITY_TYPES = ['circle', 'ellipse', 'rect', 'triangle', 'star', 'text', 'icon', 'line', 'arrow', 'ring', 'note', 'grid'];
+export const ENTITY_TYPES = ['circle', 'ellipse', 'rect', 'triangle', 'star', 'text', 'icon', 'line', 'arrow', 'ring', 'note', 'grid', 'map'];
 export const SOLID = new Set(['circle', 'ellipse', 'rect', 'triangle', 'star']);
 export const POSITIONAL = new Set(['circle', 'ellipse', 'rect', 'triangle', 'star', 'text', 'icon', 'ring', 'note']);
 export const SEGMENTED = new Set(['line', 'arrow']);
+/** 底板类：不参与位置动画，也不参与重叠 / 越界检查 */
+export const BACKDROP = new Set(['grid', 'map']);
 /** 有 w/h 两个独立尺寸的类型 */
 export const BOXED = new Set(['rect', 'ellipse']);
 
@@ -13,7 +15,7 @@ export const EFFECTS = ['pulse', 'shake', 'jump', 'spin', 'flash', 'wobble', 'do
 /** 内置音色（src/audio/sound.js 实现，无音频文件） */
 export const SOUND_NAMES = ['pop', 'tick', 'ding', 'snap', 'whoosh', 'wobble', 'success', 'spring'];
 /** 只能在创建时设置、不能在步骤里动画的属性 */
-export const STATIC_ATTRS = new Set(['inner', 'river', 'ticks', 'frame', 'off', 'id', 'layer', 'group', 'flat', 'in', 'dash', 'head', 'side', 'gap', 'style', 'dots', 'labels', 'radius', 'points', 'after', 'below']);
+export const STATIC_ATTRS = new Set(['projection', 'region', 'highlight', 'names', 'border', 'borderWidth', 'coast', 'coastWidth', 'island', 'islandWidth', 'dash', 'provinces', 'inset', 'inner', 'river', 'ticks', 'frame', 'off', 'id', 'layer', 'group', 'flat', 'in', 'dash', 'head', 'side', 'gap', 'style', 'dots', 'labels', 'radius', 'points', 'after', 'below']);
 
 const B = (doc, def) => ({ doc, ...(def !== undefined && { default: def }) });
 
@@ -21,6 +23,8 @@ export const ATTR = {
   id: B('对象名。之后的步骤可以直接把它当标签来修改它；省略则自动生成'),
   at: B('位置：格子坐标 "列,行"（从 1 起，格子中心），也可写 H8；小数表示格内位置，如 1.5,2'),
   px: B('位置：像素坐标 "x,y"（与 at 二选一）'),
+  city: B('地理位置：城市名，如 city="成都"（需要先写 <map>）。可写别名与带“市”的写法；步骤里写则是移动到那座城市'),
+  lonlat: B('地理位置：经度,纬度（经度在前），如 lonlat="104.06,30.66"（需要先写 <map>）；冷门地点用它'),
   off: B('在 at 的基础上再偏移 "dx,dy"，单位与 size 相同（像素或 .3c）。在卡片 / 面板里摆文字请用它，不要给 at 加小数——at 的小数按行高列宽算，和 c 单位对不齐'),
   size: B('尺寸（px 或 1.5c）。圆=直径；文字=字号；矩形/椭圆=同时设置 w 和 h'),
   w: B('矩形/椭圆宽度；text 时为折行宽度（超过则自动换行）'),
@@ -49,14 +53,28 @@ export const ATTR = {
   style: B('棋盘线风格：line（线穿过格子中心，棋类用）| cell（格子边框）', 'line'),
   dots: B('棋盘星位，如 dots="4,4 12,4 8,8"'),
   labels: B('在棋盘外侧标注坐标 A~ / 1~（缺省属性）'),
+  projection: B('地图投影：lambert（兰伯特圆锥，国内地图标准形状，默认）| equirect（等距柱状）| mercator（网络墨卡托）', 'lambert'),
+  region: B('地图范围：china（全国，默认）、省名（可写多个，空格分隔，如 "四川 云南 西藏"）、或 "经度min,纬度min,经度max,纬度max"。自动缩放居中'),
+  highlight: B('高亮的省：空格分隔的省名，这些省会用 fill 填充，其余省保持底色。如 highlight="四川 云南"'),
+  names: B('在省的中心写省名（缺省属性），字号随地图大小自动取，可写 names="small" / "large"'),
+  border: B('省界线的颜色，none 为不画省界。默认取次要色并半透明'),
+  borderWidth: B('省界线粗细（px 或 .05c），默认 1.2'),
+  coast: B('外轮廓（国界与海岸线）的颜色，默认取正文色'),
+  coastWidth: B('外轮廓线粗细，默认 2'),
+  island: B('南海诸岛与九段线的颜色，none 为不画，默认同外轮廓'),
+  islandWidth: B('南海诸岛线粗细，默认同外轮廓'),
+  provinces: B('要画哪些省：默认全部；写 "none" 则只画外轮廓。与 region 配合做区域地图'),
+  inset: B('南海诸岛小图：none 不画；corner（默认）在地图右下角放一张缩小的南海诸岛；off 则按真实位置画在海上'),
   inner: B('只画内部分隔线、不画外框，两端略微内缩（井字棋的 # 形；缺省属性，style="cell" 用）'),
   river: B('河界（象棋）：写河在第几行之后，如 river="5" 表示河在第 5、6 行之间；中间的竖线在河处断开，只保留最左最右两条边线（style="line" 用）'),
   ticks: B('炮位 / 兵位标记（象棋）：在这些交叉点四周画小折角，靠边的一侧自动省略，如 ticks="2,3 8,3 1,4 3,4"'),
   frame: B('外框：在棋盘线的最外圈再画一圈加粗边框，写线宽，如 frame="4"'),
   draw: B('线条的绘制进度 0~1'),
   by: B('相对当前位置移动 "dx,dy"（格数）'),
-  path: B('沿折线移动，如 path="1,1 3,1 3,3"'),
+  path: B('沿折线移动，如 path="1,1 3,1 3,3"；有 <map> 时可以直接写站点：path="北京 武汉 广州"（城市名或 经度,纬度）'),
   smooth: B('让 path 变成平滑曲线（缺省属性）'),
+  arc: B('让 path 的每一段弯成弧线：数值是弧度大小（占这一段长度的比例，常用 0.12~0.25），正数向前进方向的左边凸，负数向右。写 arc 就不用再写 smooth。也可单独写 arc="0.2" 配合 at / city 让一次移动走成弧线'),
+  heading: B('朝向：图形沿移动方向转动。数值是图形默认“车头”的角度：0 = 默认朝右，-90 = 默认朝上，90 = 朝下。适合小车、飞机、箭头（用于 at / city / path 移动）'),
   trail: B('移动时在身后留下一条尾迹线，走完保留——让静帧也能看出"走过哪里"。可写颜色 trail="#ffd166"，缺省属性则用对象自己的颜色'),
   walk: B('以"走"的方式移动：圆会滚动，其他图形一步一跳（缺省属性）'),
   out: B('退场：fade（默认）| pop | none；退场后对象消失'),
@@ -72,7 +90,7 @@ export const ATTR = {
   do: B('播放自定义关键帧动画（<anim> 里定义的名字）'),
   loop: B('do 动画重复次数', 1),
   yoyo: B('do 动画循环时来回播放（缺省属性）'),
-  name: B('图层 / 分组名'),
+  name: B('图层 / 分组名；对 <icon> 则是内置矢量图标：car（小汽车）/ bus（公交）/ train（火车）/ plane（飞机）/ ship（船）。车头默认朝右，配 heading="0" 随路径转向'),
   sound: B(`触发时播放的音效：${SOUND_NAMES.join(' / ')}`),
   after: B('相对定位：放在指定 id 对象的右边（配合 gap，锚点要写在前面且带 id）'),
   below: B('相对定位：放在指定 id 对象的下面（配合 gap）'),
@@ -82,7 +100,7 @@ export const ATTR = {
 };
 
 const BASE = ['id', 'alpha', 'z', 'layer', 'group', 'in', 'sound', 'after', 'below', 'gap'];
-const SHAPE = [...BASE, 'at', 'px', 'off', 'size', 'fill', 'stroke', 'width', 'rot', 'label', 'color', 'flat'];
+const SHAPE = [...BASE, 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'stroke', 'width', 'rot', 'label', 'color', 'flat'];
 
 export const ENTITY_ATTRS = {
   circle: SHAPE,
@@ -90,13 +108,14 @@ export const ENTITY_ATTRS = {
   rect: [...SHAPE, 'w', 'h', 'radius'],
   triangle: SHAPE,
   star: [...SHAPE, 'points'],
-  text: [...BASE, 'at', 'px', 'off', 'size', 'fill', 'rot', 'text', 'w', 'stroke', 'width'],
-  icon: [...BASE, 'at', 'px', 'off', 'size', 'fill', 'rot', 'text'],
-  ring: [...BASE, 'at', 'px', 'off', 'size', 'stroke', 'width', 'rot'],
+  text: [...BASE, 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'rot', 'text', 'w', 'stroke', 'width'],
+  icon: [...BASE, 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'stroke', 'width', 'rot', 'text', 'name'],
+  ring: [...BASE, 'at', 'px', 'city', 'lonlat', 'off', 'size', 'stroke', 'width', 'rot'],
   line: [...BASE, 'from', 'to', 'stroke', 'width', 'dash'],
   arrow: [...BASE, 'from', 'to', 'stroke', 'width', 'dash', 'head'],
-  note: [...BASE, 'at', 'px', 'off', 'size', 'fill', 'color', 'text', 'side', 'gap'],
+  note: [...BASE, 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'color', 'text', 'side', 'gap'],
   grid: [...BASE, 'style', 'dots', 'labels', 'inner', 'river', 'ticks', 'frame', 'color', 'fill', 'stroke', 'width', 'radius'],
+  map: [...BASE, 'projection', 'region', 'highlight', 'names', 'fill', 'stroke', 'border', 'borderWidth', 'coast', 'coastWidth', 'island', 'islandWidth', 'dash', 'provinces', 'inset', 'color', 'at', 'w', 'h'],
 };
 export const LAYER_ATTRS = ['name', 'id', 'z', 'alpha'];
 export const GROUP_ATTRS = ['name', 'layer'];
@@ -114,6 +133,7 @@ const ENTITY_DOC = {
   ring: '圆环，用来圈出重点',
   note: '带指向的文字气泡，用来做标注',
   grid: '棋盘/参考网格，按 <scene> 的 grid 划分',
+  map: '地图：画省界、外轮廓、南海诸岛（内置，离线可用）。之后的对象用 city="成都" / lonlat="104,30" 定位，path="北京 武汉 广州" 走路线',
 };
 
 /** 步骤里能改的属性：创建属性去掉静态项，再加上位置/效果类 */
@@ -121,7 +141,7 @@ export function modAttrs(type) {
   if (type === 'layer') return new Set(['alpha', 'z', ...TIMING]);
   const s = new Set(['alpha', 'z', 'out', ...TIMING]);
   for (const a of ENTITY_ATTRS[type]) if (!STATIC_ATTRS.has(a)) s.add(a);
-  if (POSITIONAL.has(type)) for (const a of ['by', 'path', 'smooth', 'walk', 'trail', 'orbit', 'around', 'turns', ...EFFECTS]) s.add(a);
+  if (POSITIONAL.has(type)) for (const a of ['by', 'path', 'smooth', 'walk', 'trail', 'orbit', 'around', 'turns', 'heading', 'arc', 'city', 'lonlat', ...EFFECTS]) s.add(a);
   if (SEGMENTED.has(type)) s.add('draw');
   return s;
 }
@@ -150,6 +170,7 @@ export const SCENE_ATTRS = {
   read: B('字幕阅读速度：每秒读多少个字，步骤停顿会自动延长到读完（0 = 不自动延长）。幼儿内容建议 3~4', 0),
   overlap: B('是否检查冻结画面里图形的重叠；数据可视化、粒子等"重叠是故意的"场景写 overlap="off"', true),
   seed: B('随机数种子，保证 rand() 每次结果一致', 1),
+  poster: B('封面帧：作品库和首页的缩略图停在第几步（从 1 开始，0 或不写 = 自动取靠后的一步）。信息量集中在结尾的作品（完整路线、终局）适合写 poster="-1" 取最后一步', 0),
 };
 
 export const STEP_ATTRS = {

@@ -13,6 +13,26 @@ const SEG_SAMPLES = 40; // 每段曲线用于建立弧长表的细分数
 
 const dist = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
 
+/**
+ * 给每一段加弧度：在相邻两点的中点向连线的左侧（行进方向的左手边）凸出 bulge × 段长，
+ * 返回新的点列（含原点与插入的中点）。bulge 为负则向右凸；0 不变。
+ * 常用 0.12~0.25：旅行飞线微微弯一点，像大圆航线。
+ */
+export function bulgePoints(pts, bulge) {
+  if (!bulge || pts.length < 2) return pts;
+  const out = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i];
+    const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy);
+    if (len > 1e-6) {
+      // 左手边法线（画布 y 向下时，行进方向 (dx,dy) 的左侧是 (dy,-dx)）
+      out.push([(a[0] + b[0]) / 2 + (dy / len) * len * bulge, (a[1] + b[1]) / 2 - (dx / len) * len * bulge]);
+    }
+    out.push(b);
+  }
+  return out;
+}
+
 /** 去掉连续重复点（距离 < 0.01px）。起点与首个路标重合是最常见的情况 */
 export function dedupe(pts) {
   const out = [];
@@ -111,6 +131,26 @@ export function buildPath(input, smooth = false) {
     return [edge[0] + dir[0] * over, edge[1] + dir[1] * over];
   };
   return { at, length: total, sample: (m) => Array.from({ length: m + 1 }, (_, i) => at(i / m)) };
+}
+
+/**
+ * 路径在比例 q 处的行进方向（弧度，x 轴正向为 0，y 向下为正，和画布一致）。
+ * 取前后各 span 像素的弦方向，转弯处比逐点切线平顺；路径长度为 0 时返回 null（保持原朝向）。
+ */
+export function headingAt(path, q, span = 8) {
+  if (!(path.length > 1e-6)) return null;
+  const d = span / path.length;
+  const a = path.at(Math.max(0, q - d)), b = path.at(Math.min(1, q + d));
+  const dx = b[0] - a[0], dy = b[1] - a[1];
+  return Math.hypot(dx, dy) < 1e-6 ? null : Math.atan2(dy, dx);
+}
+
+/** 两个角度之间走最短弧（避免 179° → -179° 这种瞬间转大半圈） */
+export function shortestAngle(from, to) {
+  let d = (to - from) % (Math.PI * 2);
+  if (d > Math.PI) d -= Math.PI * 2;
+  if (d < -Math.PI) d += Math.PI * 2;
+  return from + d;
 }
 
 /** 一条尾迹需要多少采样点：约每 2px 一个，保证放大后也是光滑曲线，不出现折线棱角 */

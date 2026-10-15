@@ -11,3 +11,6 @@ Thumbs.db
 # 生成产物
 gallery.html
 .shots/
+
+# 地图原始数据（构建 src/core/geo/data/china.js 时用，见 tools/build-geo.mjs，不进仓库）
+.geo/

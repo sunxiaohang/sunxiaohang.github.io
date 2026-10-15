@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { compileWithImports, evaluate, lint, describe } from '../src/core/index.js';
 import { examples, manifest, near, makeLoader } from './helpers.js';
+import { findCity } from '../src/core/geo/index.js';
 
 /**
  * 示例套件：每个示例都是一份"语言兼容性 + 效果多样性"的回归用例。
@@ -348,4 +349,101 @@ test('轨道：行星数 = n，越靠外的轨道半径越大', () => {
   const rings = sc.entities.filter((e) => /^o\d+$/.test(e.id));
   for (let i = 1; i < rings.length; i++) assert.ok(rings[i].init.size > rings[i - 1].init.size);
   assert.equal(ids('orbits').includes('sun'), true);
+});
+
+// ---------------- 旅游地图：行程讲的和画面一致 ----------------
+const cityPx = (id, name) => { const sc = compiled.get(id).scene, c = findCity(name); return sc.geo.project(c.lon, c.lat); };
+const carAt = (id, car, step) => { const L = live(id, step, car); return [L.x, L.y]; };
+const d2 = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+
+test('国内旅行：小车按 北京→西安→成都→昆明→三亚 的顺序，每一步结束时停在对应城市', () => {
+  const route = ['西安', '成都', '昆明', '三亚'];
+  route.forEach((city, i) => {
+    const step = stepOf('china-tour', `到${city}`.replace('到三亚', '到三亚')) ;
+    assert.ok(d2(carAt('china-tour', '车', step), cityPx('china-tour', city)) < 1.5, `第 ${i + 1} 段结束时小车应在 ${city}`);
+  });
+  const start = carAt('china-tour', '车', stepOf('china-tour', '小车从北京出发'));
+  assert.ok(d2(start, cityPx('china-tour', '北京')) < 1.5, '出发时在北京');
+});
+
+test('国内旅行：站点圆点落在城市的真实经纬度上，编号 1..5 依次递增', () => {
+  const sc = compiled.get('china-tour').scene;
+  ['北京', '西安', '成都', '昆明', '三亚'].forEach((city, i) => {
+    const p = sc.byId.get(`p${i + 1}`);
+    assert.ok(d2([p.init.x, p.init.y], cityPx('china-tour', city)) < 1e-6, `${city} 圆点不在城市位置上`);
+    assert.equal(p.init.label, String(i + 1));
+  });
+});
+
+test('西南自驾：路线只涉及西南四省，四川和云南被高亮；小车最终停在昆明', () => {
+  const sc = compiled.get('southwest-drive').scene;
+  const m = sc.byId.get('地图');
+  assert.deepEqual(m.provinces.filter((p) => p.hi).map((p) => p.short).sort(), ['云南', '四川']);
+  assert.ok(m.style.dash && m.style.dash.length === 2, '省界是虚线');
+  const end = carAt('southwest-drive', '车', sc.steps.length - 1);
+  assert.ok(d2(end, cityPx('southwest-drive', '昆明')) < 1.5, '终点是昆明');
+  // 所有站点都在画面里（区域取景没有把行程裁掉）
+  for (const e of sc.entities.filter((x) => /^p\d$/.test(x.id))) assert.ok(e.init.x > 0 && e.init.x < sc.width && e.init.y > 0 && e.init.y < sc.height, `${e.id} 在画面外`);
+});
+
+test('高铁干线：两列车各走各的线，京沪线终点上海、京广线终点广州；线路颜色与车辆同色', () => {
+  const sc = compiled.get('high-speed-rail').scene;
+  const last = sc.steps.length - 1;
+  assert.ok(d2(carAt('high-speed-rail', '车A', last), cityPx('high-speed-rail', '上海')) < 1.5);
+  assert.ok(d2(carAt('high-speed-rail', '车B', last), cityPx('high-speed-rail', '广州')) < 1.5);
+  const traces = sc.entities.filter((e) => e.type === 'trace');
+  assert.equal(traces.length, 2, '每条线路一条尾迹');
+  const colorOf = (id) => sc.byId.get(id).init.fill;
+  for (const [car, owner] of [['车A', 0], ['车B', 1]]) {
+    const tr = traces.find((t) => sc.entities[t.owner].id === car);
+    assert.deepEqual(tr.init.stroke, colorOf(car), `${car} 的尾迹应与车同色`);
+  }
+});
+
+test('旅游地图：所有示例的小车车头始终沿前进方向（偏差 < 10°）', () => {
+  for (const id of ['china-tour', 'southwest-drive', 'high-speed-rail']) {
+    const { scene: sc } = compiled.get(id);
+    for (const e of sc.entities.filter((x) => x.type === 'icon' && x.glyph)) {
+      let worst = 0;
+      const N = 800;
+      for (let k = 1; k < N; k++) {
+        const t = (sc.duration * k) / N, dt = sc.duration / N / 2;
+        const a = evaluate(sc, t - dt).entities[e.index], b = evaluate(sc, t + dt).entities[e.index];
+        if (Math.hypot(b.x - a.x, b.y - a.y) < 0.05) continue;
+        const move = Math.atan2(b.y - a.y, b.x - a.x), rot = evaluate(sc, t).entities[e.index].rot;
+        const d = Math.abs(((rot - move + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI);
+        worst = Math.max(worst, d);
+      }
+      assert.ok(worst < 0.175, `${id}/${e.id}：车头偏离前进方向 ${(worst * 180 / Math.PI).toFixed(1)}°`);
+    }
+  }
+});
+
+// ---------------- 配色护栏：整张画布的底色必须跟随配色模板 ----------------
+// 棋盘木色、红黑棋子这类“作品自身的视觉身份”可以写死；但决定整张画布底色的属性
+// （<scene bg / bg2>、<map fill / border / coast / island / color>）写死了，就没法跟随亮暗主题和配色切换，
+// 作品库里卡片的底色也会和别的不统一。
+test('配色护栏：没有示例在 <scene> 上写死 bg / bg2；<map> 的颜色全部用语义色', () => {
+  for (const ex of examples) {
+    const src = ex.src.replace(/<!--[\s\S]*?-->/g, '');
+    const scene = /<scene\b[^>]*>/.exec(src)?.[0] || '';
+    assert.ok(!/\sbg2?\s*=\s*"/.test(scene), `[${ex.id}] <scene> 写死了 bg / bg2，请改用 palette`);
+    for (const map of src.match(/<map\b[^>]*>/g) || []) {
+      const bad = [...map.matchAll(/\s(fill|border|coast|island|color)\s*=\s*"(#[0-9a-fA-F]{3,8}|rgba?\([^"]*\))"/g)].map((m) => `${m[1]}=${m[2]}`);
+      assert.deepEqual(bad, [], `[${ex.id}] <map> 写死了颜色 ${bad.join(' ')}：请用 accent / sub / text 等语义色，这样才能跟随配色模板`);
+    }
+  }
+});
+
+test('配色护栏：所有地图示例在每一套配色下都能编译，且零诊断（换配色不会出错）', async () => {
+  const { PALETTES } = await import('../src/core/palettes.js');
+  const { setScenePalette } = await import('../src/app/scene-src.js');
+  for (const ex of examples.filter((e) => e.category === 'travel')) {
+    for (const p of PALETTES) {
+      const r = await compileWithImports(setScenePalette(ex.src, p.name), makeLoader(ex.file));
+      assert.ok(r.scene, `[${ex.id}/${p.name}] 编译失败`);
+      const bad = [...r.diagnostics, ...lint(r.scene)].filter((d) => d.severity === 'error');
+      assert.deepEqual(bad, [], `[${ex.id}/${p.name}] ${bad.map((d) => d.message).join('；')}`);
+    }
+  }
 });

@@ -2,9 +2,10 @@ import { Reader, checkAttrs } from '../lang/reader.js';
 import { POSITIONAL, SEGMENTED, BOXED, TIMING, EFFECTS, modAttrs } from '../lang/schema.js';
 import { lerp, clamp, EASINGS } from '../util/ease.js';
 import { mix } from '../util/color.js';
-import { buildPath, trailSamples } from '../util/path.js';
+import { buildPath, trailSamples, headingAt, shortestAngle, bulgePoints } from '../util/path.js';
 import * as FX from './effects.js';
-import { EPS, cellToXY, warnOutside, seg } from './scene.js';
+import { EPS, cellToXY, warnOutside, seg, placeToXY } from './scene.js';
+import { looksLikePlace } from '../geo/place.js';
 
 const rad = (d) => (d * Math.PI) / 180;
 
@@ -151,7 +152,7 @@ export function compileTarget(node, ent, ctx, stepDur, base, viaChange) {
   // ---- 位置 ----
   let jumpDone = false;
   if (POSITIONAL.has(ent.type)) {
-    const keys = ['at', 'px', 'by', 'path', 'orbit'].filter((k) => r.has(k));
+    const keys = ['at', 'px', 'by', 'path', 'orbit', 'city', 'lonlat'].filter((k) => r.has(k));
     if (keys.length > 1) diag.warn('W_MULTI_POS', `同时写了 ${keys.join(' / ')}，只使用 ${keys[0]}`, r.at(keys[1]));
     let pts = null;
     const here = [st.x, st.y];
@@ -180,9 +181,15 @@ export function compileTarget(node, ent, ctx, stepDur, base, viaChange) {
       } else {
         diag.error('E_MISSING_ATTR', 'orbit 需要 around="圆心坐标"', r.at('orbit'));
       }
+    } else if (keys[0] === 'at' && looksLikePlace(r.raw('at'))) {
+      const xy = placeToXY(ctx, r.raw('at'), r.at('at'));
+      if (xy) pts = [here, xy];
     } else if (keys[0] === 'at') {
       const p = r.pos('at');
       if (p) { warnOutside(ctx, p, r.at('at')); pts = [here, cellToXY(scene, p)]; }
+    } else if (keys[0] === 'city' || keys[0] === 'lonlat') {
+      const xy = placeToXY(ctx, r.raw(keys[0]), r.at(keys[0]));
+      if (xy) pts = [here, xy];
     } else if (keys[0] === 'px') {
       const p = r.pair('px');
       if (p) pts = [here, p];
@@ -190,20 +197,52 @@ export function compileTarget(node, ent, ctx, stepDur, base, viaChange) {
       const p = r.pair('by');
       if (p) pts = [here, [st.x + p[0] * scene.cw, st.y + p[1] * scene.ch]];
     } else if (keys[0] === 'path') {
-      const list = r.posList('path');
-      if (list && list.length) {
-        list.forEach((p) => warnOutside(ctx, p, r.at('path')));
-        pts = [here, ...list.map((p) => cellToXY(scene, p))];
+      const toks = r.raw('path').trim().split(/\s+/).filter(Boolean);
+      if (toks.some(looksLikePlace)) {
+        // 路线按站点：path="北京 武汉 广州"，每个 token 是城市名；也可混写 "104.06,30.66"
+        const xs = toks.map((tk) => placeToXY(ctx, tk, r.at('path')));
+        if (xs.every(Boolean)) pts = [here, ...xs];
+      } else {
+        const list = r.posList('path');
+        if (list && list.length) {
+          list.forEach((p) => warnOutside(ctx, p, r.at('path')));
+          pts = [here, ...list.map((p) => cellToXY(scene, p))];
+        }
       }
     }
     if (pts) {
-      const path = buildPath(pts, r.flag('smooth'));
+      // arc：每一段向左凸出一点（负数向右），自动按曲线走；不必再写 smooth
+      const arc = r.has('arc') ? r.numOr('arc', 0.18, { min: -1, max: 1 }) : 0;
+      const path = arc ? buildPath(bulgePoints(pts, arc), true) : buildPath(pts, r.flag('smooth'));
       const fn = path.at;
       const total = path.length;
       const jumpOn = r.has('jump'), walkOn = r.has('walk');
       let mdur = dur, ease = easeOf(keys[0]);
       if (jumpOn) { mdur = r.has('dur') ? dur : 0.8; ease = FX.jumpWarp; }
-      mk('move', ['x', 'y'], (L, p) => { const q = fn(ease(p)); L.x = q[0]; L.y = q[1]; }, { dur: mdur });
+      // heading：图形的“车头”朝向，随路径切线转。heading="0" 表示图形默认朝右，"-90" 表示默认朝上
+      const headingOn = r.has('heading') && POSITIONAL.has(ent.type);
+      if (headingOn) {
+        const base = rad(r.numOr('heading', 0)); // 图形默认“车头”的角度；要朝向运动方向 h，图形需旋转 h - base
+        const rot0 = st.rot;
+        let prev = rot0;
+        // 先沿路径预采样出每个位置的朝向（并让相邻角度走最短弧），运行时只查表，求值保持纯函数
+        const N = Math.max(24, Math.min(400, Math.ceil(path.length / 4)));
+        const table = [];
+        for (let i = 0; i <= N; i++) {
+          const h = headingAt(path, i / N);
+          prev = h === null ? prev : shortestAngle(prev, h - base);
+          table.push(prev);
+        }
+        mk('move', ['x', 'y', 'rot'], (L, p) => {
+          const e = ease(p), q = fn(e);
+          L.x = q[0]; L.y = q[1];
+          const u = Math.max(0, Math.min(1, e)) * N, i = Math.min(N - 1, Math.floor(u));
+          L.rot = table[i] + (table[i + 1] - table[i]) * (u - i);
+        }, { dur: mdur });
+        st.rot = table[N];
+      } else {
+        mk('move', ['x', 'y'], (L, p) => { const q = fn(ease(p)); L.x = q[0]; L.y = q[1]; }, { dur: mdur });
+      }
       if (r.has('trail')) makeTrail(ctx, ent, node, path, mdur, start, ease, r);
       const last = pts[pts.length - 1];
       if (jumpOn) {

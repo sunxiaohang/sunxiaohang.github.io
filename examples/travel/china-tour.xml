@@ -1,0 +1,50 @@
+<scene width="960" height="720" grid="12x9" pad="16 16 96 16" palette="graphite" shadow="false" glow="false" overlap="off" hold=".8" read="4" poster="-1">
+  <!-- 国内旅行路线：北京 → 西安 → 成都 → 昆明 → 三亚。
+       · <map> 画省界、外轮廓与南海诸岛（内置数据，离线可用），线条的颜色、粗细、虚实都能自己定；
+       · 之后的对象用 city="成都" 定位，不用手算任何坐标；
+       · path="北京 西安 成都" 一句话走完整条路线，arc 让它走成弧线，heading 让小车车头朝着前进方向；
+       · 站点放在 <data> 里，圆点、编号、城市名都由 for 一次生成，换一份数据就是另一条路线。 -->
+  <data name="stops">城市,编号,dx,dy
+北京,1,30,-6
+西安,2,-34,-4
+成都,3,-34,-4
+昆明,4,-30,-4
+三亚,5,-34,0</data>
+
+  <layer name="plan" z="2"/>
+  <layer name="pins" z="4"/>
+  <layer name="names" z="6"/>
+  <layer name="car" z="8"/>
+
+  <map id="地图" region="china" border="sub" borderWidth="1" coast="sub" coastWidth="1.6"/>
+
+  <step say="一条路线五个站：北京、西安、成都、昆明、三亚" dur=".5" stagger=".12">
+    <for var="s" in="{stops}">
+      <circle id="p{s.编号}" city="{s.城市}" size="22" fill="accent" stroke="bg" width="3" label="{s.编号}" flat="" layer="pins"/>
+    </for>
+  </step>
+
+  <step say="给每个站点标上城市名" dur=".4" stagger=".08">
+    <for var="s" in="{stops}">
+      <text id="n{s.编号}" city="{s.城市}" off="{s.dx},{s.dy}" text="{s.城市}" size="17" fill="text" stroke="bg" width="5" layer="names"/>
+    </for>
+  </step>
+
+  <step say="小车从北京出发" dur=".4">
+    <icon id="车" name="car" city="北京" size="34" fill="warn" stroke="bg" width="4" rot="35" layer="car"/>
+  </step>
+
+  <step say="北京到西安" dur="1.4">
+    <车 path="西安" heading="0" arc=".16" trail="warn"/>
+  </step>
+  <step say="西安到成都" dur="1.4">
+    <车 path="成都" heading="0" arc=".16" trail="warn"/>
+  </step>
+  <step say="成都到昆明" dur="1.4">
+    <车 path="昆明" heading="0" arc=".16" trail="warn"/>
+  </step>
+  <step say="昆明到三亚，旅程结束" dur="1.6">
+    <车 path="三亚" heading="0" arc=".16" trail="warn"/>
+    <p5 pulse=".5" delay="1.3"/>
+  </step>
+</scene>

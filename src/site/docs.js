@@ -5,6 +5,7 @@ import { highlightLines } from '../editor/highlight.js';
 import { compile, evaluate } from '../core/index.js';
 import { draw } from '../render/canvas2d.js';
 import { currentTheme } from './theme.js';
+import { drawGlyph } from '../render/glyphs.js';
 import { mountChrome } from './chrome.js';
 
 mountChrome('docs');
@@ -47,6 +48,51 @@ const RECIPES = [
   ['引入主题与组件库', 'import 引入别的文件里的主题或模板，一行换肤。', '<import src="themes/dark.xml"/>\n<import src="lib/cards.xml"/>'],
 ];
 $('recipes').innerHTML = RECIPES.map(([title, desc, src]) => `<div class="qcard"><h3>${esc(title)}</h3><p>${esc(desc)}</p><pre>${code(src)}</pre></div>`).join('');
+
+// ---- 地图 ----
+const MAP_RECIPES = [
+  ['一张全国地图', '<map> 默认画整个中国：省界、外轮廓、南海诸岛小图。', '<map region="china"/>'],
+  ['放大到某几个省', 'region 写省名（空格分隔），自动缩放居中；highlight 点亮其中的省。', '<map region="四川 云南 重庆 贵州"\n     highlight="四川 云南" names/>'],
+  ['用城市名定位', 'city、lonlat、at="城市名" 三种写法等价；经度在前。', '<circle id="a" city="成都"/>\n<circle id="b" lonlat="104.06,30.66"/>\n<text city="成都" off="0,-22" text="成都"/>'],
+  ['小车沿路线行驶', 'path 写站点；arc 把每段走成弧线；heading 让车头朝着前进方向；trail 留下已走路线。', '<icon id="车" name="car" city="北京" size="34"/>\n<step dur="3">\n  <车 path="西安 成都 昆明" heading="0"\n      arc=".16" trail/>\n</step>'],
+  ['站点用数据生成', '把站点写成 CSV，一个 for 生成圆点和城市名，换一份数据就是另一条路线。', '<data name="stops">城市\n北京\n西安\n成都</data>\n<for var="s" in="{stops}">\n  <circle city="{s.城市}" size="14"/>\n</for>'],
+  ['地图换个气质', '换配色模板，底色、线条、标签全部跟着换；线条也可以逐项改。', '<scene palette="champagne">\n<map border="#9A7440" dash="5 3"\n     coast="#3F6B73" coastWidth="2.4"/>'],
+];
+$('mapRecipes').innerHTML = MAP_RECIPES.map(([title, desc, src]) => `<div class="qcard"><h3>${esc(title)}</h3><p>${esc(desc)}</p><pre>${code(src)}</pre></div>`).join('');
+
+const MAP_LINES = [
+  ['border', '省界颜色', 'none 则不画省界；默认次要色半透明'],
+  ['borderWidth', '省界粗细', '默认 1.2'],
+  ['dash', '省界虚线', 'dash="5 3"：画 5 段、空 3 段（乘以线宽）'],
+  ['coast', '外轮廓颜色', '国界与海岸线；默认正文色'],
+  ['coastWidth', '外轮廓粗细', '默认 2'],
+  ['island', '南海诸岛颜色', 'none 不画；默认同外轮廓'],
+  ['islandWidth', '南海诸岛粗细', '默认同外轮廓'],
+  ['fill', '国土底色', '默认取配色的背景高光色'],
+  ['highlight', '高亮的省', '用 color 填充，如 highlight="四川 云南"'],
+  ['names', '省名', '缺省属性；names="large" / "small" 调大小'],
+  ['inset', '南海小图', 'corner（默认，自动避开国土）/ off（按真实位置）/ none'],
+  ['projection', '投影', 'lambert（默认，国内标准形状）/ equirect / mercator'],
+];
+$('mapLines').innerHTML = MAP_LINES.map(([k, n, d]) => `<div class="ease-item"><code>${k}</code><span><b>${esc(n)}</b> · ${esc(d)}</span></div>`).join('');
+
+const GLYPH_DESC = [['car', '小汽车'], ['bus', '公交'], ['train', '火车'], ['plane', '飞机'], ['ship', '船']];
+$('glyphRow').innerHTML = GLYPH_DESC.map(([n, l]) => `<div class="glyph-card"><canvas width="120" height="90" data-glyph="${n}"></canvas><code>name="${n}"</code><span>${l}</span></div>`).join('');
+function paintGlyphs() {
+  const dark = currentTheme() === 'dark';
+  document.querySelectorAll('canvas[data-glyph]').forEach((cv) => {
+    const g = cv.getContext('2d');
+    g.clearRect(0, 0, cv.width, cv.height);
+    g.save();
+    g.translate(cv.width / 2, cv.height / 2);
+    drawGlyph(g, cv.dataset.glyph, 64, dark
+      ? { body: '#5AA9FF', glass: '#d6e9ff', dark: 'rgba(0,20,60,.4)' }
+      : { body: '#0071E3', glass: '#bcd9ff', dark: 'rgba(0,20,60,.35)' });
+    g.restore();
+  });
+}
+paintGlyphs();
+addEventListener('gm-theme', paintGlyphs);
 
 // ---- 缓动速查 ----
 const EASES = [
@@ -95,6 +141,7 @@ $('toc').innerHTML = [
   '<span class="grp">开始</span>',
   '<a href="#sec-quick">快速开始</a>',
   '<a href="#sec-recipes">常用配方</a>',
+  '<a href="#sec-map">地图与路线</a>',
   '<a href="#sec-palette">配色模板</a>',
   '<a href="#sec-caption">字幕样式</a>',
   '<a href="#sec-ease">缓动速查</a>',

@@ -9,6 +9,7 @@ import { aabb } from './lint.js';
  *  2. 连线的端点被别的图形盖住 / 离目标图形还有一段空隙（箭头断连）
  *  3. 图形里的 label 太长，被压得小到看不清
  *  4. 棋盘上的线条（落子标记、获胜线、箭头）的笔画越出了棋盘边缘（井字棋的 X、获胜线最常见）
+ *  5. 文字被画在它上面的图形 / 图标盖住（地图上标签被小车、站点压住最常见），文字之间互相压住
  * 全部在“每一步的静帧”上检查。lint() 会调用 checkLayout() 并合并结果。
  */
 
@@ -52,7 +53,7 @@ export function checkLayout(scene, checks, evaluate) {
     };
 
     // ---- 1. 文字 vs 容器 ----
-    const texts = scene.entities.filter((e) => (e.type === 'text' || e.type === 'icon') && !e.internal && vis(e));
+    const texts = scene.entities.filter((e) => (e.type === 'text' || (e.type === 'icon' && !e.glyph)) && !e.internal && vis(e));
     const boxes = scene.entities.filter((e) => CONTAINERS.has(e.type) && vis(e));
     for (const tx of texts) {
       const Lt = frame.entities[tx.index];
@@ -158,6 +159,55 @@ export function checkLayout(scene, checks, evaluate) {
             message: `线条 "${ln.id}" 的笔画越出了棋盘 "${g.id}" 的边缘 ${r1(over)}px（在 ${r1(t)}s 的画面里）`,
             hint: '把端点往棋盘内收一点（笔画宽度的一半也要算进去），或把棋盘的 pad 留大',
           });
+        }
+      }
+    }
+
+    // ---- 5. 文字被盖住 / 文字互相压住 ----
+    // 只看“独立文字”（text，不含图形自带的 label）。遮挡物：画在它上面的实心图形或矢量图标。
+    // 豁免：文字本来就写在容器里（文字中心在该图形内且图形明显更大，那是卡片 / 按钮，不是遮挡）。
+    {
+      const labels = scene.entities.filter((e) => e.type === 'text' && !e.internal && vis(e));
+      const blockers = scene.entities.filter((e) => (SOLID.has(e.type) || (e.type === 'icon' && e.glyph)) && vis(e));
+      for (const tx of labels) {
+        const Lt = frame.entities[tx.index];
+        const tb = aabb(tx, Lt);
+        const ta = (tb.r - tb.l) * (tb.b - tb.t);
+        if (ta < 1) continue;
+        const tk = orderKey(scene, frame, tx);
+        for (const bl of blockers) {
+          if (above(orderKey(scene, frame, bl), tk) <= 0) continue;          // 在文字下面或同层更早：不挡
+          const Lb = frame.entities[bl.index];
+          const bb = aabb(bl, Lb);
+          const ba = (bb.r - bb.l) * (bb.b - bb.t);
+          if (ba > ta * 4) continue;                                          // 比文字大很多：是容器 / 背景，不算遮挡
+          const dx = Math.min(tb.r, bb.r) - Math.max(tb.l, bb.l), dy = Math.min(tb.b, bb.b) - Math.max(tb.t, bb.t);
+          if (dx <= 0 || dy <= 0) continue;
+          const cover = (dx * dy) / ta;
+          if (cover > 0.2) {
+            push(`tc|${tx.id}|${bl.id}`, {
+              severity: 'warning', code: 'W_TEXT_COVERED', line: tx.line, col: tx.col, id: tx.id, ids: [tx.id, bl.id],
+              message: `文字 "${tx.id}" 有 ${Math.round(cover * 100)}% 被 "${bl.id}" 盖住了（在 ${r1(t)}s 的画面里）`,
+              hint: '给标签换个方向的偏移（off="dx,dy"），或把标签放到更靠上的图层；地图上常见于小车停在站点上盖住了城市名',
+            });
+          }
+        }
+      }
+      // 文字之间互相压住
+      for (let a = 0; a < labels.length; a++) {
+        for (let b = a + 1; b < labels.length; b++) {
+          const A = labels[a], B = labels[b];
+          const ba = aabb(A, frame.entities[A.index]), bb = aabb(B, frame.entities[B.index]);
+          const dx = Math.min(ba.r, bb.r) - Math.max(ba.l, bb.l), dy = Math.min(ba.b, bb.b) - Math.max(ba.t, bb.t);
+          if (dx <= 0 || dy <= 0) continue;
+          const small = Math.min((ba.r - ba.l) * (ba.b - ba.t), (bb.r - bb.l) * (bb.b - bb.t));
+          if ((dx * dy) / small > 0.25) {
+            push(`tt2|${A.id}|${B.id}`, {
+              severity: 'warning', code: 'W_TEXT_OVERLAP', line: B.line, col: B.col, id: B.id, ids: [A.id, B.id],
+              message: `文字 "${A.id}" 与 "${B.id}" 互相压住了（在 ${r1(t)}s 的画面里）`,
+              hint: '把其中一个往旁边挪（off="dx,dy"）；地图上相邻的城市名最容易挤在一起',
+            });
+          }
         }
       }
     }

@@ -56,6 +56,17 @@
           <div class="pal-grid" id="palGrid"></div>
         </section>
 
+        <section id="sec-map">
+          <h2>地图与旅行路线</h2>
+          <p class="prose" style="font-size:16px">内置中国地图（省界、外轮廓、南海诸岛）和 380 多个城市的坐标，<b>离线可用，不需要任何外部服务</b>。先写 <code>&lt;map&gt;</code>，之后的对象用 <code>city="成都"</code> 或 <code>lonlat="104.06,30.66"</code> 定位，<code>path="北京 武汉 广州"</code> 一句话走完整条路线。</p>
+          <div class="recipes" id="mapRecipes"></div>
+          <h3 class="doc-h3">线条样式：每一组都能自己定</h3>
+          <div class="map-lines" id="mapLines"></div>
+          <h3 class="doc-h3">内置交通工具图标</h3>
+          <div class="glyph-row" id="glyphRow"></div>
+          <p class="prose" style="font-size:14px;color:var(--text-3)">说明：城市坐标取自行政中心点，精度到城市级别；冷门地点请直接写 <code>lonlat</code>（经度在前）。地图不含街道，公路段用直线或 <code>arc</code> 弧线表示。</p>
+        </section>
+
         <section id="sec-caption">
           <h2>字幕样式</h2>
           <p class="prose" style="font-size:16px">默认字幕是安静的半透明胶囊，颜色跟随配色。在 <code>&lt;scene&gt;</code> 上写 <code>caption</code> 换样式，<code>caption-size</code> 调字号，<code>caption-pos</code> 放到上方；编辑器里也有对应的下拉框。下面的预览为了看清，统一用了 <code>large</code> 字号。</p>

@@ -100,8 +100,16 @@ function buildItem(scene, e, L, alpha, measure) {
         labelFs: L.label ? labelFontSize(e.type, L.w, L.h, L.label, (txt, px) => measure(txt, `700 ${px}px ${FONT}`)) : 0,
         shadow: buildShadow(scene, e, L),
       };
-    case 'text':
     case 'icon':
+      if (e.glyph) {
+        return {
+          kind: 'glyph', glyph: e.glyph,
+          x: L.x, y: L.y, ox: L.ox, oy: L.oy, rot: L.rot, orot: L.orot, sx: L.sx, sy: L.sy,
+          alpha, size: L.size, fill: L.fill, stroke: L.stroke, strokeWidth: L.width, glow: scene.glow,
+        };
+      }
+      return buildText(scene, e, L, alpha, measure);
+    case 'text':
       return buildText(scene, e, L, alpha, measure);
     case 'ring':
       return {
@@ -121,6 +129,12 @@ function buildItem(scene, e, L, alpha, measure) {
       return buildNote(scene, e, L, alpha, measure);
     case 'grid':
       return buildGrid(scene, e, L, alpha);
+    case 'map':
+      return {
+        kind: 'map', alpha, fill: L.fill, color: L.color,
+        provinces: e.provinces, islands: e.islands, style: e.style, inset: e.inset, insetBox: e.insetBox, box: e.mapBox,
+        unit: scene.unit,
+      };
   }
   return null;
 }

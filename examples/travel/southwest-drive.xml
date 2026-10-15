@@ -1,0 +1,59 @@
+<scene width="960" height="720" grid="12x9" pad="16 16 96 16" palette="champagne" shadow="false" glow="false" overlap="off" hold=".8" read="4" poster="-1">
+  <!-- 西南自驾：成都 → 九寨沟 → 康定 → 丽江 → 香格里拉 → 大理 → 昆明（一条环线，不走回头路）。
+       · region="四川 云南 重庆 贵州" 把地图放大到西南，四川和云南用 highlight 点亮；
+       · 省界用虚线、外轮廓用实线，颜色和粗细都是写出来的，而且全是语义色，换配色模板整张图跟着换；
+       · 小车是内置矢量图标，heading 让它沿弧线转向；站点数据放在 <data> 里。
+       提示：arc 的凸向是“相对前进方向”的（正数向左）。同一条路来回走，两段弧会落在同一侧、叠在一起——
+       所以旅行路线尽量走环线；确实要原路返回，就让两段用相反的符号。 -->
+  <data name="stops">城市,日期,dx,dy
+成都,第 1 天,-34,-4
+九寨沟,第 2 天,0,-24
+康定,第 4 天,-34,-4
+丽江,第 5 天,-34,-6
+香格里拉,第 6 天,0,-24
+大理,第 8 天,-32,6
+昆明,第 9 天,32,8</data>
+
+  <layer name="pins" z="4"/>
+  <layer name="names" z="6"/>
+  <layer name="car" z="8"/>
+
+  <map id="地图" region="四川 云南 重庆 贵州" highlight="四川 云南"
+       border="sub" borderWidth="1.2" dash="5 3" coast="text" coastWidth="2"
+       names color="accent"/>
+
+  <step say="西南九天自驾，四川和云南是这次的主角" dur=".6" stagger=".1">
+    <for var="s" index="i" in="{stops}">
+      <circle id="p{i}" city="{s.城市}" size="20" fill="accent" stroke="bg" width="3" label="{i + 1}" flat="" layer="pins"/>
+    </for>
+  </step>
+
+  <step say="标出城市" dur=".4" stagger=".08">
+    <for var="s" index="i" in="{stops}">
+      <text id="n{i}" city="{s.城市}" off="{s.dx},{s.dy}" text="{s.城市}" size="17" fill="text" stroke="bg" width="5" layer="names"/>
+    </for>
+  </step>
+
+  <step say="从成都出发" dur=".4">
+    <icon id="车" name="car" city="成都" size="36" fill="bad" stroke="bg" width="4" layer="car"/>
+  </step>
+
+  <step say="第 1~2 天：成都到九寨沟" dur="1.6">
+    <车 path="九寨沟" heading="0" arc=".14" trail="bad"/>
+  </step>
+  <step say="第 3~4 天：九寨沟南下，经成都平原西侧到康定" dur="2">
+    <车 path="康定" heading="0" arc=".14" trail="bad"/>
+  </step>
+  <step say="第 5 天：康定向南，进入云南，到丽江" dur="1.8">
+    <车 path="丽江" heading="0" arc=".12" trail="bad"/>
+  </step>
+  <step say="第 6 天：丽江北上香格里拉" dur="1.4">
+    <车 path="香格里拉" heading="0" arc=".16" trail="bad"/>
+  </step>
+  <step say="第 8 天：折向南，经丽江到大理" dur="1.8">
+    <车 path="大理" heading="0" arc="-.14" trail="bad"/>
+  </step>
+  <step say="第 9 天：大理到昆明，行程结束" dur="1.6">
+    <车 path="昆明" heading="0" arc=".14" trail="bad"/>
+  </step>
+</scene>

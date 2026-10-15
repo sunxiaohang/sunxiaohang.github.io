@@ -97,7 +97,10 @@ export class Preview {
     if (!sc) return;
     this.pause();
     const n = sc.steps.length;
-    this.player.seek(n ? sc.steps[Math.min(n - 1, Math.floor(n * 0.7))].freeze : sc.duration);
+    // 封面帧：scene 上写了 poster 就用它（正数 = 第几步，负数 = 倒数第几步）；否则取靠后的 70% 处
+    const p = sc.poster || 0;
+    const idx = !n ? -1 : p > 0 ? Math.min(n, p) - 1 : p < 0 ? Math.max(0, n + p) : Math.min(n - 1, Math.floor(n * 0.7));
+    this.player.seek(idx >= 0 ? sc.steps[idx].freeze : sc.duration);
   }
 
   play() { if (!this.scene) return; this.player.play(); activate(this); }

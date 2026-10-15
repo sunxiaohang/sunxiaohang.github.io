@@ -1,5 +1,5 @@
 import { evaluate } from '../runtime/evaluate.js';
-import { SOLID, POSITIONAL, BOXED } from '../lang/schema.js';
+import { SOLID, POSITIONAL, BOXED, BACKDROP } from '../lang/schema.js';
 import { checkLayout } from './layout.js';
 
 const r2 = (v) => Math.round(v * 100) / 100;

@@ -432,7 +432,7 @@ dialog::backdrop { background: rgba(0, 0, 0, .4); backdrop-filter: blur(10px) sa
 .pal-meta code { font: 11.5px var(--mono); color: var(--text-2); background: var(--surface-2); padding: 1px 6px; border-radius: 5px; }
 
 /* ---------- 适用场景 ---------- */
-.cases { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.cases { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
 .work.case .work-body p { color: var(--text-2); font-size: 14.5px; line-height: 1.5; margin-top: 2px; }
 .work.case .work-body h3 { font-size: 18px; }
 
@@ -478,6 +478,17 @@ a.pal-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-2), 0 0
 .cap-meta b { font-size: 15px; font-weight: 650; }
 .cap-meta code { font: 11.5px var(--mono); color: var(--text-2); background: var(--surface-2); padding: 1px 6px; border-radius: 5px; width: fit-content; }
 .cap-meta p { color: var(--text-3); font-size: 13px; line-height: 1.5; }
+/* ---------- 文档：地图 ---------- */
+.doc-h3 { font-size: 19px; font-weight: 650; letter-spacing: -.02em; margin: 36px 0 14px; }
+.map-lines { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+.map-lines .ease-item { align-items: flex-start; }
+.map-lines .ease-item code { min-width: 92px; }
+.map-lines .ease-item b { color: var(--text); font-weight: 600; }
+.glyph-row { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.glyph-card { display: grid; justify-items: center; gap: 6px; padding: 14px 8px 12px; border-radius: var(--r-md); background: var(--surface); box-shadow: 0 0 0 1px var(--line-2); font-size: 13px; color: var(--text-2); }
+.glyph-card canvas { width: 100%; max-width: 120px; height: auto; }
+.glyph-card code { font: 600 12px var(--mono); color: var(--accent); }
+
 /* ---------- 入场动效 ---------- */
 .reveal { opacity: 0; transform: translateY(28px) scale(.985); transition: opacity .9s var(--ease), transform .9s var(--ease); transition-delay: calc(var(--d, 0) * 1ms); }
 .reveal.in { opacity: 1; transform: none; }
@@ -496,6 +507,7 @@ a.pal-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-2), 0 0
   .split { grid-template-columns: 1fr; }
   .cmp-points { grid-template-columns: 1fr; }
   .recipes { grid-template-columns: minmax(0, 1fr); }
+  .glyph-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bento .s2, .bento .s3, .bento .s4 { grid-column: span 2; }

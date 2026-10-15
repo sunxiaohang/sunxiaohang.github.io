@@ -1,6 +1,9 @@
 import { composeFrame } from './ir.js';
 import { drawSolid, drawRing, drawText } from './shapes.js';
 import { drawLine, drawNote, drawGridEntity, drawTrace } from './annotations.js';
+import { drawMap } from './map.js';
+import { drawGlyph } from './glyphs.js';
+import { toCss, shade } from '../core/util/color.js';
 import { drawBackground, drawGuide, drawCaption } from './overlay.js';
 
 /** 每种图元的绘制入口：由 IR 的 kind 分发 */
@@ -19,6 +22,26 @@ const DRAWERS = {
     drawNote(ctx, item);
   },
   grid: (ctx, { item }) => drawGridEntity(ctx, item),
+  map: (ctx, { item, pr }) => drawMap(ctx, item, pr),
+  glyph: (ctx, { item, pr }) => {
+    applyXform(ctx, item);
+    // 图标有投影和描边：先画一圈同形的深色轮廓当描边（比 stroke 路径更稳），再画本体
+    const body = item.fill, ink = shade(item.fill, -0.55);
+    if (item.stroke[3] > 0 && item.strokeWidth > 0) {
+      ctx.save();
+      ctx.shadowColor = toCss(item.stroke);
+      ctx.shadowBlur = 0;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1], [0.7, 0.7], [-0.7, -0.7], [0.7, -0.7], [-0.7, 0.7]]) {
+        ctx.save();
+        ctx.translate(dx * item.strokeWidth * 0.5, dy * item.strokeWidth * 0.5);
+        drawGlyph(ctx, item.glyph, item.size, { body: toCss(item.stroke), glass: toCss(item.stroke), dark: toCss(item.stroke) });
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+    if (item.glow) { ctx.shadowColor = toCss(body, 0.45); ctx.shadowBlur = item.size * 0.25 * pr; }
+    drawGlyph(ctx, item.glyph, item.size, { body: toCss(body), glass: toCss(shade(body, 0.62)), dark: toCss(ink, 0.35) });
+  },
 };
 
 function applyXform(ctx, item) {

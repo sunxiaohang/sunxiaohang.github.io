@@ -6,7 +6,10 @@ import {
 import { clamp } from '../util/ease.js';
 import { linkEndpoints } from '../runtime/links.js';
 import { onColor } from '../util/color.js';
-import { col, NONE, cellToXY, warnOutside, register } from './scene.js';
+import { col, NONE, cellToXY, warnOutside, register, placeToXY } from './scene.js';
+import { looksLikePlace } from '../geo/place.js';
+import { compileMap } from '../geo/map-entity.js';
+import { GLYPH_NAMES } from '../../render/glyphs.js';
 
 const NAME_RE = /^[\p{L}_][\p{L}\p{N}_.-]*$/u;
 const PALETTE = ['#ff6b9d', '#4cc9f0', '#ffd166', '#9b8cff', '#06d6a0', '#ff9f68'].map(col);
@@ -16,6 +19,13 @@ const rad = (d) => (d * Math.PI) / 180;
 const raw0 = (r, name) => r.raw(name).trim();
 
 function readPlace(r, ctx) {
+  // 地理定位：city="成都" / lonlat="104,30" / at="成都"
+  const geoKey = ['city', 'lonlat'].find((k) => r.has(k)) || (r.has('at') && looksLikePlace(r.raw('at')) ? 'at' : null);
+  if (geoKey) {
+    const xy = placeToXY(ctx, r.raw(geoKey), r.at(geoKey));
+    if (xy) return xy;
+    return [ctx.scene.width / 2, ctx.scene.height / 2];
+  }
   const p = r.pos('at');
   if (p) { warnOutside(ctx, p, r.at('at')); return cellToXY(ctx.scene, p); }
   const q = r.pair('px');
@@ -149,6 +159,15 @@ export function createEntity(node, ctx, opts = {}) {
       init.stroke = r.color('stroke', NONE);
       init.width = r.len('width', 0, { min: 0 });
       init.text = r.str('text', '');
+      // name：内置矢量图标（交通工具），写了就不再用 text 当 emoji
+      if (r.has('name')) {
+        const nm = r.raw('name').trim();
+        if (GLYPH_NAMES.includes(nm)) ent.glyph = nm;
+        else {
+          const s = suggest(nm, GLYPH_NAMES);
+          diag.error('E_BAD_VALUE', `未知图标 "${nm}"`, r.at('name'), s ? `是不是想写 "${s}"？` : `可用：${GLYPH_NAMES.join(' / ')}`);
+        }
+      }
       break;
     case 'ring':
       init.size = r.len('size', Math.min(U, 96), { min: 1 });
@@ -203,6 +222,11 @@ export function createEntity(node, ctx, opts = {}) {
         Object.assign(init, (({ x1, y1, x2, y2 }) => ({ x1, y1, x2, y2 }))(linkEndpoints(live(f), live(t), gap)));
         ent.link = { from: { ref: f.ref }, to: { ref: t.ref }, gap };
       }
+      break;
+    }
+    case 'map': {
+      // 地图建立投影并把省界换算成像素；失败（region 写错等）时不创建，避免后面一串地名全报错
+      if (!compileMap(r, ctx, init, ent, scene)) return null;
       break;
     }
     case 'grid': {

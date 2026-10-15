@@ -6,6 +6,7 @@
     { "id": "algo", "name": "算法可视化", "desc": "排序、查找：用柱子和格子把算法的每一步讲清楚" },
     { "id": "math", "name": "数学与图形", "desc": "正弦波、数列：表达式生成成批图形，用相位和公式驱动动画" },
     { "id": "product", "name": "产品与图表", "desc": "数据看板、流程图、路线图、加载动效：产品演示与汇报常用的版式" },
+    { "id": "travel", "name": "旅游地图", "desc": "内置中国地图（省界、南海诸岛）：城市名定位、路线、小车沿弧线行驶，线条样式可自定义" },
     { "id": "site", "name": "站点演示", "desc": "官网首页与文档用的演示场景，不在作品库展示", "hidden": true }
   ],
   "examples": [
@@ -37,6 +38,10 @@
     { "id": "request-flow", "category": "product", "file": "product/request-flow.xml", "name": "请求流程图", "covers": ["arrow", "path", "trail", "for", "pal"] },
     { "id": "roadmap", "category": "product", "file": "product/roadmap.xml", "name": "产品路线图", "covers": ["line", "for", "index", "ternary", "text"] },
     { "id": "loaders", "category": "product", "file": "product/loaders.xml", "name": "加载动效", "covers": ["orbit", "jump", "bounce", "trail", "ease"] },
+
+    { "id": "china-tour", "category": "travel", "file": "travel/china-tour.xml", "name": "国内旅行路线", "covers": ["map", "city", "data", "path", "arc", "heading", "icon", "trail"] },
+    { "id": "southwest-drive", "category": "travel", "file": "travel/southwest-drive.xml", "name": "西南自驾", "covers": ["map", "region", "highlight", "dash", "city", "arc", "heading", "icon"] },
+    { "id": "high-speed-rail", "category": "travel", "file": "travel/high-speed-rail.xml", "name": "高铁干线", "covers": ["map", "border", "coast", "island", "city", "icon", "trail", "data"] },
 
     { "id": "site-hero", "category": "site", "file": "site/hero.xml", "name": "首页主视觉", "covers": ["palette", "orbit", "pal"] },
     { "id": "site-path", "category": "site", "file": "site/path.xml", "name": "沿路径移动", "covers": ["path", "smooth", "trail"] },

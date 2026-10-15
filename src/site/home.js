@@ -117,7 +117,7 @@ $('palStrips').innerHTML = ['porcelain', 'graphite', 'aurora', 'champagne']
   .map((id) => `<div class="pal-strip" title="${esc(getPalette(id).label)}">${getPalette(id).series.map((c) => `<i style="background:${c}"></i>`).join('')}</div>`).join('');
 
 // ================= 作品精选 =================
-const FEATURED = ['gomoku', 'dashboard', 'sine-wave', 'request-flow', 'orbits', 'xiangqi'];
+const FEATURED = ['gomoku', 'china-tour', 'dashboard', 'high-speed-rail', 'sine-wave', 'xiangqi'];
 const catName = (id) => manifest.categories.find((c) => c.id === id)?.name || id;
 for (const id of FEATURED) {
   const ex = manifest.examples.find((e) => e.id === id);
@@ -130,6 +130,8 @@ const CASES = [
   { id: 'bubble-sort', tag: '算法讲解', title: '把算法讲成动画', desc: '柱子互换、格子淡出、指针移动。数据换一组，动画自己重排。' },
   { id: 'dashboard', tag: '数据汇报', title: '会动的数据看板', desc: 'CSV 进去，卡片和图表出来；周报月报换一份数据就是新的一期。' },
   { id: 'request-flow', tag: '产品演示', title: '流程与架构一目了然', desc: '节点、箭头、沿路径流动的数据包，把一次请求从头到尾讲清楚。' },
+  { id: 'china-tour', tag: '旅游地图', title: '一条路线，一句话走完', desc: '内置中国地图和 380 多个城市：写城市名，小车沿弧线从 A 到 B 到 C，离线可用。' },
+  { id: 'southwest-drive', tag: '区域地图', title: '放大到你要讲的那几个省', desc: '省界、外轮廓、南海诸岛的线条颜色、粗细、虚实都能自己定。' },
 ];
 for (const c of CASES) {
   const ex = manifest.examples.find((e) => e.id === c.id);
