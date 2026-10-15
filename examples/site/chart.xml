@@ -1,4 +1,4 @@
-<scene width="800" height="500" grid="8x5" pad="30 40 70 40" palette="material" hold="1">
+<scene width="800" height="500" grid="8x5" pad="30 40 70 40" palette="porcelain" shadow="false" glow="false" hold="1">
   <data name="rows">月份,销量
 1月,2
 2月,4
@@ -16,11 +16,11 @@
   <step say="柱子高度来自「销量」这一列" dur=".5" stagger=".1">
     <for var="i" in="1..{rows.length}">
       <rect id="b{i}" at="{i + 1},{4.5 - rows[i - 1].销量 * 0.3}" w=".6c" h="{rows[i - 1].销量 * 0.6}c" radius="10"
-            fill="{pal(i - 1)}" in="drop"/>
+            fill="accent" alpha=".38" in="drop"/>
     </for>
   </step>
 
   <step say="换一份 CSV，就是另一张图表" dur=".6">
-    <b6 fill="accent" pulse=".12"/>
+    <b6 alpha="1" pulse=".12"/>
   </step>
 </scene>

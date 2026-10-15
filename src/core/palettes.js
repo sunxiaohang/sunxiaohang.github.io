@@ -19,6 +19,20 @@ function def(name, label, dark, desc, base, series) {
 }
 
 export const PALETTES = [
+  // ---------------- 精选：低饱和、克制，站点与示例作品的默认气质 ----------------
+  def('porcelain', '瓷白', false, '近白底 + 苹果蓝，低饱和系列色，克制耐看，适合讲解与产品演示',
+    { accent: '#0071E3', accent2: '#5E5CE6', text: '#1D1D1F', sub: '#6E6E73', bg: '#F5F5F7', bg2: '#FFFFFF', warn: '#C98A1B', good: '#2E9E6B', bad: '#D64550' },
+    ['#0071E3', '#5E5CE6', '#2FA38A', '#D29A2F', '#E0675A', '#86868B', '#4E9F6D', '#A15A8F']),
+  def('graphite', '石墨', true, '近黑底 + 冷调亮蓝，雾面系列色，高级、沉稳',
+    { accent: '#5AA9FF', accent2: '#A78BFA', text: '#F5F5F7', sub: '#98989D', bg: '#050507', bg2: '#1C1C1E', warn: '#E3B35A', good: '#5CC49A', bad: '#F07178' },
+    ['#5AA9FF', '#A78BFA', '#4FC8B4', '#E3B35A', '#F28B82', '#9A9AA3', '#7BC47F', '#D68FC0']),
+  def('aurora', '极光', true, '深青蓝底，青绿到靛紫的柔和渐变，通透安静',
+    { accent: '#4FD1C5', accent2: '#7C9CF5', text: '#E8F4F5', sub: '#8DAAB2', bg: '#06131A', bg2: '#10303A', warn: '#E8C37A', good: '#7FD4A0', bad: '#F08A7E' },
+    ['#4FD1C5', '#7C9CF5', '#B59AF0', '#E8C37A', '#F0907F', '#8FD3E8', '#9AD18B', '#DB8FB6']),
+  def('champagne', '香槟', false, '暖白纸感底 + 古铜金与墨青，质感内敛的出版风',
+    { accent: '#9A7440', accent2: '#3F6B73', text: '#2B2620', sub: '#7A6F62', bg: '#F7F3EC', bg2: '#FFFFFF', warn: '#C58A2E', good: '#5C8A58', bad: '#B5503F' },
+    ['#9A7440', '#3F6B73', '#B5503F', '#5C8A58', '#6B5B8C', '#C79A4B', '#3A5A7C', '#9C6B7B']),
+
   // ---------------- Material Design ----------------
   def('material', 'Material 浅色', false, 'Material Design 3 基线紫 + 经典 500 色阶，清爽通用',
     { accent: '#6750A4', accent2: '#625B71', text: '#1D1B20', sub: '#49454F', bg: '#FEF7FF', bg2: '#FFFFFF', warn: '#FFA000', good: '#388E3C', bad: '#D32F2F' },

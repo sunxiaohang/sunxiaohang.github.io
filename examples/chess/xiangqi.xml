@@ -1,16 +1,16 @@
-<scene width="640" height="780" grid="9x10" pad="30 30 130 30" bg="#1a1410" bg2="#2e2218" hold="0.8" read="4">
+<scene width="640" height="780" grid="9x10" pad="30 30 130 30" palette="graphite" hold="0.8" read="4">
   <!-- 中国象棋：9x10 交叉点，棋子是带汉字的圆；红黑双方各用一个 group，方便整体强调。
        行 1 是黑方底线，行 10 是红方底线，河在第 5、6 行之间；红方的兵走到第 5 行及以上就算过河。 -->
-  <def name="红" is="circle" size=".9c" fill="#fbeed2" stroke="#c0392b" width="3" color="#c0392b" layer="pieces"/>
+  <def name="红" is="circle" size=".9c" fill="#fbeed2" stroke="#B5473B" width="3" color="#B5473B" layer="pieces"/>
   <def name="黑" is="circle" size=".9c" fill="#fbeed2" stroke="#2b2b2b" width="3" color="#222" layer="pieces"/>
 
   <layer name="board" z="0"/>
   <layer name="pieces" z="10"/>
   <layer name="marks" z="20"/>
 
-  <grid id="木盘" fill="#d9a85c" stroke="#5b3a14" width="2" layer="board"/>
+  <grid id="木盘" fill="#D4B07E" stroke="#6B4A22" width="2" layer="board"/>
   <!-- 楚河汉界写在河道正中（第 5、6 行之间 = 5.5 行），字号小一点，不挡棋子 -->
-  <text id="河" text="楚 河                   汉 界" at="5,5.5" size=".5c" fill="#7a5320" layer="board" in="fade"/>
+  <text id="河" text="楚 河                   汉 界" at="5,5.5" size=".5c" fill="#8A6A3A" layer="board" in="fade"/>
   <!-- 九宫斜线 -->
   <line from="4,1" to="6,3" stroke="#5b3a14" width="2" layer="board" in="none"/>
   <line from="6,1" to="4,3" stroke="#5b3a14" width="2" layer="board" in="none"/>
@@ -40,32 +40,32 @@
 
   <step say="「帅」和「将」只能在九宫格里走，每次一格，横竖都行">
     <r帅 at="5,9" ease="snap"/>
-    <ring id="r1" at="5,9" size="1.2c" stroke="#ffd166" layer="marks"/>
+    <ring id="r1" at="5,9" size="1.2c" stroke="warn" layer="marks"/>
   </step>
 
   <step say="「车」走直线，不限格数，但不能越过其他棋子">
     <r1 out/>
     <r车 at="1,5" dur="1"/>
-    <arrow id="a车" from="1,10" to="1,5" stroke="#ffd166" width="4" layer="marks" dur=".6"/>
+    <arrow id="a车" from="1,10" to="1,5" stroke="warn" width="4" layer="marks" dur=".6"/>
   </step>
 
   <step say="「马」走「日」字：先直走一格，再斜走一格" dur=".9">
     <a车 out/>
     <r马 path="2,9 3,8"/>
-    <line id="rm1" from="2,10" to="2,9" stroke="#ffd166" width="4" layer="marks"/>
-    <line id="rm2" from="2,9" to="3,8" stroke="#ffd166" width="4" layer="marks" delay=".4"/>
+    <line id="rm1" from="2,10" to="2,9" stroke="warn" width="4" layer="marks"/>
+    <line id="rm2" from="2,9" to="3,8" stroke="warn" width="4" layer="marks" delay=".4"/>
   </step>
 
   <step say="「炮」平时像车一样走，不吃子的时候不能跳过别的棋子" dur=".9">
     <rm1 out/>
     <rm2 out/>
     <r炮 at="8,7" jump=".25c"/>
-    <arrow id="a炮" from="8,8" to="8,7" stroke="#ffd166" width="4" layer="marks"/>
+    <arrow id="a炮" from="8,8" to="8,7" stroke="warn" width="4" layer="marks"/>
   </step>
 
   <step say="「炮」吃子必须隔着一个棋子：炮、中间的炮架、对方的炮，三个排成一线" dur=".8">
     <a炮 out/>
-    <ring id="架环" at="8,5" size="1.25c" stroke="#7dd3a8" layer="marks"/>
+    <ring id="架环" at="8,5" size="1.25c" stroke="good" layer="marks"/>
     <note id="架说明" at="8,5" text="炮架" side="left" layer="marks" delay=".3"/>
   </step>
 
@@ -78,7 +78,7 @@
 
   <step say="「兵」没过河时，只能向前走一格" dur=".8">
     <r兵 at="3,6"/>
-    <arrow id="a兵1" from="3,7" to="3,6" stroke="#ffd166" width="4" layer="marks"/>
+    <arrow id="a兵1" from="3,7" to="3,6" stroke="warn" width="4" layer="marks"/>
   </step>
 
   <step say="走过了河（第 5 行），就算「过河兵」" dur=".8">
@@ -90,7 +90,7 @@
   <step say="过河的兵，除了向前，还可以向左或向右走一格" dur=".9">
     <过河 out/>
     <r兵 at="4,5"/>
-    <arrow id="a兵2" from="3,5" to="4,5" stroke="#ffd166" width="4" layer="marks"/>
+    <arrow id="a兵2" from="3,5" to="4,5" stroke="warn" width="4" layer="marks"/>
   </step>
 
   <step say="黑方「将」被红炮和红兵夹击，红方获胜！" dur=".8">

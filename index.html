@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>GridMotion · 用 XML 写几何动画</title>
-  <meta name="description" content="写结果，不写过程。用声明式 XML 脚本做几何动画与教学动画：补间、轨道、数据驱动、19 套配色，一键导出视频、分镜与图片。">
+  <title>CodeMotion · 用 XML 写几何动画</title>
+  <meta name="description" content="写结果，不写过程。用声明式 XML 脚本做几何动画与教学动画：补间、轨道、数据驱动、23 套配色，一键导出视频、分镜与图片。">
   <meta name="theme-color" content="#fbfbfd">
-  <meta property="og:title" content="GridMotion · 用 XML 写几何动画">
+  <meta property="og:title" content="CodeMotion · 用 XML 写几何动画">
   <meta property="og:description" content="写一份声明式脚本，得到一段可播放、可讲解、可导出的动画。">
   <meta property="og:type" content="website">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -43,7 +43,7 @@
         </div>
 
         <div class="stats reveal">
-          <div class="stat"><b id="statPal">19</b><span>套内置配色</span></div>
+          <div class="stat"><b id="statPal">23</b><span>套内置配色</span></div>
           <div class="stat"><b id="statWorks">20</b><span>个示例作品</span></div>
           <div class="stat"><b>0</b><span>依赖 · 纯前端</span></div>
           <div class="stat"><b>MIT</b><span>开源许可</span></div>
@@ -99,8 +99,8 @@
           </article>
           <article class="bcard s2 reveal">
             <span class="eyebrow">配色</span>
-            <h3>19 套配色，一行套用</h3>
-            <p>Material、Pantone 年度色、Nord、Dracula……</p>
+            <h3>23 套配色，一行套用</h3>
+            <p>瓷白、石墨、极光、香槟，以及 Nord、Dracula、Pantone 年度色……</p>
             <div class="bvis pal-strips" id="palStrips"></div>
           </article>
           <article class="bcard s2 reveal" style="--d:80">
@@ -135,19 +135,70 @@
       </div>
     </section>
 
+    <!-- ================= 适用场景 ================= -->
+    <section class="section alt" id="cases">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">适用场景</span>
+          <h2 class="h2">讲清楚一件事，<br>一份脚本就够。</h2>
+          <p class="lead">从课堂到会议室，凡是需要“一步一步讲明白”的地方。</p>
+        </div>
+        <div class="cases" id="casesGrid"></div>
+      </div>
+    </section>
+
     <!-- ================= 作品精选 ================= -->
-    <section class="section alt" id="works">
+    <section class="section" id="works">
       <div class="section-head reveal">
         <span class="eyebrow">作品库</span>
         <h2 class="h2">看看别人怎么写的。</h2>
-        <p class="lead">棋类教程、幼儿启蒙、效果展示。每个都是实时渲染，悬停即可播放。</p>
+        <p class="lead">棋类教程、算法可视化、数据看板、流程图……每个都是实时渲染，悬停即可播放。</p>
       </div>
       <div class="rail" id="rail" aria-label="精选作品"></div>
       <div class="rail-more reveal"><a class="btn btn-ghost" href="works.html">查看全部作品</a></div>
     </section>
 
+    <!-- ================= 写法对比 ================= -->
+    <section class="section alt" id="compare">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">写法对比</span>
+          <h2 class="h2">同一个动画，<br>少写四分之三。</h2>
+          <p class="lead">“A 沿一条曲线走到 B，带拖尾和缓动”。左边自己算每一帧，右边只写目标。</p>
+        </div>
+        <div class="split reveal">
+          <div class="codecard">
+            <div class="codebar codecard-bar"><span class="dots"><i></i><i></i><i></i></span><span>手写逐帧 · JavaScript</span></div>
+            <pre id="cmpOld" tabindex="0"></pre>
+          </div>
+          <div class="codecard cmp-new">
+            <div class="codebar codecard-bar"><span class="dots"><i></i><i></i><i></i></span><span>CodeMotion · XML</span></div>
+            <pre id="cmpNew" tabindex="0"></pre>
+          </div>
+        </div>
+        <div class="cmp-points">
+          <div class="reveal"><b>不写插值</b><p>曲线、缓动、拖尾都由引擎推算。</p></div>
+          <div class="reveal" style="--d:80"><b>不管帧率</b><p>时间轴是确定的，任何一帧都能精确回放。</p></div>
+          <div class="reveal" style="--d:160"><b>现成的讲解与导出</b><p>字幕、步骤跳转、视频和分镜不用另外做。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= 配色展示 ================= -->
+    <section class="section" id="palettes">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">配色</span>
+          <h2 class="h2">一行 palette，<br>换一种气质。</h2>
+          <p class="lead">23 套内置模板：低饱和的精选系列、Material、Pantone 年度色，以及开发者熟悉的 Nord、Dracula、Solarized。</p>
+        </div>
+        <div class="pal-grid pal-showcase" id="palShowcase"></div>
+        <div class="rail-more reveal"><a class="btn btn-ghost" href="docs.html#sec-palette">查看全部配色</a></div>
+      </div>
+    </section>
+
     <!-- ================= 三步上手 ================= -->
-    <section class="section" id="start">
+    <section class="section alt" id="start">
       <div class="wrap">
         <div class="section-head reveal">
           <span class="eyebrow">三步上手</span>
@@ -158,6 +209,17 @@
           <div class="step3 reveal" style="--d:90"><h3>写下步骤</h3><p>每个 <code>&lt;step say="…"&gt;</code> 写“让谁变成什么样”，字幕和停顿自动配好。</p></div>
           <div class="step3 reveal" style="--d:180"><h3>套配色，导出</h3><p>在 <code>&lt;scene&gt;</code> 上加一行 <code>palette</code>，然后导出视频或分镜。</p></div>
         </div>
+      </div>
+    </section>
+
+    <!-- ================= 常见问题 ================= -->
+    <section class="section" id="faq">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">常见问题</span>
+          <h2 class="h2">你可能想问。</h2>
+        </div>
+        <div class="faq reveal" id="faqList"></div>
       </div>
     </section>
 

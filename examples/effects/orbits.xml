@@ -1,4 +1,4 @@
-<scene width="800" height="680" grid="8x6" pad="20 20 110 20" bg="#05060f" bg2="#141a40" hold="0.4" read="4">
+<scene width="800" height="680" grid="8x6" pad="20 20 110 20" palette="graphite" hold="0.4" read="4">
   <!-- 轨道：用表达式生成"太阳系"。行星位置由公式算出来；path + smooth 让它们沿多边形近似的圆走，
        每颗行星的圈数、半径、颜色、大小都由循环变量决定——改 n 就能改行星数量 -->
   <let n="6"/>
@@ -8,7 +8,7 @@
   <layer name="orbit" z="0"/>
   <layer name="planet" z="5"/>
 
-  <circle id="sun" at="{cx},{cy}" size="1.1c" fill="#ffb300" layer="planet"/>
+  <circle id="sun" at="{cx},{cy}" size="1.1c" fill="warn" layer="planet"/>
 
   <step say="一个太阳，加上 {n} 条轨道" dur=".5" stagger=".1">
     <for var="i" in="1..n">
@@ -16,10 +16,10 @@
     </for>
   </step>
 
-  <step say="每条轨道上放一颗行星，颜色沿色相环渐变" dur=".4" stagger=".12">
+  <step say="每条轨道上放一颗行星，颜色取自当前配色" dur=".4" stagger=".12">
     <for var="i" in="1..n">
       <circle id="p{i}" at="{cx + (i * 0.39 + 0.45) * cos(i)},{cy + (i * 0.39 + 0.45) * sin(i)}"
-              size="{0.14 + (i % 3) * 0.06}c" fill="{hsl(i * 55, 80, 62)}" layer="planet"/>
+              size="{0.14 + (i % 3) * 0.06}c" fill="{pal(i - 1)}" layer="planet"/>
     </for>
   </step>
 
@@ -32,7 +32,7 @@
   </step>
 
   <step say="太阳脉动，整个太阳系一起亮起来" dur=".8">
-    <sun pulse=".18" fill="#ffd54f"/>
+    <sun pulse=".18" fill="text"/>
     <change id="p*" pulse=".3"/>
   </step>
 </scene>

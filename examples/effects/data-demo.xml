@@ -1,15 +1,15 @@
-<scene width="900" height="600" grid="5x4">
+<scene width="900" height="600" grid="5x4" palette="graphite">
   <data name="rows">水果,数量,颜色
-苹果,3,#ff6b6b
-香蕉,5,#ffd166
-橙子,4,#ff9f43
-葡萄,2,#7c6cff
-梨,6,#57d9a3</data>
+苹果,3,#F28B82
+香蕉,5,#E3B35A
+橙子,4,#E39A6B
+葡萄,2,#A78BFA
+梨,6,#7BC47F</data>
 
   <for var="i" in="1..{rows.length}">
     <rect id="card{i}" at="{i},1" w=".8c" h=".8c" fill="{rows[i-1].颜色}" flat="" radius="10"/>
     <text id="lbl{i}" at="{i},2" text="{rows[i-1].水果}" size=".3c"/>
-    <text id="num{i}" at="{i},3" text="{rows[i-1].数量}" size=".26c" fill="#9aa3c7"/>
+    <text id="num{i}" at="{i},3" text="{rows[i-1].数量}" size=".26c" fill="sub"/>
   </for>
 
   <step say="CSV 数据源：每一行数据生成一张卡片">

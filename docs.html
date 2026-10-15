@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>文档 · GridMotion</title>
-  <meta name="description" content="GridMotion 语法速查：场景、对象、步骤、效果、表达式、数据源、流式布局与 19 套配色模板。">
+  <title>文档 · CodeMotion</title>
+  <meta name="description" content="CodeMotion 语法速查：场景、对象、步骤、效果、表达式、数据源、流式布局与 23 套配色模板。">
   <meta name="theme-color" content="#fbfbfd">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <script>(function(){try{var t=localStorage.getItem('gm.theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='light';}})();</script>
@@ -44,13 +44,30 @@
           </div>
         </section>
 
+        <section id="sec-recipes">
+          <h2>常用配方</h2>
+          <p class="prose" style="font-size:16px;margin-bottom:16px">把下面的片段放进 <code>&lt;step&gt;</code> 或 <code>&lt;scene&gt;</code> 就能用，id、坐标按需替换。</p>
+          <div class="recipes" id="recipes"></div>
+        </section>
+
         <section id="sec-palette">
           <h2>配色模板</h2>
           <p class="prose" style="font-size:16px">语义色 <code>accent</code> <code>accent2</code> <code>text</code> <code>sub</code> <code>bg</code> <code>bg2</code> <code>warn</code> <code>good</code> <code>bad</code> 可直接写进 <code>fill</code>、<code>stroke</code>；表达式里用 <code>pal(i)</code> 按序号循环取系列色 c1~c8。</p>
           <div class="pal-grid" id="palGrid"></div>
         </section>
 
+        <section id="sec-ease">
+          <h2>缓动速查</h2>
+          <p class="prose" style="font-size:16px">在任何会动的属性上写 <code>ease="名字"</code>；不写则按引擎默认。同一个动作换缓动，手感完全不同。</p>
+          <div class="ease-list" id="easeList"></div>
+        </section>
+
         <section id="sec-ref"><h2>完整参考</h2><div class="prose" id="refBody"></div></section>
+
+        <section id="sec-faq">
+          <h2>常见问题</h2>
+          <div class="faq in-doc" id="docFaq"></div>
+        </section>
       </div>
     </div>
   </main>

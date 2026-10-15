@@ -1,4 +1,4 @@
-<scene width="900" height="640" grid="6x4" pad="40 30 130 30" palette="pantone-classic-blue" hold="1">
+<scene width="900" height="640" grid="6x4" pad="40 30 130 30" palette="porcelain" hold="1">
   <!-- 配色模板：scene 上写一行 palette="…"，背景、默认图形色、文字色、线条色、标签对比度全部自动跟随。
        工具栏的"配色…"下拉框可以一键换成 material / pantone-* / nord / dracula / macaron / neon …，这个示例不用改任何一行。
        循环里想按序号取色，用 pal(i)；想引用语义色，直接在 fill/stroke 里写 accent / accent2 / warn / good / bad / text / sub。 -->

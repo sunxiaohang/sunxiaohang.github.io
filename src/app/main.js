@@ -293,13 +293,13 @@ paletteSel.addEventListener('change', () => {
 // ---------- 导出 ----------
 $('btnPng').addEventListener('click', () => {
   stage.render();
-  $('stage').toBlob((b) => b && download(b, 'gridmotion.png'), 'image/png');
+  $('stage').toBlob((b) => b && download(b, 'codemotion.png'), 'image/png');
 });
 
 $('btnBoard').addEventListener('click', () => {
   const sheet = player.scene && renderStoryboard(player.scene);
   if (!sheet) { alert('场景里还没有 <step>，没有可导出的分镜'); return; }
-  sheet.toBlob((b) => b && download(b, 'gridmotion-storyboard.png'), 'image/png');
+  sheet.toBlob((b) => b && download(b, 'codemotion-storyboard.png'), 'image/png');
 });
 
 const btnWebm = $('btnWebm');
@@ -318,7 +318,7 @@ btnWebm.addEventListener('click', async () => {
         fps: 30, scale: 1, withAudio: true,
         onProgress: (r) => { btnWebm.textContent = `离线导出 ${Math.round(r * 100)}%`; },
       });
-      download(blob, 'gridmotion.webm');
+      download(blob, 'codemotion.webm');
     } catch (err) {
       alert(err.message);
     } finally {
@@ -343,7 +343,7 @@ btnWebm.addEventListener('click', async () => {
   btnWebm.classList.add('busy');
   btnWebm.textContent = '录制中… 点击停止';
   const blob = await rec.done;
-  download(blob, 'gridmotion.webm');
+  download(blob, 'codemotion.webm');
   exporting = null;
   player.pause();
   Object.assign(player, prev);

@@ -30,7 +30,7 @@ test('import：引入主题 + 组件库，语义色与 def 一起生效', async 
   const r = await compileWithImports(src, makeLoader('effects/theme-demo.xml'));
   assert.ok(r.scene, JSON.stringify(r.diagnostics));
   assert.equal(r.scene.byId.get('c').type, 'rect');
-  assert.deepEqual(r.scene.byId.get('c').init.fill.slice(0, 3).map(Math.round), [124, 108, 255]);
+  assert.deepEqual(r.scene.byId.get('c').init.fill.slice(0, 3).map(Math.round), [90, 169, 255]);
 });
 
 test('import：as 命名空间给 def 加前缀', async () => {

@@ -1,0 +1,38 @@
+<scene width="900" height="520" grid="9x3" pad="40 40 120 40" palette="graphite" hold="0.8" read="3">
+  <!-- 加载动效三件套：弹跳的三点、绕圈的圆点、慢慢填满的进度条。
+       全部是几何图形 + 缓动：jump 负责弹跳，orbit 负责绕圈，ease 决定“手感” -->
+  <layer name="bg" z="0"/>
+  <layer name="fx" z="5"/>
+
+  <step say="第一种：三点弹跳，最常见的“正在处理”" dur=".4" stagger=".1">
+    <for var="i" in="0..2">
+      <circle id="d{i}" at="{1.6 + i * 0.5},2" size=".26c" fill="{pal(i)}" layer="fx"/>
+    </for>
+  </step>
+
+  <step say="每个点比前一个晚一点跳起，就是波浪的节奏" dur=".9" stagger=".12">
+    <for var="i" in="0..2">
+      <change id="d{i}" jump=".5c" ease="bounce"/>
+    </for>
+  </step>
+
+  <step say="第二种：一个点绕圈，加上拖尾，速度感立刻出来" dur=".4">
+    <ring id="track" at="5,2" size="1.4c" stroke="sub" width="2" alpha=".4" layer="bg"/>
+    <circle id="o" at="5.7,2" size=".26c" fill="accent" layer="fx"/>
+  </step>
+
+  <step say="orbit 只写半径和圈数，轨道交给引擎" dur="2">
+    <o orbit=".7c" around="5,2" turns="1" ease="linear" trail="accent"/>
+  </step>
+
+  <step say="第三种：进度条。宽度从零涨到满，位置同步右移，看起来就是从左往右填充" dur="1.8">
+    <rect id="bar0" at="8,2" w="2c" h=".22c" radius="11" fill="bg2" stroke="sub" width="1" layer="bg"/>
+    <rect id="bar" at="7.025,2" w=".05c" h=".22c" radius="11" fill="good" layer="fx"/>
+    <bar at="8,2" w="2c" ease="soft" delay=".4" dur="1.4"/>
+  </step>
+
+  <step say="三种加载动效，换配色就换了气质" dur=".6">
+    <change id="d*" pulse=".2"/>
+    <o pulse=".4"/>
+  </step>
+</scene>

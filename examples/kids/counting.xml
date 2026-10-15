@@ -1,14 +1,14 @@
-<scene width="800" height="640" grid="10x2" pad="120 30 130 30" bg="#fff3e0" bg2="#ffe0b2" hold="0.6" read="3" shadow="false" glow="false">
-  <!-- 数数 1~10：每步多出一个苹果，数字同步变大。苹果 = 红圆 + 绿叶（def 模板） -->
+<scene width="800" height="640" grid="10x2" pad="120 30 130 30" palette="champagne" hold="0.6" read="3" shadow="false" glow="false">
+  <!-- 数数 1~10：每步多出一个苹果，数字同步变大。苹果 = 红圆 + 绿叶（def 模板）。配色用 champagne 的砖红与苔绿，低饱和更耐看 -->
   <layer name="fruit" z="5"/>
   <layer name="num" z="10"/>
 
   <def name="苹果" cx="1" cy="1">
-    <circle id="{id}_b" at="{cx},{cy}" size=".7c" fill="#f44336" layer="fruit" group="{id}"/>
-    <ellipse id="{id}_l" at="{cx + 0.1},{cy - 0.36}" w=".22c" h=".12c" fill="#43a047" rot="-25" layer="fruit" group="{id}"/>
+    <circle id="{id}_b" at="{cx},{cy}" size=".7c" fill="c3" layer="fruit" group="{id}"/>
+    <ellipse id="{id}_l" at="{cx + 0.1},{cy - 0.36}" w=".22c" h=".12c" fill="good" rot="-25" layer="fruit" group="{id}"/>
   </def>
 
-  <text id="大数" px="400,60" size="1.1c" fill="#ff7043" text="0" layer="num"/>
+  <text id="大数" px="400,60" size="1.1c" fill="accent" text="0" layer="num"/>
 
   <step say="我们一起来数苹果，从 1 数到 10" hold="1">
     <大数 text="0"/>

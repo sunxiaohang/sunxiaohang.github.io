@@ -1,0 +1,34 @@
+<scene width="900" height="560" grid="12x5" pad="30 40 120 40" palette="graphite" hold="0.7" read="4">
+  <!-- 正弦波：30 个点沿 y = sin(x) 排开；然后让相位整体前进，波就“流”起来了。
+       每个点的颜色按序号渐变取自系列色，纯表达式生成，没有一个手写坐标 -->
+  <let n="30"/>
+
+  <layer name="axis" z="0"/>
+  <layer name="dots" z="5"/>
+
+  <line from="0.6,3" to="12.4,3" stroke="sub" width="1.5" alpha=".45" layer="axis" in="none"/>
+
+  <step say="y = sin(x)：先画出坐标轴上的 {n} 个采样点" dur=".4" stagger=".03">
+    <for var="i" in="0..{n - 1}">
+      <circle id="d{i}" at="{1 + i * 0.37},{3 - 1.1 * sin(i * 0.42)}" size=".2c" fill="{pal(i % 3)}" layer="dots"/>
+    </for>
+  </step>
+
+  <step say="把相位向前推一点，每个点沿着新的正弦值上下移动" dur="1.6" stagger=".02">
+    <for var="i" in="0..{n - 1}">
+      <change id="d{i}" at="{1 + i * 0.37},{3 - 1.1 * sin(i * 0.42 + 2)}" ease="soft"/>
+    </for>
+  </step>
+
+  <step say="再推一次：波形向左平移，这就是“行波”" dur="1.6" stagger=".02">
+    <for var="i" in="0..{n - 1}">
+      <change id="d{i}" at="{1 + i * 0.37},{3 - 1.1 * sin(i * 0.42 + 4)}" ease="soft"/>
+    </for>
+  </step>
+
+  <step say="叠加第二个频率，波形变成了更复杂的合成波" dur="1.6" stagger=".02">
+    <for var="i" in="0..{n - 1}">
+      <change id="d{i}" at="{1 + i * 0.37},{3 - 0.8 * sin(i * 0.42 + 4) - 0.5 * sin(i * 1.1)}" ease="soft"/>
+    </for>
+  </step>
+</scene>

@@ -1,4 +1,4 @@
-<scene width="800" height="500" grid="8x5" pad="20 30 90 30" palette="material" hold="1">
+<scene width="800" height="500" grid="8x5" pad="20 30 90 30" palette="porcelain" hold="1">
   <let n="8"/>
 
   <for var="i" in="1..n">

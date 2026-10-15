@@ -27,4 +27,4 @@ createServer(async (req, res) => {
   } catch {
     res.writeHead(404).end('Not found');
   }
-}).listen(PORT, () => console.log(`GridMotion 编辑器：http://localhost:${PORT}`));
+}).listen(PORT, () => console.log(`CodeMotion 编辑器：http://localhost:${PORT}`));

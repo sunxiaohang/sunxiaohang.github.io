@@ -1,6 +1,7 @@
-<scene width="800" height="700" grid="4x2" pad="60 20 160 20" bg="#fff6e5" bg2="#ffe9c7" hold="0.8" read="3" shadow="false" glow="false">
+<scene width="800" height="700" grid="4x2" pad="60 20 160 20" palette="champagne" hold="0.8" read="3" shadow="false" glow="false">
   <!-- 幼儿识字：一字一卡。卡片是 def 模板（白卡 + 大字 + 拼音），用 for 摆出 8 张。
-       读到哪个字，那张卡就被"点亮"：卡片变成该字的主题色、字变白——暂停在任意一步，一眼就知道在讲哪个字。 -->
+       读到哪个字，那张卡就被"点亮"：卡片变成该字的主题色、字变白——暂停在任意一步，一眼就知道在讲哪个字。
+       主题色取自 champagne 的系列色 pal(i)，低饱和，不会花。 -->
   <let chars="{['日','月','山','水','火','木','田','口']}"/>
   <let pinyin="{['rì','yuè','shān','shuǐ','huǒ','mù','tián','kǒu']}"/>
   <let words="{['太阳','月亮','大山','河水','火苗','大树','田地','嘴巴']}"/>
@@ -8,16 +9,16 @@
   <layer name="card" z="0"/>
   <layer name="txt" z="10"/>
 
-  <def name="字卡" col="1" row="1" ch="" py="" tint="#ff8a5c">
-    <rect id="{id}_bg" at="{col},{row}" w=".92c" h=".96c" fill="#ffffff" stroke="{tint}" width="6" radius="28" flat="" layer="card" group="{id}"/>
+  <def name="字卡" col="1" row="1" ch="" py="" tint="accent">
+    <rect id="{id}_bg" at="{col},{row}" w=".92c" h=".96c" fill="bg2" stroke="{tint}" width="3" radius="28" flat="" layer="card" group="{id}"/>
     <text id="{id}_ch" at="{col},{row - 0.08}" size=".6c" fill="{tint}" text="{ch}" layer="txt" group="{id}"/>
-    <text id="{id}_py" at="{col},{row + 0.34}" size=".17c" fill="#8a8a99" text="{py}" layer="txt" group="{id}"/>
+    <text id="{id}_py" at="{col},{row + 0.34}" size=".17c" fill="sub" text="{py}" layer="txt" group="{id}"/>
   </def>
 
   <step say="我们来认识八个汉字，一边看一边跟着读" stagger=".12" dur=".4">
     <for var="c" index="i" in="{chars}">
       <字卡 id="k{i}" col="{(i % 4) + 1}" row="{floor(i / 4) + 1}" ch="{c}" py="{pinyin[i]}"
-            tint="{hsl(i * 45, 80, 52)}"/>
+            tint="{pal(i)}"/>
     </for>
   </step>
 
@@ -25,20 +26,20 @@
   <for var="w" index="i" in="{words}">
     <step say="{chars[i]}（{pinyin[i]}）—— {w}" dur=".4">
       <if test="i > 0">
-        <change id="k{i - 1}_bg" fill="#ffffff"/>
-        <change id="k{i - 1}_ch" fill="{hsl((i - 1) * 45, 80, 52)}"/>
-        <change id="k{i - 1}_py" fill="#8a8a99"/>
+        <change id="k{i - 1}_bg" fill="bg2"/>
+        <change id="k{i - 1}_ch" fill="{pal(i - 1)}"/>
+        <change id="k{i - 1}_py" fill="sub"/>
       </if>
-      <change id="k{i}_bg" fill="{hsl(i * 45, 80, 52)}" pulse=".1"/>
-      <change id="k{i}_ch" fill="#ffffff" pulse=".25"/>
-      <change id="k{i}_py" fill="#ffffff"/>
+      <change id="k{i}_bg" fill="{pal(i)}" pulse=".1"/>
+      <change id="k{i}_ch" fill="bg2" pulse=".25"/>
+      <change id="k{i}_py" fill="bg2"/>
     </step>
   </for>
 
   <step say="八个字都认识了，你真棒！" dur=".8" stagger=".05">
-    <change id="k7_bg" fill="#ffffff"/>
-    <change id="k7_ch" fill="{hsl(7 * 45, 80, 52)}"/>
-    <change id="k7_py" fill="#8a8a99"/>
+    <change id="k7_bg" fill="bg2"/>
+    <change id="k7_ch" fill="{pal(7)}"/>
+    <change id="k7_py" fill="sub"/>
     <for var="i" in="0..7">
       <change id="k{i}_ch" jump=".25c"/>
     </for>

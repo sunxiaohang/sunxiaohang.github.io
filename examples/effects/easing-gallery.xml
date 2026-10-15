@@ -1,4 +1,4 @@
-<scene width="800" height="860" grid="10x8" pad="40 40 140 40" bg="#0e1020" bg2="#1c2040" hold="0.9" read="4">
+<scene width="800" height="860" grid="10x8" pad="40 40 140 40" palette="graphite" hold="0.9" read="4">
   <!-- 缓动展览：每种缓动一行（共 8 行），每行一颗球，从左端跑到右端，区别只在 ease。
        先让 8 颗球同时出发"赛跑"，一眼看出快慢差异；再逐行框出来，球退回起点后单独重播一遍。
        框 = 当前讲的那一行：左边把行名圈进去，右边留出余量给过冲的缓动（back / spring / elastic），
@@ -16,18 +16,18 @@
     <line from="{x0},{i + 1}" to="{x1},{i + 1}" stroke="rgba(255,255,255,.12)" width="2" in="none" layer="rail"/>
     <circle id="s{i}" at="{x0},{i + 1}" size=".1c" fill="rgba(255,255,255,.25)" in="none" layer="rail"/>
     <circle id="e{i}" at="{x1},{i + 1}" size=".1c" fill="rgba(255,255,255,.25)" in="none" layer="rail"/>
-    <text id="nm{i}" at="1.35,{i + 1}" text="{k}" size=".22c" fill="#9aa0bd" layer="rail" in="fade"/>
+    <text id="nm{i}" at="1.35,{i + 1}" text="{k}" size=".22c" fill="sub" layer="rail" in="fade"/>
   </for>
 
   <step say="缓动 = 速度的变化方式。8 颗球同一起点、同样时长，只有 ease 不同" dur=".4" stagger=".05" hold=".4">
     <for var="k" index="i" in="{names}">
-      <circle id="b{i}" at="{x0},{i + 1}" size=".3c" fill="{hsl(i * 44, 80, 64)}" layer="ball"/>
+      <circle id="b{i}" at="{x0},{i + 1}" size=".3c" fill="{pal(i)}" layer="ball"/>
     </for>
   </step>
 
   <step say="同时出发：谁先到、谁冲过头、谁在终点抖，一目了然" dur="2.4" hold="1">
     <for var="k" index="i" in="{names}">
-      <change id="b{i}" at="{x1},{i + 1}" ease="{k}" trail="{hsl(i * 44, 80, 64)}"/>
+      <change id="b{i}" at="{x1},{i + 1}" ease="{k}" trail="{pal(i)}"/>
     </for>
   </step>
 
@@ -35,7 +35,7 @@
   <for var="k" index="i" in="{names}">
     <step say="{says[i]}" dur=".4" hold="1">
       <if test="i > 0"><change id="hl{i - 1}" out/></if>
-      <rect id="hl{i}" at="5.05,{i + 1}" w="8.9c" h=".8c" fill="rgba(255,255,255,.07)" stroke="{hsl(i * 44, 80, 64)}"
+      <rect id="hl{i}" at="5.05,{i + 1}" w="8.9c" h=".8c" fill="rgba(255,255,255,.07)" stroke="{pal(i)}"
             width="3" radius="18" layer="focus"/>
       <change id="b{i}" at="{x0},{i + 1}" dur=".3" ease="soft"/>
       <change id="b{i}" at="{x1},{i + 1}" delay=".5" dur="1.8" ease="{k}"/>

@@ -3,6 +3,9 @@
     { "id": "chess", "name": "棋类教程", "desc": "棋盘、棋子、棋谱：压测网格、分组、图层、箭头标注、模板与表达式" },
     { "id": "kids", "name": "幼儿启蒙", "desc": "识字、识图、数数、四则运算、九九表：压测大字号、循环生成、变量驱动、字幕阅读时长" },
     { "id": "effects", "name": "效果展示", "desc": "缓动、轨道、关键帧、颜色与文字：压测补间与效果的多样性" },
+    { "id": "algo", "name": "算法可视化", "desc": "排序、查找：用柱子和格子把算法的每一步讲清楚" },
+    { "id": "math", "name": "数学与图形", "desc": "正弦波、数列：表达式生成成批图形，用相位和公式驱动动画" },
+    { "id": "product", "name": "产品与图表", "desc": "数据看板、流程图、路线图、加载动效：产品演示与汇报常用的版式" },
     { "id": "site", "name": "站点演示", "desc": "官网首页与文档用的演示场景，不在作品库展示", "hidden": true }
   ],
   "examples": [
@@ -26,6 +29,17 @@
     { "id": "theme-demo", "category": "effects", "file": "effects/theme-demo.xml", "name": "主题与组件", "covers": ["import", "theme", "def", "semantic-color"] },
     { "id": "palette-demo", "category": "effects", "file": "effects/palette-demo.xml", "name": "配色模板", "covers": ["palette", "theme", "semantic-color", "for", "expr"] },
     { "id": "data-demo", "category": "effects", "file": "effects/data-demo.xml", "name": "数据驱动", "covers": ["data", "csv", "for", "member-access"] },
+
+    { "id": "bubble-sort", "category": "algo", "file": "algo/bubble-sort.xml", "name": "冒泡排序", "covers": ["let", "nested-array", "for", "index", "label", "change"] },
+    { "id": "binary-search", "category": "algo", "file": "algo/binary-search.xml", "name": "二分查找", "covers": ["for", "index", "ring", "alpha-fade", "wildcard"] },
+
+    { "id": "sine-wave", "category": "math", "file": "math/sine-wave.xml", "name": "正弦波", "covers": ["sin", "for", "expr", "pal", "ease"] },
+    { "id": "fibonacci", "category": "math", "file": "math/fibonacci.xml", "name": "斐波那契数列", "covers": ["array", "for", "if", "ring", "label"] },
+
+    { "id": "dashboard", "category": "product", "file": "product/dashboard.xml", "name": "数据看板", "covers": ["data", "csv", "for", "member-access", "drop"] },
+    { "id": "request-flow", "category": "product", "file": "product/request-flow.xml", "name": "请求流程图", "covers": ["arrow", "path", "trail", "for", "pal"] },
+    { "id": "roadmap", "category": "product", "file": "product/roadmap.xml", "name": "产品路线图", "covers": ["line", "for", "index", "ternary", "text"] },
+    { "id": "loaders", "category": "product", "file": "product/loaders.xml", "name": "加载动效", "covers": ["orbit", "jump", "bounce", "trail", "ease"] },
 
     { "id": "site-hero", "category": "site", "file": "site/hero.xml", "name": "首页主视觉", "covers": ["palette", "orbit", "pal"] },
     { "id": "site-path", "category": "site", "file": "site/path.xml", "name": "沿路径移动", "covers": ["path", "smooth", "trail"] },

@@ -1,0 +1,35 @@
+<scene width="900" height="540" grid="9x3" pad="50 40 120 40" palette="champagne" shadow="false" glow="false" hold="0.8" read="4">
+  <!-- 产品路线图：一条时间轴，五个里程碑上下交错放标签。进度线沿轴线向前延伸，延伸到哪个节点哪个节点就被点亮 -->
+  <let ms="{['原型','内测','公测','商用','生态']}"/>
+  <let qs="{['Q1','Q2','Q3','Q4','次年']}"/>
+
+  <layer name="axis" z="0"/>
+  <layer name="dots" z="5"/>
+  <layer name="txt" z="8"/>
+
+  <line id="轴" from="0.8,2" to="9.2,2" stroke="sub" width="3" alpha=".5" layer="axis"/>
+
+  <step say="五个里程碑，从原型一路走到生态" dur=".5" stagger=".12">
+    <for var="m" index="i" in="{ms}">
+      <circle id="m{i}" at="{i * 1.75 + 1.5},2" size=".36c" fill="bg2" stroke="sub" width="3" layer="dots"/>
+      <text id="t{i}" at="{i * 1.75 + 1.5},{i % 2 == 0 ? 1.2 : 2.8}" text="{qs[i]} · {m}" size=".26c" fill="text" layer="txt"/>
+    </for>
+  </step>
+
+  <step say="从起点开始，一段一段点亮时间轴" dur=".4">
+    <line id="prog" from="1.5,2" to="1.5,2" stroke="accent" width="4" layer="axis"/>
+  </step>
+
+  <for var="m" index="i" in="{ms}">
+    <step say="{qs[i]}：{m}" dur=".8" hold="0.5">
+      <prog to="{i * 1.75 + 1.5},2" ease="soft"/>
+      <change id="m{i}" fill="accent" stroke="accent" pulse=".25" delay=".5"/>
+    </step>
+  </for>
+
+  <step say="全部点亮：路线图走完了一圈" dur=".6" stagger=".05">
+    <for var="i" in="0..4">
+      <change id="t{i}" fill="accent" pulse=".08"/>
+    </for>
+  </step>
+</scene>

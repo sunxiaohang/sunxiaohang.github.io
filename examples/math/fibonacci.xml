@@ -1,0 +1,31 @@
+<scene width="860" height="600" grid="8x4" pad="50 40 130 40" palette="champagne" shadow="false" glow="false" hold="0.7" read="4">
+  <!-- 斐波那契：每一项等于前两项之和。柱高 = 数值；每一步先圈出前两项，再长出新的一项 -->
+  <let fib="{[1,1,2,3,5,8,13]}"/>
+
+  <layer name="bars" z="5"/>
+  <layer name="marks" z="8"/>
+
+  <line from="0.5,4.5" to="7.5,4.5" stroke="sub" width="2" alpha=".45" layer="bars" in="none"/>
+
+  <step say="斐波那契数列从 1、1 开始，每一项都是前两项之和" dur=".5" stagger=".1">
+    <for var="k" in="0..1">
+      <rect flat="" id="f{k}" at="{k + 1},{4.5 - fib[k] * 0.12 - 0.1}" w=".7c" h="{fib[k] * 0.24 + 0.2}c" radius="10" fill="c1" label="{fib[k]}" layer="bars"/>
+    </for>
+  </step>
+
+  <for var="k" in="2..6">
+    <step say="{fib[k - 2]} + {fib[k - 1]} = {fib[k]}：第 {k + 1} 项" dur=".6" hold="0.5">
+      <ring id="a{k}" at="{k - 1},{4.5 - fib[k - 2] * 0.12 - 0.1}" size="{0.9 + fib[k - 2] * 0.02}c" stroke="warn" width="3" layer="marks"/>
+      <ring id="b{k}" at="{k},{4.5 - fib[k - 1] * 0.12 - 0.1}" size="{0.9 + fib[k - 1] * 0.02}c" stroke="warn" width="3" layer="marks"/>
+      <rect flat="" id="f{k}" at="{k + 1},{4.5 - fib[k] * 0.12 - 0.1}" w=".7c" h="{fib[k] * 0.24 + 0.2}c" radius="10" fill="{pal(k)}" label="{fib[k]}" layer="bars" delay=".25"/>
+      <if test="k > 2">
+        <change id="a{k - 1} b{k - 1}" out/>
+      </if>
+    </step>
+  </for>
+
+  <step say="相邻两项的比值越来越接近 1.618——著名的黄金分割" dur=".7">
+    <change id="a6 b6" out/>
+    <change id="f*" pulse=".1"/>
+  </step>
+</scene>

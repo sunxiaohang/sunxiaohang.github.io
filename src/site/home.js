@@ -12,7 +12,7 @@ initReveal();
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const autoPalette = () => (currentTheme() === 'dark' ? 'material-dark' : 'material');
+const autoPalette = () => (currentTheme() === 'dark' ? 'graphite' : 'porcelain');
 const ICON_PLAY = '<svg viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg>';
 const ICON_PAUSE = '<svg viewBox="0 0 24 24"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>';
 
@@ -28,7 +28,7 @@ $('statWorks').textContent = String(manifest.examples.filter((e) => !hiddenCats.
 $('statPal').textContent = String(PALETTES.length);
 
 // ================= Hero：实时太阳系 + 配色切换 =================
-const SWATCHES = ['auto', 'pantone-classic-blue', 'pantone-living-coral', 'pantone-greenery', 'macaron', 'sunset', 'ocean', 'neon', 'dracula'];
+const SWATCHES = ['auto', 'aurora', 'champagne', 'nord', 'pantone-classic-blue', 'pantone-mocha-mousse', 'ocean', 'dracula', 'solarized-light'];
 const hero = { file: 'site/hero.xml', src: '', pick: 'auto', pv: null };
 
 const swBox = $('heroSwatches');
@@ -113,13 +113,76 @@ new IntersectionObserver(([en]) => { if (!en.isIntersecting) show.pv.pause(); el
 $('miniCode').innerHTML = highlightLines(
   '<step say="A 走到 B">\n  <a at="6,4" ease="back" trail/>\n  <b pulse=".2"/>\n</step>',
 ).map((h) => `<div>${h}</div>`).join('');
-$('palStrips').innerHTML = ['pantone-classic-blue', 'pantone-living-coral', 'dracula', 'macaron']
+$('palStrips').innerHTML = ['porcelain', 'graphite', 'aurora', 'champagne']
   .map((id) => `<div class="pal-strip" title="${esc(getPalette(id).label)}">${getPalette(id).series.map((c) => `<i style="background:${c}"></i>`).join('')}</div>`).join('');
 
 // ================= 作品精选 =================
-const FEATURED = ['gomoku', 'orbits', 'easing-gallery', 'palette-demo', 'xiangqi', 'times-table'];
+const FEATURED = ['gomoku', 'sine-wave', 'bubble-sort', 'dashboard', 'orbits', 'request-flow', 'easing-gallery', 'roadmap', 'xiangqi', 'literacy'];
 const catName = (id) => manifest.categories.find((c) => c.id === id)?.name || id;
 for (const id of FEATURED) {
   const ex = manifest.examples.find((e) => e.id === id);
   if (ex) $('rail').appendChild(createCard(ex, catName(ex.category)));
 }
+
+// ================= 适用场景 =================
+const CASES = [
+  { id: 'literacy', tag: '教学课件', title: '课堂上的每一步', desc: '识字、算术、棋谱：每一步配一句字幕，暂停在任何一帧都是一页完整的讲义。' },
+  { id: 'bubble-sort', tag: '算法讲解', title: '把算法讲成动画', desc: '柱子互换、格子淡出、指针移动。数据换一组，动画自己重排。' },
+  { id: 'dashboard', tag: '数据汇报', title: '会动的数据看板', desc: 'CSV 进去，卡片和图表出来；周报月报换一份数据就是新的一期。' },
+  { id: 'request-flow', tag: '产品演示', title: '流程与架构一目了然', desc: '节点、箭头、沿路径流动的数据包，把一次请求从头到尾讲清楚。' },
+];
+for (const c of CASES) {
+  const ex = manifest.examples.find((e) => e.id === c.id);
+  if (!ex) continue;
+  const card = createCard(ex, c.tag);
+  card.classList.add('case');
+  card.querySelector('.work-body').innerHTML = `<div class="work-cat">${esc(c.tag)}</div><h3>${esc(c.title)}</h3><p>${esc(c.desc)}</p>`;
+  $('casesGrid').appendChild(card);
+}
+
+// ================= 写法对比 =================
+const OLD_CODE = [
+  '// 手写逐帧：自己插值、自己画拖尾、自己管时间',
+  "const pts = [[1,4],[2.6,1.6],[6,1.6],[7.2,4]];",
+  'const DUR = 1800;',
+  'function frame(now) {',
+  '  const t = Math.min((now - t0) / DUR, 1);',
+  '  const k = easeInOut(t);',
+  '  const p = bezierThrough(pts, k);',
+  '  ctx.clearRect(0, 0, W, H);',
+  '  drawTrail(ctx, trail.push(p); trail);',
+  '  drawCircle(ctx, p.x * cell, p.y * cell, r);',
+  '  if (t < 1) requestAnimationFrame(frame);',
+  '}',
+  'requestAnimationFrame((n) => { t0 = n; frame(n); });',
+];
+$('cmpOld').innerHTML = OLD_CODE.map((l) => `<div class="ln${l.startsWith('//') ? ' tk-c' : ''}">${esc(l)}</div>`).join('');
+$('cmpNew').innerHTML = highlightLines(
+  '<step say="A 要去 B" dur="1.8">\n  <a path="1,4 2.6,1.6 6,1.6 7.2,4"\n     smooth trail ease="soft"/>\n</step>',
+).map((h) => `<div class="ln">${h || ' '}</div>`).join('');
+
+// ================= 配色展示 =================
+const SHOWCASE = ['porcelain', 'graphite', 'aurora', 'champagne', 'nord', 'dracula', 'solarized-light', 'pantone-mocha-mousse'];
+$('palShowcase').innerHTML = SHOWCASE.map((id) => {
+  const p = getPalette(id);
+  const t = p.tokens;
+  return `<a class="pal-card" href="docs.html#sec-palette" style="text-decoration:none">
+    <div class="pal-top" style="background:${t.bg};color:${t.text}">
+      <b>${esc(p.label)}</b>
+      <div class="pal-dots">${p.series.map((c) => `<i style="background:${c}"></i>`).join('')}</div>
+      <div class="pal-bars"><i style="background:${t.accent};width:62%"></i><i style="background:${t.accent2};width:38%"></i><i style="background:${t.bg2};width:50%;box-shadow:0 0 0 1px ${t.sub}55"></i></div>
+    </div>
+    <div class="pal-meta"><code>palette="${esc(p.name)}"</code></div>
+  </a>`;
+}).join('');
+
+// ================= 常见问题 =================
+const FAQ = [
+  ['需要安装什么吗？', '不需要。CodeMotion 是纯前端项目，打开网页就能写、能预览、能导出，没有任何依赖。'],
+  ['我的脚本会上传到服务器吗？', '不会。脚本只保存在你自己浏览器的本地存储里，所有渲染和导出都在本机完成。'],
+  ['能导出什么？', 'WebM 视频（离线逐帧或实时录制）、分镜长图、当前帧 PNG，以及一条可以分享的链接。'],
+  ['和手写 Canvas 或 CSS 动画相比有什么好处？', '你只描述“画面要变成什么样”，补间、缓动、轨道和字幕由引擎推算；时间轴是确定的，任意一帧都能精确回放，方便做分步讲解。'],
+  ['适合做什么，不适合做什么？', '适合几何图形驱动的讲解类动画：教学、算法、流程、数据图表。不适合需要位图素材、复杂角色动画或视频剪辑的场景。'],
+  ['视频导出需要什么浏览器？', '推荐最新版 Chrome 或 Edge。其他浏览器仍可正常预览，也可以导出分镜长图和 PNG。'],
+];
+$('faqList').innerHTML = FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join('');

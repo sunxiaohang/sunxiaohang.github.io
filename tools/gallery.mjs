@@ -8,7 +8,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const manifest = JSON.parse(readFileSync(join(root, 'examples/manifest.json'), 'utf8'));
 
 const html = `<!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><title>GridMotion Gallery</title>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>CodeMotion Gallery</title>
 <style>
   body { margin: 0; background: #0b0c15; color: #e8eaf6; font: 14px system-ui, "Microsoft YaHei UI", sans-serif; padding: 20px; }
   h1 { font-size: 18px; } h2 { margin: 28px 0 6px; font-size: 16px; color: #7fe3d3; }
@@ -18,7 +18,7 @@ const html = `<!doctype html>
   canvas { border-radius: 6px; box-shadow: 0 0 0 1px #22243a; width: 260px; display: block; }
   .bad { color: #ff6b8a; }
 </style></head><body>
-<h1>GridMotion Gallery</h1><div id="root"></div>
+<h1>CodeMotion Gallery</h1><div id="root"></div>
 <script type="module">
 import { compileWithImports, evaluate, lint } from './src/core/index.js';
 import { draw } from './src/render/canvas2d.js';

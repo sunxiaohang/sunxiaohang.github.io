@@ -1,18 +1,18 @@
-<scene width="800" height="800" grid="9x9" pad="70 20 110 60" bg="#fffde7" bg2="#fff59d" hold="0.5" read="4" shadow="false" glow="false">
+<scene width="800" height="800" grid="9x9" pad="70 20 110 60" palette="porcelain" hold="0.5" read="4" shadow="false" glow="false">
   <!-- 九九乘法表：9x9 格，第 r 行第 c 列放 r×c（只显示 c≤r 的下三角，和课本一样）。
-       嵌套 for 一次生成 45 个方块；颜色按行着色；逐行点亮并读出口诀 -->
+       嵌套 for 一次生成 45 个方块；同一色相、越往下越深，逐行点亮并读出口诀 -->
   <layer name="cells" z="1"/>
   <layer name="txt" z="10"/>
 
-  <grid id="表格" style="cell" stroke="#d4c06a" width="2" layer="cells"/>
+  <grid id="表格" style="cell" stroke="#d2d2d7" width="1.5" layer="cells"/>
 
   <step say="九九乘法表：横着看、竖着看，都有规律" hold="0.8"/>
 
   <step say="每一行从 1 乘到那一行的数" dur=".3" stagger=".012">
     <for var="r" in="1..9">
       <for var="c" in="1..r">
-        <rect id="t{r}_{c}" at="{c},{r}" w=".88c" h=".88c" fill="{hsl(r * 38, 75, 78)}" radius="10" layer="cells"
-              label="{c * r}" color="#4a3b00" group="row{r}"/>
+        <rect id="t{r}_{c}" at="{c},{r}" w=".88c" h=".88c" fill="{hsl(214, 70, 97 - r * 3.4)}" radius="10" layer="cells"
+              label="{c * r}" color="text" group="row{r}"/>
       </for>
     </for>
   </step>
@@ -28,7 +28,7 @@
 
   <step say="看对角线：1×1、2×2、3×3……都是「平方数」" dur=".5" stagger=".08">
     <for var="k" in="1..9">
-      <change id="t{k}_{k}" fill="#ef5350" color="#ffffff" pulse=".3"/>
+      <change id="t{k}_{k}" fill="bad" color="bg2" pulse=".3"/>
     </for>
   </step>
 

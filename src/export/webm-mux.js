@@ -156,8 +156,8 @@ export class WebmMuxer {
 
     const info = el(ID.Info, concat([
       el(ID.TimecodeScale, writeUint(1_000_000, 4)), // 1ms
-      el(ID.MuxingApp, str('GridMotion')),
-      el(ID.WritingApp, str('GridMotion')),
+      el(ID.MuxingApp, str('CodeMotion')),
+      el(ID.WritingApp, str('CodeMotion')),
       el(ID.Duration, writeFloat32(this.maxTs)),
     ]));
 

@@ -1,0 +1,31 @@
+<scene width="800" height="620" grid="5x4" pad="40 40 130 40" palette="graphite" hold="0.7" read="4">
+  <!-- 冒泡排序：5 根柱子，每次比较相邻两根，左边更大就交换。
+       swaps 的每一项是 [左边的值, 右边的值, 左边所在列]：交换后右边的值落到该列，左边的值落到下一列。
+       柱高 = 数值，所有柱子共用同一条基线，所以交换时只需要改 x -->
+  <let swaps="{[[5,3,1],[5,4,2],[5,1,3],[5,2,4],[4,1,2],[4,2,3],[3,1,1],[3,2,2]]}"/>
+  <let order="{[5,3,4,1,2]}"/>
+
+  <layer name="base" z="0"/>
+  <layer name="bars" z="5"/>
+
+  <line from="0.6,4.4" to="5.4,4.4" stroke="sub" width="2" alpha=".5" layer="base" in="none"/>
+
+  <step say="冒泡排序：反复比较相邻两个数，大的往右换，像气泡一样浮到最右" dur=".5" stagger=".08">
+    <for var="v" index="i" in="{order}">
+      <rect id="v{v}" at="{i + 1},{4.4 - v * 0.34}" w=".72c" h="{v * 0.68}c" radius="12" fill="c6" label="{v}" layer="bars"/>
+    </for>
+  </step>
+
+  <for var="s" index="k" in="{swaps}">
+    <step say="第 {k + 1} 次交换：{s[0]} 比 {s[1]} 大，两者互换位置" dur=".6" hold="0.5">
+      <change id="v{s[0]}" at="{s[2] + 1},{4.4 - s[0] * 0.34}" fill="accent" ease="soft"/>
+      <change id="v{s[1]}" at="{s[2]},{4.4 - s[1] * 0.34}" fill="accent2" ease="soft"/>
+    </step>
+  </for>
+
+  <step say="没有需要交换的相邻对了，排序完成：1 2 3 4 5" dur=".7" stagger=".08">
+    <for var="v" in="1..5">
+      <change id="v{v}" fill="good" pulse=".12"/>
+    </for>
+  </step>
+</scene>

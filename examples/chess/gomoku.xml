@@ -1,10 +1,10 @@
-<scene width="720" height="820" grid="15x15" pad="40 30 120 30" bg="#12131f" bg2="#1f2238" hold="0.8">
+<scene width="720" height="820" grid="15x15" pad="40 30 120 30" palette="graphite" hold="0.8">
   <!-- 五子棋：15x15 交叉点；棋谱用列表驱动，说明文字与手数一一对应 -->
   <def name="黑" is="circle" size=".86c" fill="#17171f" stroke="#4a4a58" width="1.5" layer="stones"/>
   <def name="白" is="circle" size=".86c" fill="#f6f2e8" stroke="#a39e90" width="1.5" layer="stones"/>
 
   <layer name="board" z="0">
-    <grid fill="#e3b963" stroke="#7a5a22" width="1.3" dots="4,4 12,4 8,8 4,12 12,12" color="#8a8fa8" labels/>
+    <grid fill="#D9BC8A" stroke="#86693A" width="1.3" dots="4,4 12,4 8,8 4,12 12,12" color="#7C6A48" labels/>
   </layer>
   <layer name="stones" z="10"/>
   <layer name="marks" z="20"/>
@@ -22,7 +22,7 @@
       <else><白 at="{m}"/></else>
       <if test="k == 0"><tip out/></if>
       <if test="k == 4">
-        <line id="three" from="8,8" to="10,8" stroke="#ff4d6d" width="5" layer="marks" delay=".3"/>
+        <line id="three" from="8,8" to="10,8" stroke="bad" width="5" layer="marks" delay=".3"/>
         <note id="n3" at="9,8" text="活三" side="top" layer="marks" delay=".5"/>
       </if>
       <if test="k == 6">
@@ -37,7 +37,7 @@
     <n3 out/>
     <three from="7,8" to="11,8" width="8"/>
     <for var="x" in="7..11">
-      <ring at="{x},8" size="1.15c" stroke="#ffd166" layer="marks"/>
+      <ring at="{x},8" size="1.15c" stroke="warn" layer="marks"/>
     </for>
   </step>
 </scene>

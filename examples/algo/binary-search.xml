@@ -1,0 +1,35 @@
+<scene width="800" height="520" grid="8x3" pad="60 30 120 30" palette="aurora" hold="0.8" read="4">
+  <!-- 二分查找：在有序数组里找 13。每次看中间那个数，比目标小就丢掉左半边，每步搜索范围减半。
+       cells 是 8 个格子（值 1,3,5,…,15）；被排除的格子淡出，当前中点用圆环圈出 -->
+  <let vals="{[1,3,5,7,9,11,13,15]}"/>
+
+  <layer name="cells" z="1"/>
+  <layer name="marks" z="5"/>
+
+  <text id="目标" at="4.5,1" text="查找：13" size=".5c" fill="accent" layer="marks"/>
+
+  <step say="二分查找要求数组有序。我们在 8 个数里找 13" dur=".4" stagger=".06">
+    <for var="v" index="i" in="{vals}">
+      <rect id="c{i}" at="{i + 1},2" w=".82c" h=".82c" radius="14" fill="bg2" stroke="sub" width="2" label="{v}" layer="cells"/>
+    </for>
+  </step>
+
+  <step say="第 1 次：看中间的 7。7 比 13 小，13 一定在右边，左半边整体排除" dur=".7">
+    <ring id="mid" at="4,2" size="1.05c" stroke="warn" width="4" layer="marks"/>
+    <change id="c0 c1 c2 c3" alpha=".25"/>
+  </step>
+
+  <step say="第 2 次：剩下 9 11 13 15，看中间的 11。11 还是比 13 小，再排除左半" dur=".7">
+    <mid at="6,2"/>
+    <change id="c4 c5" alpha=".25"/>
+  </step>
+
+  <step say="第 3 次：剩下 13 15，看到 13，正好等于目标，找到了！" dur=".7">
+    <mid at="7,2" stroke="good"/>
+    <c6 fill="good" stroke="good" pulse=".18"/>
+  </step>
+
+  <step say="8 个数只比较了 3 次。每次范围减半，所以 100 万个数最多比较 20 次" dur=".6">
+    <目标 text="找到了：下标 6" fill="good" pulse=".15"/>
+  </step>
+</scene>

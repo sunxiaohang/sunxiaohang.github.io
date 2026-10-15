@@ -1,0 +1,39 @@
+<scene width="900" height="520" grid="9x3" pad="50 30 120 30" palette="aurora" hold="0.8" read="4">
+  <!-- 请求流程图：浏览器 → 网关 → 服务 → 数据库。节点用 for 排开，箭头与数据包沿同一组坐标；
+       数据包是一个小圆，用 path 沿着节点依次走过去，再原路返回 -->
+  <let nodes="{['浏览器','网关','服务','数据库']}"/>
+
+  <layer name="links" z="1"/>
+  <layer name="nodes" z="5"/>
+  <layer name="packet" z="9"/>
+
+  <step say="一次请求要穿过四层：浏览器、网关、服务、数据库" dur=".5" stagger=".15">
+    <for var="n" index="i" in="{nodes}">
+      <rect id="n{i}" at="{i * 2.3 + 1.5},2" w="1.7c" h=".9c" radius="22" fill="bg2" stroke="{pal(i)}" width="3" label="{n}" layer="nodes"/>
+    </for>
+  </step>
+
+  <step say="节点之间用箭头连起来，表示请求的方向" dur=".5" stagger=".15">
+    <for var="i" in="0..2">
+      <arrow id="a{i}" from="{i * 2.3 + 2.45},2" to="{i * 2.3 + 3.75},2" stroke="sub" width="3" layer="links"/>
+    </for>
+  </step>
+
+  <step say="发出请求：数据包从浏览器出发，依次经过网关和服务，到达数据库" dur="2.2">
+    <circle id="pkt" at="1.5,2" size=".26c" fill="warn" layer="packet"/>
+    <pkt path="1.5,2 3.8,2 6.1,2 8.4,2" ease="soft" trail="warn" delay=".1"/>
+    <n3 stroke="warn" pulse=".12" delay="1.9"/>
+  </step>
+
+  <step say="数据库查到结果，数据包原路返回，每一层都亮一下" dur="2.2" stagger=".4">
+    <pkt path="8.4,2 6.1,2 3.8,2 1.5,2" ease="soft" trail="good"/>
+    <n2 stroke="good" pulse=".1" delay=".6"/>
+    <n1 stroke="good" pulse=".1" delay="1.1"/>
+    <n0 stroke="good" pulse=".1" delay="1.7"/>
+    <pkt out delay="2.1"/>
+  </step>
+
+  <step say="一来一回，一次完整的请求就结束了" dur=".6" stagger=".1">
+    <change id="n*" pulse=".08"/>
+  </step>
+</scene>

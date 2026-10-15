@@ -1,5 +1,5 @@
 /**
- * GridMotion 核心引擎（无 DOM 依赖，Node / 浏览器通用）
+ * CodeMotion 核心引擎（无 DOM 依赖，Node / 浏览器通用）
  *
  *   util/      基础：缓动、颜色
  *   lang/      语言：XML 解析 → 表达式 / 展开 → 语法定义(schema) / 属性读取与诊断

@@ -1,4 +1,4 @@
-<scene width="800" height="500" grid="8x5" palette="material-dark" hold=".6" seed="3">
+<scene width="800" height="500" grid="8x5" palette="graphite" hold=".6" seed="3">
   <!-- 首页主视觉：整场颜色都来自当前配色（palette 由页面在运行时写入），所以切换配色会整场换色 -->
   <layer name="orbit" z="0"/>
   <layer name="body" z="4"/>
