@@ -267,3 +267,68 @@ test('lint：诊断带结构化 id / ids，供画布高亮定位', () => {
     .find((d) => d.code === 'W_OVERLAP');
   assert.ok(overlap && overlap.ids.includes('a') && overlap.ids.includes('b'));
 });
+
+// ---------------- 流式布局 row / column ----------------
+test('row：横向流式排布，子对象 at 覆盖流式位置', () => {
+  const r = compile(wrap('<row at="1,1" gap="1"><circle id="a"/><circle id="b"/><circle id="c" at="5,1"/></row><step say="x"/>'));
+  assert.ok(r.ok, JSON.stringify(r.diagnostics));
+  const sc = r.scene;
+  const cell = (id) => { const e = sc.byId.get(id); return [Math.round((e.init.x - sc.ax) / sc.cw + 0.5), Math.round((e.init.y - sc.ay) / sc.ch + 0.5)]; };
+  assert.deepEqual(cell('a'), [1, 1]);
+  assert.deepEqual(cell('b'), [2, 1]);
+  assert.deepEqual(cell('c'), [5, 1], '写了 at 的子对象保留绝对位置');
+});
+
+test('column：纵向流式排布，gap 支持 c 后缀与小数', () => {
+  const r = compile(wrap('<column at="2,2" gap="1.5c"><circle id="a"/><circle id="b"/></column><step say="x"/>'));
+  assert.ok(r.ok, JSON.stringify(r.diagnostics));
+  const sc = r.scene;
+  const dy = (sc.byId.get('b').init.y - sc.byId.get('a').init.y) / sc.ch;
+  assert.ok(Math.abs(dy - 1.5) < 1e-6, `b 应在 a 下方 1.5 格，实际 ${dy}`);
+});
+
+test('row：与 for 组合，批量生成并流式排布', () => {
+  const r = compile(wrap('<row at="1,1" gap="1.2"><for var="i" in="1..3"><circle id="c{i}"/></for></row><step say="x"/>'));
+  assert.ok(r.ok, JSON.stringify(r.diagnostics));
+  const sc = r.scene;
+  assert.ok(sc.byId.has('c1') && sc.byId.has('c3'));
+  const x = (id) => sc.byId.get(id).init.x;
+  assert.ok(Math.abs((x('c2') - x('c1')) / sc.cw - 1.2) < 1e-6);
+  assert.ok(Math.abs((x('c3') - x('c2')) / sc.cw - 1.2) < 1e-6);
+});
+
+test('row：非法 at / gap 给出诊断', () => {
+  assert.ok(codes(compile(wrap('<row at="x"><circle/></row>'))).includes('E_BAD_VALUE'));
+  assert.ok(codes(compile(wrap('<row at="1,1" gap="20px"><circle/></row>'))).includes('E_BAD_VALUE'), 'px gap 暂不支持（需编译期换算）');
+});
+
+// ---------------- 相对定位 after / below ----------------
+test('after/below：相对锚点定位，锚点在前且带 id', () => {
+  const r = compile(wrap('<circle id="a" at="2,2"/><circle id="b" after="a" gap="1.5"/><circle id="c" below="a" gap="2"/><step say="x"/>'));
+  assert.ok(r.ok, JSON.stringify(r.diagnostics));
+  const sc = r.scene;
+  const col = (id) => (sc.byId.get(id).init.x - sc.ax) / sc.cw + 0.5;
+  const row = (id) => (sc.byId.get(id).init.y - sc.ay) / sc.ch + 0.5;
+  near(col('a'), 2); near(row('a'), 2);
+  near(col('b'), 3.5, 1e-4); near(row('b'), 2, 1e-4); // b 在 a 右边 1.5 格
+  near(col('c'), 2, 1e-4); near(row('c'), 4, 1e-4); // c 在 a 下面 2 格
+});
+
+test('after/below：锚点不存在给出诊断', () => {
+  const r = compile(wrap('<circle id="b" after="nope"/>'));
+  assert.ok(r.diagnostics.some((d) => d.code === 'E_UNDEF_VAR'));
+});
+
+// ---------------- 等距分布 distribute ----------------
+test('row distribute：between / evenly / around 等距分布', () => {
+  const colOf = (src) => {
+    const sc = compile(wrap(src)).scene;
+    return (id) => (sc.byId.get(id).init.x - sc.ax) / sc.cw + 0.5;
+  };
+  const between = colOf('<row at="1,1" to="5,1" distribute="between"><circle id="a"/><circle id="b"/><circle id="c"/></row><step say="x"/>');
+  near(between('a'), 1); near(between('b'), 3); near(between('c'), 5);
+  const evenly = colOf('<row at="1,1" to="5,1" distribute="evenly"><circle id="a"/><circle id="b"/><circle id="c"/></row><step say="x"/>');
+  near(evenly('a'), 2); near(evenly('b'), 3); near(evenly('c'), 4);
+  const around = colOf('<row at="1,1" to="5,1" distribute="around"><circle id="a"/><circle id="b"/><circle id="c"/></row><step say="x"/>');
+  near(around('a'), 1 + 2 / 3); near(around('c'), 5 - 2 / 3, 'around 两端留半个间距');
+});

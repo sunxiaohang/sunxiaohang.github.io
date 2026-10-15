@@ -1,6 +1,7 @@
 import { Scope, evalExpr, ExprError, truthy } from './expr.js';
 import { ENTITY_TYPES } from './schema.js';
 import { resolveEase } from '../util/ease.js';
+import { parsePos } from './reader.js';
 
 const MAX_NODES = 60000;
 const MAX_LOOPS = 40000;
@@ -9,8 +10,14 @@ const IDENT = /^[\p{L}_][\p{L}\p{N}_]*$/u;
 const NUM = /^\s*-?(?:\d+\.?\d*|\.\d+)\s*$/;
 const RANGE = /^\s*(-?\d+(?:\.\d+)?)\s*\.\.\s*(-?\d+(?:\.\d+)?)\s*$/;
 export const RESERVED_TAGS = new Set([
-  ...ENTITY_TYPES, 'scene', 'step', 'layer', 'group', 'let', 'set', 'for', 'if', 'elseif', 'else', 'def', 'anim', 'change', 'k', 'theme', 'import', 'data',
+  ...ENTITY_TYPES, 'scene', 'step', 'layer', 'group', 'let', 'set', 'for', 'if', 'elseif', 'else', 'def', 'anim', 'change', 'k', 'theme', 'import', 'data', 'row', 'column',
 ]);
+
+/** 流式布局 gap：格子数（纯数字或带 c 后缀，c 等价于格子） */
+function parseGap(raw) {
+  const m = /^\s*(-?(?:\d+\.?\d*|\.\d+))\s*(c)?\s*$/i.exec(String(raw));
+  return m ? parseFloat(m[1]) : null;
+}
 
 function makeRng(seed) {
   let a = Math.floor(seed) | 0 || 1;
@@ -58,6 +65,7 @@ export function expand(root, diag, dataSources = {}) {
   const anims = new Map();
   const theme = {};
   const global = new Scope();
+  const placed = new Map(); // id → [col, row]，供 after/below 相对定位
   // 数据源（<data>）：作为全局变量注入，供 <for in="{rows}"> 引用
   for (const [k, v] of Object.entries(dataSources)) global.declare(k, v);
   const posOf = (node, name) => (name && node.attrPos?.[name]) || node;
@@ -218,6 +226,25 @@ export function expand(root, diag, dataSources = {}) {
     if (def) { useDef(def, n, scope, out, depth); return; }
     if (++budget.nodes > MAX_NODES) { overBudget(n, '节点数量'); return; }
     const node = { tag: n.tag, attrs: attrsOf(n, scope), attrPos: n.attrPos, children: [], line: n.line, col: n.col };
+    // 相对定位 after/below：以锚点对象的位置为基准
+    const anchor = node.attrs.after !== undefined ? node.attrs.after : node.attrs.below;
+    if (anchor !== undefined) {
+      const pos = placed.get(anchor);
+      if (pos) {
+        const gap = parseGap(node.attrs.gap ?? '1') ?? 1;
+        node.attrs.at = node.attrs.after !== undefined
+          ? `${fmt(pos[0] + gap)},${fmt(pos[1])}`
+          : `${fmt(pos[0])},${fmt(pos[1] + gap)}`;
+        node.attrPos.at = n.attrPos?.after || n.attrPos?.below || n;
+      } else {
+        diag.error('E_UNDEF_VAR', `after/below 的锚点 "${anchor}" 找不到（锚点要写在前面，且带 id）`, posOf(n, 'after') || posOf(n, 'below'));
+      }
+    }
+    // 记录位置，供后续 after/below 引用
+    if (node.attrs.id && node.attrs.at !== undefined) {
+      const p = parsePos(node.attrs.at);
+      if (p) placed.set(node.attrs.id, p);
+    }
     out.push(node);
     const inner = n.tag === 'step' || n.tag === 'layer' ? new Scope(scope) : scope;
     expandChildren(n.children, inner, node.children, depth);
@@ -284,6 +311,56 @@ export function expand(root, diag, dataSources = {}) {
           if (!chain.done) expandChildren(n.children, new Scope(scope), out, depth);
           chain = null;
           break;
+        case 'row':
+        case 'column': {
+          chain = null;
+          const atRaw = interp(n.attrs.at ?? '1,1', scope, posOf(n, 'at'), false);
+          const at = parsePos(atRaw);
+          if (!at) { diag.error('E_BAD_VALUE', `<${n.tag}> 的 at 需要格子坐标 "列,行"，实际是 "${atRaw}"`, posOf(n, 'at')); break; }
+          const gapRaw = interp(n.attrs.gap ?? '1', scope, posOf(n, 'gap'), false);
+          const gap = parseGap(gapRaw);
+          if (gap === null) { diag.error('E_BAD_VALUE', `<${n.tag}> 的 gap 需要格子数（如 1.2 或 0.3c），实际是 "${gapRaw}"`, posOf(n, 'gap')); break; }
+          // 等距分布：to + distribute（between/evenly/around）
+          let distTo = null, distMode = null;
+          if (n.attrs.distribute !== undefined) {
+            distMode = n.attrs.distribute;
+            if (!['between', 'evenly', 'around'].includes(distMode)) {
+              diag.warn('W_BAD_VALUE', `distribute 只能是 between / evenly / around，实际是 "${distMode}"，已改用 evenly`, posOf(n, 'distribute'));
+              distMode = 'evenly';
+            }
+            const toRaw = interp(n.attrs.to ?? atRaw, scope, posOf(n, 'to'), false);
+            distTo = parsePos(toRaw);
+            if (!distTo) { diag.error('E_BAD_VALUE', `<${n.tag}> 的 to 需要格子坐标，实际是 "${toRaw}"`, posOf(n, 'to')); distTo = null; }
+          }
+          // 收集子元素（递归展开，子元素里可用 for/def/表达式）
+          const items = [];
+          expandChildren(n.children, new Scope(scope), items, depth + 1);
+          const count = items.length;
+          // 流式注入 at：写 at 的子元素保留绝对位置，其余按槽位排布
+          let k = 0;
+          for (const item of items) {
+            if (item.attrs.at === undefined) {
+              let col, row;
+              if (distMode && distTo) {
+                const span = (n.tag === 'row' ? distTo[0] - at[0] : distTo[1] - at[1]);
+                const step = distMode === 'between' ? (count > 1 ? span / (count - 1) : 0)
+                  : distMode === 'around' ? span / count
+                    : span / (count + 1);
+                const off = distMode === 'between' ? k * step : distMode === 'around' ? (k + 0.5) * step : (k + 1) * step;
+                col = at[0] + (n.tag === 'row' ? off : 0);
+                row = at[1] + (n.tag === 'column' ? off : 0);
+              } else {
+                col = at[0] + (n.tag === 'row' ? k * gap : 0);
+                row = at[1] + (n.tag === 'column' ? k * gap : 0);
+              }
+              item.attrs.at = `${fmt(col)},${fmt(row)}`;
+              item.attrPos.at = posOf(n, 'at');
+            }
+            out.push(item);
+            k++;
+          }
+          break;
+        }
         default:
           chain = null;
           expandElement(n, scope, out, depth);

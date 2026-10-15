@@ -13,7 +13,7 @@ export const EFFECTS = ['pulse', 'shake', 'jump', 'spin', 'flash', 'wobble', 'do
 /** 内置音色（src/audio/sound.js 实现，无音频文件） */
 export const SOUND_NAMES = ['pop', 'tick', 'ding', 'snap', 'whoosh', 'wobble', 'success', 'spring'];
 /** 只能在创建时设置、不能在步骤里动画的属性 */
-export const STATIC_ATTRS = new Set(['id', 'layer', 'group', 'flat', 'in', 'dash', 'head', 'side', 'gap', 'style', 'dots', 'labels', 'radius', 'points']);
+export const STATIC_ATTRS = new Set(['id', 'layer', 'group', 'flat', 'in', 'dash', 'head', 'side', 'gap', 'style', 'dots', 'labels', 'radius', 'points', 'after', 'below']);
 
 const B = (doc, def) => ({ doc, ...(def !== undefined && { default: def }) });
 
@@ -69,9 +69,11 @@ export const ATTR = {
   yoyo: B('do 动画循环时来回播放（缺省属性）'),
   name: B('图层 / 分组名'),
   sound: B(`触发时播放的音效：${SOUND_NAMES.join(' / ')}`),
+  after: B('相对定位：放在指定 id 对象的右边（配合 gap，锚点要写在前面且带 id）'),
+  below: B('相对定位：放在指定 id 对象的下面（配合 gap）'),
 };
 
-const BASE = ['id', 'alpha', 'z', 'layer', 'group', 'in', 'sound'];
+const BASE = ['id', 'alpha', 'z', 'layer', 'group', 'in', 'sound', 'after', 'below', 'gap'];
 const SHAPE = [...BASE, 'at', 'px', 'size', 'fill', 'stroke', 'width', 'rot', 'label', 'color', 'flat'];
 
 export const ENTITY_ATTRS = {
@@ -159,6 +161,13 @@ export const PROGRAMMING = {
   change: {
     doc: '按 id 修改对象，id 可写多个或前缀通配：<change id="a b c" fill="red"/>、<change id="c*" at="2,2"/>。' +
       '适合 id 是计算出来的场景（循环里）。普通情况直接把 id 当标签写就行',
+  },
+  row: {
+    doc: '横向流式布局：<row at="2,2" gap="1.2c">子对象依次从左到右排开，gap 是相邻中心距（格子数，默认 1）。' +
+      '子对象自己写 at 则覆盖流式位置（绝对定位优先）。加 to="4,2" distribute="between/evenly/around" 可等距分布',
+  },
+  column: {
+    doc: '纵向流式布局：<column at="2,2" gap="1.5">子对象依次从上到下排开，其余同 <row>',
   },
 };
 
