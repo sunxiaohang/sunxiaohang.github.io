@@ -224,3 +224,59 @@ test('off：与 size 同单位偏移，不受行高列宽影响', () => {
   const bad = compile(wrap('<text at="4,3" off="3" text="x"/>'));
   assert.ok(bad.diagnostics.some((d) => d.code === 'E_BAD_VALUE'));
 });
+
+// =============== 棋盘：河界 / 炮兵位 / 内部分隔线 / 越框检查 ===============
+
+test('grid：river / ticks / inner / frame 被编译并进入渲染 IR；非法值有提示', () => {
+  const r = build('<grid style="line" river="5" ticks="2,3 9,4 99,99" frame="4"/><grid id="g2" style="cell" inner/>', 'grid="9x10"');
+  const [g1, g2] = r.scene.entities.filter((e) => e.type === 'grid');
+  assert.equal(g1.river, 5);
+  assert.equal(g1.ticks.length, 2, '越界的标记点被丢弃');
+  assert.equal(g1.frame, 4);
+  assert.equal(g2.inner, true);
+  const bad = compile(wrap('<grid style="cell" river="3"/>'));
+  assert.ok(bad.diagnostics.some((d) => d.code === 'W_NOT_APPLICABLE' && d.message.includes('river')));
+});
+
+test('grid 渲染：河处中间的竖线断开，只有两条边线贯穿；炮位折角靠边一侧省略', async () => {
+  const { draw } = await import('../src/render/canvas2d.js');
+  const r = build('<grid style="line" river="5" ticks="1,4 5,4" frame="3"/>', 'grid="9x10"');
+  const ops = [];
+  const ctx = new Proxy({}, {
+    get(t, p) {
+      if (p === 'measureText') return () => ({ width: 10 });
+      if (p === 'createLinearGradient' || p === 'createRadialGradient') return () => ({ addColorStop() {} });
+      if (p === 'moveTo' || p === 'lineTo') return (x, y) => ops.push([p, x, y]);
+      if (p === 'strokeRect') return (...a) => ops.push(['strokeRect', ...a]);
+      return typeof t[p] === 'function' ? t[p] : (t[p] ??= () => {});
+    },
+    set(t, p, v) { t[p] = v; return true; },
+  });
+  draw(ctx, r.scene, evaluate(r.scene, 0), { pixelRatio: 1 });
+  const sc = r.scene;
+  const xAt = (c) => sc.ax + (c - 0.5) * sc.cw;
+  // 竖线：moveTo 之后紧跟 lineTo、x 相同
+  const verticals = [];
+  for (let i = 0; i < ops.length - 1; i++) {
+    if (ops[i][0] === 'moveTo' && ops[i + 1][0] === 'lineTo' && Math.abs(ops[i][1] - ops[i + 1][1]) < 1e-6 && Math.abs(ops[i][2] - ops[i + 1][2]) > sc.ch * 0.9) verticals.push([ops[i][1], ops[i][2], ops[i + 1][2]]);
+  }
+  const col = (c) => verticals.filter((v) => Math.abs(v[0] - xAt(c)) < 1e-6);
+  assert.equal(col(1).length, 1, '最左边线一整条贯穿');
+  assert.equal(col(9).length, 1, '最右边线一整条贯穿');
+  assert.equal(col(5).length, 2, '中间的竖线在河处断成两段');
+  const [a, b] = col(5).sort((p, q) => p[1] - q[1]);
+  near(b[1] - a[2], sc.ch, 1e-6);   // 断口 = 一格高的河道
+  assert.ok(ops.some((o) => o[0] === 'strokeRect'), '有外框');
+});
+
+test('lint：线条笔画越出棋盘会报 W_LINE_OUTSIDE，收进棋盘则不报', () => {
+  const head = 'pad="40 60 100 60"';
+  const over = build('<grid style="cell" inner/><line id="w" from="1,1" to="3.55,1" width="10"/><step say="x"><w alpha="1"/></step>', `grid="3x3" ${head}`);
+  assert.ok(lint(over.scene).some((d) => d.code === 'W_LINE_OUTSIDE' && d.id === 'w'), '末端越出棋盘应报警');
+  const edge = build('<grid style="cell" inner/><line id="w" from="1,1" to="3.5,1" width="12"/><step say="x"><w alpha="1"/></step>', `grid="3x3" ${head}`);
+  assert.ok(lint(edge.scene).some((d) => d.code === 'W_LINE_OUTSIDE'), '端点贴着边缘、笔画仍会越出：也要报');
+  const fine = build('<grid style="cell" inner/><line id="w" from="0.72,1" to="3.28,1" width="10"/><step say="x"><w alpha="1"/></step>', `grid="3x3" ${head}`);
+  assert.equal(lint(fine.scene).filter((d) => d.code === 'W_LINE_OUTSIDE').length, 0);
+  const far = build('<grid style="cell" inner/><line id="w" from="10,1" to="11,1"/><step say="x"><w alpha="1"/></step>', `grid="3x3" ${head}`);
+  assert.equal(lint(far.scene).filter((d) => d.code === 'W_LINE_OUTSIDE').length, 0, '完全在棋盘外的线条不归它管');
+});

@@ -94,7 +94,9 @@ async function rebuild(keepTime) {
   pv.setScene(scene, { keepTime });
   $('stepList').innerHTML = scene.steps.map((s, i) => `<li><button type="button" data-i="${i}"><b>${i + 1}</b><span></span></button></li>`).join('');
   $('stepList').querySelectorAll('button span').forEach((el, i) => { el.textContent = scene.steps[i].say || `第 ${i + 1} 步`; });
-  $('codeView').innerHTML = highlightLines(view.src).map((h) => `<div class="ln">${h || ' '}</div>`).join('');
+  // 每行带上缩进深度：自动换行后的续行按缩进悬挂对齐，不用横向滚动
+  const srcLines = view.src.split(/\r?\n/);
+  $('codeView').innerHTML = highlightLines(view.src).map((h, i) => `<div class="ln" style="--i:${(/^ */.exec(srcLines[i] || '')[0] || '').length}">${h || ' '}</div>`).join('');
 }
 
 async function openWork(id, push = true) {

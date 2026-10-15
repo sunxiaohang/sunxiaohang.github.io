@@ -156,13 +156,81 @@ test('狼吃羊：被跳过的羊消失，狼落在羊的后方空位', () => {
   assert.deepEqual(cell, [2, 5]);
 });
 
-test('井字棋：X 用模板生成（每个两条线），O 用 def 简写，最终有一条获胜线', () => {
+test('井字棋：一局合法的棋——X 4 手、O 3 手，获胜线真的连着三个 X，且在棋盘内', () => {
   const sc = compiled.get('tictactoe').scene;
   const lines = sc.entities.filter((e) => e.type === 'line');
-  assert.equal(lines.filter((e) => /^x\d+[ab]$/.test(e.id)).length, 10, '5 个 X × 2 条线');
-  assert.equal(sc.entities.filter((e) => e.type === 'circle').length, 4);
-  assert.ok(ent('tictactoe', 'win'));
+  assert.equal(lines.filter((e) => /^x\d+[ab]$/.test(e.id)).length, 8, '4 个 X × 2 条线');
+  assert.equal(sc.entities.filter((e) => e.type === 'circle').length, 3);
   assert.equal(sc.groups.get('x1').members.length, 2, '模板里的 group="{id}" 把一个 X 的两条线编成一组');
+  assert.equal(sc.cw, sc.ch, '格子必须是正方形，X 才不会被拉歪');
+
+  // 按格子收集棋子：X 取两条线的中点，O 取圆心
+  const cell = (x, y) => [Math.round((x - sc.ax) / sc.cw + 0.5), Math.round((y - sc.ay) / sc.ch + 0.5)];
+  const last = frameAt('tictactoe', sc.steps.length - 1);
+  const X = [], O = [];
+  for (const id of ['x1', 'x2', 'x3', 'x4']) {
+    const a = last.entities[sc.byId.get(id + 'a').index];
+    X.push(cell((a.x1 + a.x2) / 2, (a.y1 + a.y2) / 2));
+  }
+  for (const e of sc.entities.filter((e) => e.type === 'circle')) O.push(cell(e.init.x, e.init.y));
+  const key = (c) => c.join(',');
+  const taken = new Set([...X, ...O].map(key));
+  assert.equal(taken.size, 7, '没有两颗棋子落在同一格');
+
+  // 获胜线：两端各在一个 X 所在的格子里，且经过的三格都是 X
+  const w = last.entities[sc.byId.get('win').index];
+  const from = cell(w.x1, w.y1), to = cell(w.x2, w.y2);
+  const xs = new Set(X.map(key));
+  const steps = Math.max(Math.abs(to[0] - from[0]), Math.abs(to[1] - from[1]));
+  for (let i = 0; i <= steps; i++) {
+    const c = [from[0] + ((to[0] - from[0]) * i) / steps, from[1] + ((to[1] - from[1]) * i) / steps];
+    assert.ok(xs.has(key(c)), `获胜线经过的格子 ${key(c)} 应该是 X`);
+  }
+  // 获胜线的笔画整个在棋盘内
+  const half = w.width / 2;
+  for (const [px, py] of [[w.x1, w.y1], [w.x2, w.y2]]) {
+    assert.ok(px - half >= sc.ax && px + half <= sc.ax + 3 * sc.cw && py - half >= sc.ay && py + half <= sc.ay + 3 * sc.ch, '获胜线越出了棋盘');
+  }
+});
+
+test('象棋：规范棋盘——河界、炮兵位标记、外框都在；河道文字不压棋子', () => {
+  const sc = compiled.get('xiangqi').scene;
+  const g = sc.entities.find((e) => e.type === 'grid');
+  assert.equal(g.river, 5, '河在第 5、6 行之间');
+  assert.equal(g.ticks.length, 14, '4 个炮位 + 10 个兵位');
+  assert.ok(g.frame > g.init.width, '外框比棋盘线粗');
+  assert.equal(sc.cw, sc.ch, '格子是正方形');
+  // 河道恰好是一格高、8 格宽，正好夹在第 5、6 行之间
+  const band = sc.byId.get('河道').init;
+  near(band.h, sc.ch, 1e-6);
+  near(band.w, 8 * sc.cw, 1e-6);
+  near(band.y, sc.ay + 5 * sc.ch, 1e-6);
+  // 所有静帧里，棋子都不与“楚河”“汉界”两个字重叠
+  for (let i = 0; i < sc.steps.length; i++) {
+    const f = frameAt('xiangqi', i);
+    for (const word of ['楚河', '汉界']) {
+      const T = f.entities[sc.byId.get(word).index];
+      for (const e of sc.entities.filter((e) => e.type === 'circle' && !f.entities[e.index].hidden && f.entities[e.index].alpha > 0.5)) {
+        const P = f.entities[e.index];
+        const dx = Math.abs(P.x - T.x) - (P.size / 2 + T.size), dy = Math.abs(P.y - T.y) - (P.size / 2 + T.size / 2);
+        assert.ok(dx > 0 || dy > 0, `第 ${i + 1} 步：棋子 ${e.id} 压在了“${word}”上`);
+      }
+    }
+  }
+});
+
+test('斗兽棋：格子是正方形，水域恰好占 2 列 × 3 行的整格，穴与陷阱各占一格', () => {
+  const sc = compiled.get('doushouqi').scene;
+  assert.equal(sc.cw, sc.ch, '格子必须是正方形，水域才能和格子对齐');
+  for (const [id, col] of [['河左', 2.5], ['河右', 5.5]]) {
+    const w = sc.byId.get(id).init;
+    near(w.w, 2 * sc.cw, 1e-6);
+    near(w.h, 3 * sc.ch, 1e-6);
+    near(w.x, sc.ax + (col - 0.5) * sc.cw, 1e-6);
+    near(w.y, sc.ay + 4.5 * sc.ch, 1e-6);
+  }
+  assert.equal(sc.entities.filter((e) => /^阱\d$/.test(e.id)).length, 6, '每方 3 个陷阱');
+  assert.ok(sc.byId.get('蓝穴') && sc.byId.get('红穴'));
 });
 
 test('识字：八张卡 × 三个部件，卡片内容与字表一致；逐个点亮', () => {

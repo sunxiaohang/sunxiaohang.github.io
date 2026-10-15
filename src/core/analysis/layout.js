@@ -8,6 +8,7 @@ import { aabb } from './lint.js';
  *  1. 文字压着容器边缘或溢出容器（卡片里的字、面板标题）
  *  2. 连线的端点被别的图形盖住 / 离目标图形还有一段空隙（箭头断连）
  *  3. 图形里的 label 太长，被压得小到看不清
+ *  4. 棋盘上的线条（落子标记、获胜线、箭头）的笔画越出了棋盘边缘（井字棋的 X、获胜线最常见）
  * 全部在“每一步的静帧”上检查。lint() 会调用 checkLayout() 并合并结果。
  */
 
@@ -129,6 +130,35 @@ export function checkLayout(scene, checks, evaluate) {
             });
           }
         });
+      }
+    }
+
+    // ---- 4. 线条笔画越出棋盘 ----
+    // 棋盘范围：cell 风格是格子区域本身；line 风格是最外圈交叉点再外扩（有底板时含底板的边距）。
+    // 只检查“至少一端落在棋盘内”的线条：这样的线条是画在棋盘上的标记，笔画（含圆头、箭头）必须全部在棋盘内。
+    for (const g of scene.entities.filter((e) => e.type === 'grid' && vis(e))) {
+      const Lg = frame.entities[g.index];
+      const m = g.style === 'cell' ? 0 : (Lg.fill[3] > 0 ? U * 0.6 : U * 0.3);
+      const box = g.style === 'cell'
+        ? { l: scene.ax, t: scene.ay, r: scene.ax + scene.cols * scene.cw, b: scene.ay + scene.rows * scene.ch }
+        : { l: scene.ax + scene.cw / 2 - m, t: scene.ay + scene.ch / 2 - m, r: scene.ax + (scene.cols - 0.5) * scene.cw + m, b: scene.ay + (scene.rows - 0.5) * scene.ch + m };
+      const inside = (x, y) => x >= box.l - 1 && x <= box.r + 1 && y >= box.t - 1 && y <= box.b + 1;
+      for (const ln of scene.entities.filter((e) => SEGMENTED.has(e.type) && !e.internal && vis(e))) {
+        const L = frame.entities[ln.index];
+        const p = [L.x1 + L.ox, L.y1 + L.oy], q = [L.x2 + L.ox, L.y2 + L.oy];
+        if (!inside(p[0], p[1]) && !inside(q[0], q[1])) continue;
+        const half = L.width / 2 + (ln.type === 'arrow' ? 0 : 0);
+        const head = ln.type === 'arrow' ? (ln.head || 0) * 0.5 : 0;
+        const pad = Math.max(half, head);
+        const ext = { l: Math.min(p[0], q[0]) - pad, r: Math.max(p[0], q[0]) + pad, t: Math.min(p[1], q[1]) - pad, b: Math.max(p[1], q[1]) + pad };
+        const over = Math.max(box.l - ext.l, ext.r - box.r, box.t - ext.t, ext.b - box.b);
+        if (over > 1) {
+          push(`lo|${ln.id}`, {
+            severity: 'warning', code: 'W_LINE_OUTSIDE', line: ln.line, col: ln.col, id: ln.id, ids: [ln.id, g.id],
+            message: `线条 "${ln.id}" 的笔画越出了棋盘 "${g.id}" 的边缘 ${r1(over)}px（在 ${r1(t)}s 的画面里）`,
+            hint: '把端点往棋盘内收一点（笔画宽度的一半也要算进去），或把棋盘的 pad 留大',
+          });
+        }
       }
     }
 

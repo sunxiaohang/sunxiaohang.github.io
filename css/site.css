@@ -350,11 +350,11 @@ button, select, input { font: inherit; color: inherit; }
 .empty { text-align: center; color: var(--text-3); padding: 80px 0; grid-column: 1 / -1; }
 
 /* ---------- 查看器 ---------- */
-.viewer { width: min(1180px, 94vw); max-height: 92vh; padding: 0; border: 0; border-radius: var(--r-xl); background: var(--surface); color: var(--text); box-shadow: var(--shadow-3), 0 0 0 1px var(--line-2); overflow: hidden; }
+.viewer { width: min(1360px, 96vw); max-height: 92vh; padding: 0; border: 0; border-radius: var(--r-xl); background: var(--surface); color: var(--text); box-shadow: var(--shadow-3), 0 0 0 1px var(--line-2); overflow: hidden; }
 .viewer[open] { animation: pop .42s var(--ease-spring); }
 @keyframes pop { from { opacity: 0; transform: scale(.94) translateY(12px); } to { opacity: 1; transform: none; } }
 dialog::backdrop { background: rgba(0, 0, 0, .4); backdrop-filter: blur(10px) saturate(140%); -webkit-backdrop-filter: blur(10px) saturate(140%); }
-.viewer-in { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr); max-height: 92vh; }
+.viewer-in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(440px, 1.05fr); max-height: 92vh; }
 .viewer-main { padding: 20px 20px 20px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .viewer-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .viewer-head h2 { font-size: 22px; font-weight: 700; letter-spacing: -.03em; }
@@ -368,7 +368,7 @@ dialog::backdrop { background: rgba(0, 0, 0, .4); backdrop-filter: blur(10px) sa
 }
 .viewer-side { border-left: 1px solid var(--line-2); display: flex; flex-direction: column; min-height: 0; background: var(--bg-alt); }
 .viewer-side .seg { margin: 18px 18px 0; align-self: flex-start; }
-.vpanel { flex: 1; min-height: 0; overflow: auto; padding: 14px 18px 18px; }
+.vpanel { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 14px 20px 18px; }
 .vpanel[hidden] { display: none; }
 .steplist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .steplist button { width: 100%; text-align: left; border: 0; cursor: pointer; display: flex; gap: 12px; align-items: flex-start; padding: 11px 12px; border-radius: 14px; background: transparent; color: var(--text-2); font-size: 14px; line-height: 1.45; transition: background .2s, color .2s; }
@@ -376,8 +376,12 @@ dialog::backdrop { background: rgba(0, 0, 0, .4); backdrop-filter: blur(10px) sa
 .steplist button[aria-current="step"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-1), 0 0 0 1px var(--line-2); }
 .steplist b { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: var(--surface-3); color: var(--text-2); }
 .steplist button[aria-current="step"] b { background: var(--accent); color: var(--on-accent); }
-.vpanel pre { margin: 0; font: 12px/1.7 var(--mono); tab-size: 2; color: var(--text); }
-.vpanel pre .ln { white-space: pre; }
+.vpanel pre { margin: 0; font: 12.5px/1.7 var(--mono); tab-size: 2; color: var(--text); }
+.vpanel pre { white-space: normal; }
+.vpanel pre .ln {
+  white-space: pre-wrap; overflow-wrap: anywhere; word-break: normal;
+  padding-left: calc((var(--i, 0) + 2) * 1ch); text-indent: calc(-1 * (var(--i, 0) + 2) * 1ch);
+}
 .viewer-actions { display: flex; gap: 8px; padding: 14px 18px 18px; border-top: 1px solid var(--line-2); flex-wrap: wrap; }
 .viewer-actions .btn { font-size: 14px; padding: 9px 18px; }
 .viewer-actions .btn-primary { flex: 1; }

@@ -83,6 +83,7 @@ function buildGrid(scene, e, L, alpha) {
     ax: scene.ax, ay: scene.ay, cols: scene.cols, rows: scene.rows, cw: scene.cw, ch: scene.ch, unit: scene.unit,
     fill: L.fill, stroke: L.stroke, width: L.width, color: L.color,
     style: e.style, radius: e.radius, dots: e.dots, labels: e.labels,
+    inner: e.inner, frame: e.frame, river: e.river, ticks: e.ticks,
   };
 }
 

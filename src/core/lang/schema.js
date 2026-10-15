@@ -13,7 +13,7 @@ export const EFFECTS = ['pulse', 'shake', 'jump', 'spin', 'flash', 'wobble', 'do
 /** 内置音色（src/audio/sound.js 实现，无音频文件） */
 export const SOUND_NAMES = ['pop', 'tick', 'ding', 'snap', 'whoosh', 'wobble', 'success', 'spring'];
 /** 只能在创建时设置、不能在步骤里动画的属性 */
-export const STATIC_ATTRS = new Set(['off', 'id', 'layer', 'group', 'flat', 'in', 'dash', 'head', 'side', 'gap', 'style', 'dots', 'labels', 'radius', 'points', 'after', 'below']);
+export const STATIC_ATTRS = new Set(['inner', 'river', 'ticks', 'frame', 'off', 'id', 'layer', 'group', 'flat', 'in', 'dash', 'head', 'side', 'gap', 'style', 'dots', 'labels', 'radius', 'points', 'after', 'below']);
 
 const B = (doc, def) => ({ doc, ...(def !== undefined && { default: def }) });
 
@@ -49,6 +49,10 @@ export const ATTR = {
   style: B('棋盘线风格：line（线穿过格子中心，棋类用）| cell（格子边框）', 'line'),
   dots: B('棋盘星位，如 dots="4,4 12,4 8,8"'),
   labels: B('在棋盘外侧标注坐标 A~ / 1~（缺省属性）'),
+  inner: B('只画内部分隔线、不画外框，两端略微内缩（井字棋的 # 形；缺省属性，style="cell" 用）'),
+  river: B('河界（象棋）：写河在第几行之后，如 river="5" 表示河在第 5、6 行之间；中间的竖线在河处断开，只保留最左最右两条边线（style="line" 用）'),
+  ticks: B('炮位 / 兵位标记（象棋）：在这些交叉点四周画小折角，靠边的一侧自动省略，如 ticks="2,3 8,3 1,4 3,4"'),
+  frame: B('外框：在棋盘线的最外圈再画一圈加粗边框，写线宽，如 frame="4"'),
   draw: B('线条的绘制进度 0~1'),
   by: B('相对当前位置移动 "dx,dy"（格数）'),
   path: B('沿折线移动，如 path="1,1 3,1 3,3"'),
@@ -92,7 +96,7 @@ export const ENTITY_ATTRS = {
   line: [...BASE, 'from', 'to', 'stroke', 'width', 'dash'],
   arrow: [...BASE, 'from', 'to', 'stroke', 'width', 'dash', 'head'],
   note: [...BASE, 'at', 'px', 'off', 'size', 'fill', 'color', 'text', 'side', 'gap'],
-  grid: [...BASE, 'style', 'dots', 'labels', 'color', 'fill', 'stroke', 'width', 'radius'],
+  grid: [...BASE, 'style', 'dots', 'labels', 'inner', 'river', 'ticks', 'frame', 'color', 'fill', 'stroke', 'width', 'radius'],
 };
 export const LAYER_ATTRS = ['name', 'id', 'z', 'alpha'];
 export const GROUP_ATTRS = ['name', 'layer'];

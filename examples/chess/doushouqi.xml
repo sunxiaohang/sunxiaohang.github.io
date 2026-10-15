@@ -1,25 +1,38 @@
-<scene width="640" height="860" grid="7x9" pad="30 30 120 30" palette="graphite" hold="0.8" read="4">
-  <!-- 斗兽棋：7x9 方格。地形全是 flat（平面）：河流是两块水域，各占 3 列×2 行，中间留一条陆路；
-       兽穴在两端中间，陷阱围在兽穴周围。动物是带字的圆，按大小排序。 -->
+<scene width="630" height="880" grid="7x9" pad="40 35 120 35" palette="graphite" hold="0.8" read="4">
+  <!-- 斗兽棋：7 列 × 9 行的方格，格子是正方形（80px），所以 1c 正好是一格，水域、兽穴、陷阱都和格子严丝合缝。
+       规范棋盘：
+         · 河：左右各一片，各占 2 列 × 3 行（第 2-3 列、第 5-6 列，第 4-6 行），中间第 4 列是陆路；
+         · 兽穴在两端正中，用己方颜色描边；陷阱是兽穴上、左、右的三格，颜色略深，标“阱”；
+       动物是带字的圆，按大小排序。地形全部 flat（平面）。 -->
   <let animals="{['象','狮','虎','豹','狼','狗','猫','鼠']}"/>
 
-  <def name="兽" is="circle" size=".84c" stroke="#ffffff" width="3" layer="pieces"/>
-  <def name="水" is="rect" fill="#3F7FA8" radius="14" flat="" layer="map"/>
+  <def name="兽" is="circle" size=".8c" stroke="#ffffff" width="3" layer="pieces"/>
+  <def name="水" is="rect" fill="#3C7BA8" stroke="#7DB4D6" width="2" radius="8" flat="" layer="water"/>
+  <!-- 陷阱：比草地略深的一格，不抢棋子 -->
+  <def name="阱" cx="1" cy="1">
+    <rect id="{id}" at="{cx},{cy}" w=".94c" h=".94c" radius="8" fill="#2F4F3C" alpha=".7" flat="" layer="map" in="fade"/>
+    <text id="{id}字" at="{cx},{cy}" text="阱" size=".26c" fill="#8FB59C" layer="marks" in="fade"/>
+  </def>
+  <!-- 兽穴：深色一格，己方颜色描边，中间写“穴” -->
+  <def name="穴" cx="4" cy="1" tint="c1">
+    <rect id="{id}" at="{cx},{cy}" w=".94c" h=".94c" radius="10" fill="#14202A" stroke="{tint}" width="3" flat="" layer="map" in="fade"/>
+    <text id="{id}字" at="{cx},{cy}" text="穴" size=".34c" fill="{tint}" layer="marks" in="fade"/>
+  </def>
 
   <layer name="map" z="0"/>
+  <layer name="water" z="1"/>
   <layer name="marks" z="3"/>
   <layer name="pieces" z="10"/>
+  <layer name="panel" z="18"/>
   <layer name="top" z="20"/>
 
-  <grid style="cell" fill="#5F8F6B" stroke="#A9C9B0" width="2" layer="map" radius="14"/>
-  <!-- 两片水域：左边 列 2-3，右边 列 5-6；行 4-6。块中心取 2.5 / 5.5，行中心 5 -->
+  <grid style="cell" fill="#4F7F63" stroke="#8DB59A" width="1.5" layer="map" radius="14"/>
   <水 id="河左" at="2.5,5" w="2c" h="3c" in="fade"/>
   <水 id="河右" at="5.5,5" w="2c" h="3c" in="fade"/>
-  <!-- 兽穴（黑色小门）与陷阱（带叉的格子） -->
-  <rect id="蓝穴" at="4,1" w=".7c" h=".7c" fill="#16202B" radius="10" flat="" layer="marks" in="fade"/>
-  <rect id="红穴" at="4,9" w=".7c" h=".7c" fill="#16202B" radius="10" flat="" layer="marks" in="fade"/>
-  <for var="t" in="{[[3,1],[5,1],[4,2],[3,9],[5,9],[4,8]]}">
-    <text at="{t[0]},{t[1]}" text="✕" size=".5c" fill="#3E5A4A" layer="marks"/>
+  <穴 id="蓝穴" cx="4" cy="1" tint="c1"/>
+  <穴 id="红穴" cx="4" cy="9" tint="c5"/>
+  <for var="t" index="k" in="{[[3,1],[5,1],[4,2],[3,9],[5,9],[4,8]]}">
+    <阱 id="阱{k}" cx="{t[0]}" cy="{t[1]}"/>
   </for>
 
   <group name="蓝方">
@@ -38,23 +51,25 @@
     <红方 pulse=".15" delay=".2"/>
   </step>
 
-  <step say="每个动物都有大小，大的能吃小的。我们按顺序排出来" stagger=".14" dur=".5">
-    <蓝方 alpha=".3"/>
-    <红方 alpha=".3"/>
+  <step say="每个动物都有大小，大的能吃小的。我们按顺序排出来" stagger=".12" dur=".5">
+    <蓝方 alpha=".25"/>
+    <红方 alpha=".25"/>
+    <rect id="榜底" at="4,5" w="7c" h="1.7c" radius="22" fill="bg2" stroke="sub" width="1.5" alpha=".96" flat="" layer="panel"/>
     <for var="a" index="i" in="{animals}">
-      <circle id="rank{i}" at="{1 + i*0.8},5" size=".62c" fill="{hsl(214, 58, 78 - i*7)}" label="{a}" layer="top"/>
+      <circle id="rank{i}" at="{1.14 + i * 0.82},4.8" size=".62c" fill="{hsl(214, 58, 78 - i*7)}" label="{a}" layer="top"/>
     </for>
   </step>
 
   <step say="大小顺序：象 > 狮 > 虎 > 豹 > 狼 > 狗 > 猫 > 鼠" dur=".6" stagger=".08">
     <for var="i" in="0..6">
-      <arrow id="ar{i}" from="{1 + i*0.8},5.9" to="{1 + (i+1)*0.8},5.9" stroke="warn" width="3" head="12" layer="top"/>
+      <arrow id="ar{i}" from="rank{i}" to="rank{i + 1}" stroke="warn" width="3" head="12" gap="2" layer="top"/>
     </for>
   </step>
 
   <step say="但有一个例外：最小的「鼠」可以吃最大的「象」！" dur=".6">
     <change id="rank*" out/>
     <change id="ar*" out/>
+    <榜底 out/>
     <蓝方 alpha="1"/>
     <红方 alpha="1"/>
   </step>

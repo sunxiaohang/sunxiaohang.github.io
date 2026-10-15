@@ -101,15 +101,58 @@ export function drawGridEntity(ctx, item) {
   if (item.stroke[3] > 0 && item.width > 0) {
     ctx.strokeStyle = toCss(item.stroke);
     ctx.lineWidth = item.width;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     ctx.beginPath();
     if (item.style === 'cell') {
-      for (let i = 0; i <= cols; i++) { ctx.moveTo(ax + i * cw, ay); ctx.lineTo(ax + i * cw, ay + rows * ch); }
-      for (let j = 0; j <= rows; j++) { ctx.moveTo(ax, ay + j * ch); ctx.lineTo(ax + cols * cw, ay + j * ch); }
+      if (item.inner) {
+        // 只画内部分隔线（井字 #）：两端内缩一点，不贴着画布 / 面板边缘
+        const ins = unit * 0.06;
+        for (let i = 1; i < cols; i++) { ctx.moveTo(ax + i * cw, ay + ins); ctx.lineTo(ax + i * cw, ay + rows * ch - ins); }
+        for (let j = 1; j < rows; j++) { ctx.moveTo(ax + ins, ay + j * ch); ctx.lineTo(ax + cols * cw - ins, ay + j * ch); }
+      } else {
+        for (let i = 0; i <= cols; i++) { ctx.moveTo(ax + i * cw, ay); ctx.lineTo(ax + i * cw, ay + rows * ch); }
+        for (let j = 0; j <= rows; j++) { ctx.moveTo(ax, ay + j * ch); ctx.lineTo(ax + cols * cw, ay + j * ch); }
+      }
     } else {
-      for (let i = 0; i < cols; i++) { const x = ax + (i + 0.5) * cw; ctx.moveTo(x, y1); ctx.lineTo(x, y2); }
+      const river = item.river > 0 && item.river < rows ? item.river : 0;
+      const ra = ay + (river - 0.5) * ch, rb = ay + (river + 0.5) * ch; // 河的上下沿（第 river 行 / 第 river+1 行的线）
+      for (let i = 0; i < cols; i++) {
+        const x = ax + (i + 0.5) * cw;
+        if (river && i > 0 && i < cols - 1) {
+          // 河界：中间的竖线在河处断开，只有最左、最右两条边线贯穿
+          ctx.moveTo(x, y1); ctx.lineTo(x, ra);
+          ctx.moveTo(x, rb); ctx.lineTo(x, y2);
+        } else { ctx.moveTo(x, y1); ctx.lineTo(x, y2); }
+      }
       for (let j = 0; j < rows; j++) { const y = ay + (j + 0.5) * ch; ctx.moveTo(x1, y); ctx.lineTo(x2, y); }
     }
     ctx.stroke();
+
+    // 炮位 / 兵位：交叉点四周的小折角，靠边的一侧省略
+    if (item.ticks?.length) {
+      const g = unit * 0.09, a = unit * 0.17;
+      ctx.lineWidth = Math.max(1, item.width * 0.85);
+      ctx.beginPath();
+      for (const [c, r] of item.ticks) {
+        const x = ax + (c - 0.5) * cw, y = ay + (r - 0.5) * ch;
+        for (const sx of [-1, 1]) {
+          if ((sx < 0 && c === 1) || (sx > 0 && c === cols)) continue;
+          for (const sy of [-1, 1]) {
+            ctx.moveTo(x + sx * g, y + sy * (g + a));
+            ctx.lineTo(x + sx * g, y + sy * g);
+            ctx.lineTo(x + sx * (g + a), y + sy * g);
+          }
+        }
+      }
+      ctx.stroke();
+    }
+
+    // 外框：最外圈加粗
+    if (item.frame > 0 && item.style !== 'cell') {
+      ctx.lineWidth = item.frame;
+      ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+    }
   }
   if (item.dots.length) {
     ctx.fillStyle = toCss(item.stroke, 1);

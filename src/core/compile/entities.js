@@ -213,6 +213,11 @@ export function createEntity(node, ctx, opts = {}) {
       }
       ent.dots = (r.posList('dots') || []).map((p) => cellToXY(scene, p));
       ent.labels = r.flag('labels');
+      ent.inner = r.flag('inner');
+      ent.frame = r.len('frame', 0, { min: 0 });
+      ent.river = Math.round(r.num('river', 0, { min: 0, max: Math.max(0, scene.rows - 1) }));
+      ent.ticks = (r.posList('ticks') || []).filter((p) => p[0] >= 1 && p[0] <= scene.cols && p[1] >= 1 && p[1] <= scene.rows);
+      if (ent.river && ent.style !== 'line') diag.warn('W_NOT_APPLICABLE', 'river 只适用于 style="line" 的棋盘', r.at('river'));
       ent.radius = r.len('radius', U * 0.4, { min: 0 });
       init.fill = r.color('fill', NONE);
       init.stroke = r.color('stroke', scene.theme.text ? withAlpha(scene.theme.text, 0.28) : col('rgba(255,255,255,0.28)'));

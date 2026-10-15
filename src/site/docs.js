@@ -35,6 +35,8 @@ $('palGrid').innerHTML = PALETTES.map((p) => {
 
 // ---- 常用配方 ----
 const RECIPES = [
+  ['连线跟着对象走', 'from / to 直接写对象 id：箭头自动贴在边缘上，对象移动、放大时跟着走，不会断开。', '<rect id="a" at="2,2" w="1.4c" h="1c"/>\n<rect id="b" at="6,2" w="1.4c" h="1c"/>\n<arrow from="a" to="b"/>'],
+  ['卡片里摆文字', '位置用 off（和 size 同样的 c 单位），不要给 at 加小数。上下留出相等的内边距。', '<rect id="c" at="3,2" w=".9c" h="1.15c"/>\n<text at="3,2" off="0,-.17c" size=".56c" text="日"/>\n<text at="3,2" off="0,.37c" size=".17c" text="rì"/>'],
   ['沿路径移动', '给出路径点，smooth 把折线变成圆滑曲线，trail 留下拖尾。', '<a path="1,4 3,2 6,2 8,4"\n   smooth trail ease="soft"/>'],
   ['用 for 批量生成', '循环变量 i 可以进表达式，一次生成一排对象。', '<for var="i" in="1..6">\n  <circle id="d{i}" at="{i},2"\n          size=".6c" fill="{pal(i - 1)}"/>\n</for>'],
   ['绕圈运动', '只写半径、圈数和时长，真正的圆轨道由引擎计算。', '<p orbit="1.5c" around="4,3" turns="2"\n   dur="4" ease="linear"/>'],

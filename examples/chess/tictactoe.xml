@@ -1,49 +1,45 @@
-<scene width="640" height="760" grid="3x3" pad="40 60 130 60" palette="aurora" hold="0.8" read="4">
-  <!-- 井字棋：def 模板把"两条线"打包成一个 X；O 是带 none 填充的圆。
-       模板参数：cx / cy 是格子坐标；id 由使用处传入，内部图元用 {id}a / {id}b 命名 -->
+<scene width="640" height="690" grid="3x3" pad="40 60 130 60" palette="aurora" hold="0.8" read="4">
+  <!-- 井字棋：格子是正方形（宽 = 高 = 173px），所以 .25 个格子在横竖两个方向上长度一样，X 才不会被拉歪。
+       棋盘只画内部的 # 形分隔线（grid 的 inner），两端内缩，不贴着画布边缘。
+       所有棋子的笔画都画在格子内部：X 的臂 ±.25 格、O 的外径约 .69 格，到格线至少留出 .15 格。
+       def 模板把“两条线”打包成一个 X；O 是 none 填充的圆。 -->
   <def name="X" cx="2" cy="2" color="accent">
-    <line id="{id}a" from="{cx-0.28},{cy-0.28}" to="{cx+0.28},{cy+0.28}" stroke="{color}" width="12" layer="marks" group="{id}"/>
-    <line id="{id}b" from="{cx+0.28},{cy-0.28}" to="{cx-0.28},{cy+0.28}" stroke="{color}" width="12" layer="marks" group="{id}" delay=".15"/>
+    <line id="{id}a" from="{cx-0.25},{cy-0.25}" to="{cx+0.25},{cy+0.25}" stroke="{color}" width="12" layer="marks" group="{id}"/>
+    <line id="{id}b" from="{cx+0.25},{cy-0.25}" to="{cx-0.25},{cy+0.25}" stroke="{color}" width="12" layer="marks" group="{id}" delay=".15"/>
   </def>
-  <def name="O" is="circle" size=".66c" fill="none" stroke="c5" width="12" layer="marks"/>
+  <def name="O" is="circle" size=".62c" fill="none" stroke="c5" width="12" layer="marks"/>
 
   <layer name="board" z="0"/>
   <layer name="marks" z="10"/>
 
-  <grid style="cell" stroke="sub" width="3" layer="board"/>
+  <grid style="cell" inner stroke="sub" width="5" layer="board"/>
 
-  <!-- 一局棋：数组里每一项是 "X/O,列,行"；用 split 在循环里拆开 -->
-  <let game="{['X,2,2','O,1,1','X,3,3','O,1,3','X,1,2','O,3,2','X,2,1','O,2,3','X,3,1']}"/>
-
-  <step say="井字棋：两个人轮流在 3x3 的格子里画 X 和 O" hold="1"/>
+  <step say="井字棋：两个人轮流在 3x3 的格子里画 X 和 O，先连成一线的人赢" hold="1"/>
 
   <step say="先手画 X，落在正中间，这是最强的开局">
     <X id="x1" cx="2" cy="2"/>
   </step>
-  <step say="后手 O 只能选一个角">
-    <O id="o1" at="1,1"/>
+  <step say="后手 O 落在边上（左边中间）。这不是好棋，X 能抓住机会">
+    <O id="o1" at="1,2"/>
   </step>
-  <step say="X 再占对角，形成两个连着的 X">
-    <X id="x2" cx="3" cy="3"/>
+  <step say="X 占左上角，和中间的 X 连成斜线，威胁右下角">
+    <X id="x2" cx="1" cy="1"/>
   </step>
-  <step say="X 马上要连成一线了，O 必须堵住左下角">
-    <O id="o2" at="1,3"/>
-    <ring at="1,3" size="1.1c" stroke="warn" layer="marks" delay=".3"/>
+  <step say="O 必须堵住右下角">
+    <O id="o2" at="3,3"/>
   </step>
-  <step say="X 在左边中间落子，同时威胁两条线">
-    <X id="x3" cx="1" cy="2"/>
+  <step say="X 落在右上角：和左上角连成一行，又和中间连成另一条斜线，同时威胁两处" dur=".8">
+    <X id="x3" cx="3" cy="1"/>
+    <ring id="t1" at="2,1" size=".9c" stroke="warn" width="4" layer="marks" delay=".5"/>
+    <ring id="t2" at="1,3" size=".9c" stroke="warn" width="4" layer="marks" delay=".7"/>
   </step>
-  <step say="O 只能堵一边，右边中间">
-    <O id="o3" at="3,2"/>
+  <step say="O 一次只能堵一处，选了左下角">
+    <t1 out/>
+    <t2 out/>
+    <O id="o3" at="1,3"/>
   </step>
-  <step say="X 在上边中间落子，凑成一条斜线与一条竖线的双重威胁">
+  <step say="X 补上上边中间，三个 X 连成一行，X 获胜！" dur=".8">
     <X id="x4" cx="2" cy="1"/>
-  </step>
-  <step say="O 堵住下边中间，但左上到右下的斜线已经无法阻止">
-    <O id="o4" at="2,3"/>
-  </step>
-  <step say="X 在右上角落子，三个 X 连成一条斜线，X 获胜！" dur=".8">
-    <X id="x5" cx="3" cy="1"/>
-    <line id="win" from="3,1" to="1,3" stroke="warn" width="10" layer="marks" delay=".6"/>
+    <line id="win" from="0.72,1" to="3.28,1" stroke="warn" width="10" layer="marks" delay=".6"/>
   </step>
 </scene>

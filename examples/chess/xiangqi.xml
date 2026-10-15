@@ -1,21 +1,29 @@
-<scene width="640" height="780" grid="9x10" pad="30 30 130 30" palette="graphite" hold="0.8" read="4">
-  <!-- 中国象棋：9x10 交叉点，棋子是带汉字的圆；红黑双方各用一个 group，方便整体强调。
-       行 1 是黑方底线，行 10 是红方底线，河在第 5、6 行之间；红方的兵走到第 5 行及以上就算过河。 -->
+<scene width="640" height="800" grid="9x10" pad="30 32 130 32" palette="graphite" hold="0.8" read="4">
+  <!-- 中国象棋：9x10 个交叉点，格子是正方形（64px）。红黑双方各用一个 group，方便整体强调。
+       规范棋盘：
+         · 河界在第 5、6 行之间：中间的竖线在河处断开，只有最左最右两条边线贯穿；河道是一条浅色带，里面写“楚河”“汉界”；
+         · 最外圈加粗成外框；炮位、兵位四周有小折角（靠边的一侧省略）；两个九宫各有一对斜线。
+       行 1 是黑方底线，行 10 是红方底线；红方的兵走到第 5 行及以上就算过河。 -->
   <def name="红" is="circle" size=".9c" fill="#fbeed2" stroke="#B5473B" width="3" color="#B5473B" layer="pieces"/>
   <def name="黑" is="circle" size=".9c" fill="#fbeed2" stroke="#2b2b2b" width="3" color="#222" layer="pieces"/>
 
   <layer name="board" z="0"/>
+  <layer name="band" z="1"/>
+  <layer name="words" z="2"/>
   <layer name="pieces" z="10"/>
   <layer name="marks" z="20"/>
 
-  <grid id="木盘" fill="#D4B07E" stroke="#6B4A22" width="2" layer="board"/>
-  <!-- 楚河汉界写在河道正中（第 5、6 行之间 = 5.5 行），字号小一点，不挡棋子 -->
-  <text id="河" text="楚 河                   汉 界" at="5,5.5" size=".5c" fill="#8A6A3A" layer="board" in="fade"/>
+  <grid id="木盘" fill="#D4B07E" stroke="#6B4A22" width="2" frame="4" river="5"
+        ticks="2,3 8,3 2,8 8,8 1,4 3,4 5,4 7,4 9,4 1,7 3,7 5,7 7,7 9,7" layer="board"/>
   <!-- 九宫斜线 -->
-  <line from="4,1" to="6,3" stroke="#5b3a14" width="2" layer="board" in="none"/>
-  <line from="6,1" to="4,3" stroke="#5b3a14" width="2" layer="board" in="none"/>
-  <line from="4,8" to="6,10" stroke="#5b3a14" width="2" layer="board" in="none"/>
-  <line from="6,8" to="4,10" stroke="#5b3a14" width="2" layer="board" in="none"/>
+  <line from="4,1" to="6,3" stroke="#6B4A22" width="2" layer="board" in="none"/>
+  <line from="6,1" to="4,3" stroke="#6B4A22" width="2" layer="board" in="none"/>
+  <line from="4,8" to="6,10" stroke="#6B4A22" width="2" layer="board" in="none"/>
+  <line from="6,8" to="4,10" stroke="#6B4A22" width="2" layer="board" in="none"/>
+  <!-- 河道：正好是第 5、6 行之间的一格高、从最左线到最右线的 8 格宽 -->
+  <rect id="河道" at="5,5.5" w="8c" h="1c" radius="0" fill="#6B4A22" alpha=".1" flat="" layer="band" in="fade"/>
+  <text id="楚河" text="楚河" at="2,5.5" size=".46c" fill="#7A5A2E" layer="words" in="fade"/>
+  <text id="汉界" text="汉界" at="8,5.5" size=".46c" fill="#7A5A2E" layer="words" in="fade"/>
 
   <group name="红方">
     <红 id="r帅" at="5,10" label="帅"/>
@@ -31,8 +39,8 @@
     <黑 id="b炮" at="8,3" label="炮"/>
     <黑 id="b卒" at="3,4" label="卒"/>
   </group>
-  <!-- 炮架：炮和被吃的炮中间必须隔着一个棋子 -->
-  <黑 id="架" at="8,5" label="卒"/>
+  <!-- 炮架：炮和被吃的炮中间必须隔着一个棋子（放在第 4 行，不压在河道文字上） -->
+  <黑 id="架" at="8,4" label="卒"/>
 
   <step say="中国象棋：红方在下，黑方在上，中间是「楚河汉界」" dur="1">
     <红方 pulse="0.15"/>
@@ -65,8 +73,8 @@
 
   <step say="「炮」吃子必须隔着一个棋子：炮、中间的炮架、对方的炮，三个排成一线" dur=".8">
     <a炮 out/>
-    <ring id="架环" at="8,5" size="1.25c" stroke="good" layer="marks"/>
-    <note id="架说明" at="8,5" text="炮架" side="left" layer="marks" delay=".3"/>
+    <ring id="架环" at="8,4" size="1.25c" stroke="good" layer="marks"/>
+    <note id="架说明" at="8,4" text="炮架" side="left" layer="marks" delay=".3"/>
   </step>
 
   <step say="红炮跳过炮架，吃掉了黑炮" dur="1">
