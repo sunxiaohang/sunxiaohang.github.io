@@ -12,11 +12,12 @@ export function drawBackground(ctx, ir) {
 
 /** 编辑器用的坐标参考（不属于场景内容，导出时不画） */
 export function drawGuide(ctx, ir) {
-  const { ax, ay, cols, rows, cw, ch, unit } = ir.guide;
+  const { ax, ay, cols, rows, cw, ch, unit, dark } = ir.guide;
+  const ink = dark === false ? '20,22,40' : '255,255,255'; // 浅色背景上改用深色参考线
   ctx.save();
   if (cols * rows <= 400) {
     ctx.lineWidth = 1;
-    ctx.strokeStyle = 'rgba(255,255,255,.07)';
+    ctx.strokeStyle = `rgba(${ink},${dark === false ? 0.09 : 0.07})`;
     ctx.setLineDash([4, 7]);
     ctx.beginPath();
     for (let i = 0; i <= cols; i++) { const x = Math.round(ax + i * cw) + 0.5; ctx.moveTo(x, ay); ctx.lineTo(x, ay + rows * ch); }
@@ -24,7 +25,7 @@ export function drawGuide(ctx, ir) {
     ctx.stroke();
     ctx.setLineDash([]);
   }
-  ctx.fillStyle = 'rgba(255,255,255,.28)';
+  ctx.fillStyle = `rgba(${ink},.28)`;
   ctx.font = `500 12px ${FONT}`;
   ctx.textBaseline = 'top';
   const labels = unit >= 56;

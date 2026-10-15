@@ -1,4 +1,4 @@
-import { parseColor, shade } from '../util/color.js';
+import { parseColor, shade, luminance } from '../util/color.js';
 import { Reader, checkAttrs } from '../lang/reader.js';
 import { SCENE_ATTRS } from '../lang/schema.js';
 
@@ -49,11 +49,17 @@ export function buildScene(root, diag, themeRaw) {
     ah = height;
   }
 
-  const bg = r.color('bg', col('#0f1020'));
+  // 背景：显式写的优先，其次取配色 / 主题里的 bg、bg2，最后才是内置深色
+  const bg = r.color('bg', theme.bg || col('#0f1020'));
+  const bg2 = r.color('bg2', null) || (r.has('bg') ? null : theme.bg2) || shade(bg, 0.07);
+  const series = [];
+  for (let i = 1; theme[`c${i}`]; i++) series.push(theme[`c${i}`]);
   const cw = aw / cols, ch = ah / rows;
   return {
     width, height, cols, rows, pad, ax: pad[3], ay: pad[0], cw, ch, unit: Math.min(cw, ch),
-    bg, bg2: r.color('bg2', null) || shade(bg, 0.07),
+    bg, bg2,
+    // 套用了配色 / 主题：图形默认色、文字色、标签对比度改由主题决定
+    themed: Object.keys(theme).length > 0, series, dark: luminance(bg) < 0.4,
     shadow: r.bool('shadow', true), glow: r.bool('glow', true), caption: r.bool('caption', true),
     hold: r.num('hold', 0.6, { min: 0.05 }),
     read: r.num('read', 0, { min: 0, max: 30 }),

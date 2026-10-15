@@ -126,7 +126,11 @@ export const SCENE_ATTRS = {
   height: B('画布高度(px)', 600),
   grid: B('把画布划成 "列x行" 的格子，位置都以格子为单位', '3x3'),
   pad: B('格子区域四周的留白（CSS 顺序：上 右 下 左；可写 1/2/4 个数），字幕与坐标标签放在留白里', 0),
-  bg: B('背景色（外圈）', '#0f1020'),
+  palette: B('配色模板，一行套上：背景、默认图形色、文字/线条色、标签对比度自动跟随。' +
+    '可选 material / material-dark / pantone-classic-blue / pantone-living-coral / pantone-viva-magenta / pantone-peach-fuzz / ' +
+    'pantone-ultra-violet / pantone-greenery / pantone-mocha-mousse / nord / dracula / solarized-light / macaron / ocean / sunset / neon / mono / dark / light。' +
+    '语义色 accent accent2 text sub bg bg2 warn good bad c1…c8 可直接写进 fill/stroke，表达式里用 pal(i) 取系列色'),
+  bg: B('背景色（外圈），默认取配色的 bg，没有配色时为 #0f1020', '#0f1020'),
   bg2: B('背景色（中心高光），默认由 bg 自动提亮'),
   shadow: B('是否绘制地面投影', true),
   glow: B('是否绘制图形光晕', true),
@@ -192,7 +196,7 @@ export function schema() {
       layer: { doc: '图层：<layer name="marks" z="20">…子对象…</layer>；z 越大越靠上；可在步骤里用图层名改 alpha', attrs: attrs(LAYER_ATTRS) },
       theme: {
         doc: '主题（语义色）：<theme accent="#7c6cff" text="#e8eaf6" bg="#0f1020"/>，之后对象里写 fill="accent" 引用。' +
-          '配合 <import> 引入主题文件即可一键换肤',
+          '配合 <import> 引入主题文件即可一键换肤。<theme palette="nord" accent="#f90"/> 先套内置配色模板，再覆盖个别颜色（<scene palette> 同理，优先级更高）',
         attrs: attrs([]),
       },
       import: {

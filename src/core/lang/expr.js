@@ -1,4 +1,5 @@
 import { resolveEase } from '../util/ease.js';
+import { DEFAULT_SERIES, seriesOf } from '../palettes.js';
 
 export class ExprError extends Error {
   constructor(message, index = 0) {
@@ -217,6 +218,17 @@ const defs = {
     return fn(Math.min(1, Math.max(0, N(t, 'ease'))));
   }],
   hsl: ['hsl(h, s, l)', '生成颜色字符串，s/l 为 0~100', (cx, [h, s, l]) => `hsl(${fmt(N(h, 'hsl'))},${fmt(N(s, 'hsl'))}%,${fmt(N(l, 'hsl'))}%)`],
+  pal: ['pal(i) / pal("accent")', '取当前配色（palette）里的颜色：数字 = 第 i 个系列色（循环取，0 起），名字 = 语义色。没启用配色时用默认系列色', (cx, [k]) => {
+    const t = cx.theme ?? {};
+    if (typeof k === 'string') {
+      if (!Object.hasOwn(t, k)) throw new ExprError(`当前配色里没有 "${k}"（先在 <scene> 写 palette="…"，或用 <theme ${k}="#…"/> 声明）`);
+      return t[k];
+    }
+    const list = seriesOf(t);
+    const s = list.length ? list : DEFAULT_SERIES;
+    const n = Math.floor(N(k, 'pal'));
+    return s[((n % s.length) + s.length) % s.length];
+  }],
   rgb: ['rgb(r, g, b)', '生成颜色字符串', (cx, [r, g, b]) => `rgb(${fmt(N(r, 'rgb'))},${fmt(N(g, 'rgb'))},${fmt(N(b, 'rgb'))})`],
 };
 

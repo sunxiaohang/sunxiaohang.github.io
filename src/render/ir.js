@@ -154,7 +154,7 @@ export function composeFrame(scene, frame, measure) {
   return {
     width: scene.width, height: scene.height,
     background: { inner: scene.bg2, outer: scene.bg },
-    guide: { ax: scene.ax, ay: scene.ay, cols: scene.cols, rows: scene.rows, cw: scene.cw, ch: scene.ch, unit: scene.unit },
+    guide: { ax: scene.ax, ay: scene.ay, cols: scene.cols, rows: scene.rows, cw: scene.cw, ch: scene.ch, unit: scene.unit, dark: scene.dark !== false },
     items: items.map(({ e, L, alpha }) => buildItem(scene, e, L, alpha, measure)).filter(Boolean),
     captions: frame.captions.map((c) => buildCaption(scene, c, measure)),
   };

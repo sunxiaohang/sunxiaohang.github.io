@@ -26,7 +26,10 @@ function makePath(pts, smooth) {
       let i = 1;
       while (i < pts.length - 1 && d > lens[i]) i++;
       const span = lens[i] - lens[i - 1];
-      const u = span > 1e-9 ? clamp((d - lens[i - 1]) / span) : 1;
+      // 首段允许 u<0、末段允许 u>1：这样 back/spring/elastic 等过冲缓动在起终点处能真的冲出去，而不是被钳死
+      let u = span > 1e-9 ? (d - lens[i - 1]) / span : 1;
+      if (i > 1 && u < 0) u = 0;
+      if (i < pts.length - 1 && u > 1) u = 1;
       return [lerp(pts[i - 1][0], pts[i][0], u), lerp(pts[i - 1][1], pts[i][1], u)];
     };
   }

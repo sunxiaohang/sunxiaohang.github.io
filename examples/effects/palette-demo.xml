@@ -1,0 +1,26 @@
+<scene width="900" height="640" grid="6x4" pad="40 30 130 30" palette="pantone-classic-blue" hold="1">
+  <!-- 配色模板：scene 上写一行 palette="…"，背景、默认图形色、文字色、线条色、标签对比度全部自动跟随。
+       工具栏的"配色…"下拉框可以一键换成 material / pantone-* / nord / dracula / macaron / neon …，这个示例不用改任何一行。
+       循环里想按序号取色，用 pal(i)；想引用语义色，直接在 fill/stroke 里写 accent / accent2 / warn / good / bad / text / sub。 -->
+  <text id="title" at="3.5,1" text="换一行 palette，整场换色" size=".38c"/>
+
+  <step say="系列色 c1~c6：循环里写 fill=&quot;{{pal(i)}}&quot;，一批对象自动配成一套" dur=".4" stagger=".06">
+    <for var="i" in="0..5">
+      <circle id="s{i}" at="{i + 1},2" size=".72c" fill="{pal(i)}" label="{i + 1}"/>
+    </for>
+  </step>
+
+  <step say="语义色 accent / warn / good / bad：状态一眼分清，标签文字按底色自动选深浅" dur=".4" stagger=".08">
+    <rect id="r1" at="1.5,3" w="1.6c" h=".7c" fill="accent" label="accent" radius="14"/>
+    <rect id="r2" at="2.9,3" w="1.6c" h=".7c" fill="warn" label="warn" radius="14"/>
+    <rect id="r3" at="4.3,3" w="1.6c" h=".7c" fill="good" label="good" radius="14"/>
+    <rect id="r4" at="5.7,3" w="1.6c" h=".7c" fill="bad" label="bad" radius="14"/>
+  </step>
+
+  <step say="动起来：配色同时管着默认的圈、线、文字颜色" dur=".6" stagger=".05">
+    <for var="i" in="0..5">
+      <change id="s{i}" at="{i + 1},4" pulse=".12"/>
+    </for>
+    <ring id="halo" at="1,4" size="1.05c" width="3"/>
+  </step>
+</scene>

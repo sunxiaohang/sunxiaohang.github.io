@@ -1,7 +1,8 @@
 import { Scope, evalExpr, ExprError, truthy } from './expr.js';
 import { ENTITY_TYPES } from './schema.js';
 import { resolveEase } from '../util/ease.js';
-import { parsePos } from './reader.js';
+import { parsePos, suggest } from './reader.js';
+import { getPalette, PALETTE_NAMES } from '../palettes.js';
 
 const MAX_NODES = 60000;
 const MAX_LOOPS = 40000;
@@ -63,7 +64,7 @@ export function expand(root, diag, dataSources = {}) {
   const budget = { nodes: 0, loops: 0, over: false };
   const defs = new Map();
   const anims = new Map();
-  const theme = {};
+  let theme = {};
   const global = new Scope();
   const placed = new Map(); // id → [col, row]，供 after/below 相对定位
   // 数据源（<data>）：作为全局变量注入，供 <for in="{rows}"> 引用
@@ -430,6 +431,7 @@ export function expand(root, diag, dataSources = {}) {
     defs.set(name, n);
   }
 
+  let palName = '', palNode = root;
   for (const n of root.children) {
     if (n.tag === 'def') registerDef(n);
     else if (n.tag === 'anim') registerAnim(n);
@@ -437,10 +439,25 @@ export function expand(root, diag, dataSources = {}) {
       n.hoisted = true;
       for (const [k, v] of Object.entries(n.attrs)) {
         if (k === 'name') continue; // name 仅作文档标注，非语义色
-        theme[k] = toStr(interp(v, global, posOf(n, k), false));
+        const val = toStr(interp(v, global, posOf(n, k), false));
+        if (k === 'palette') { palName = val; palNode = n; } else theme[k] = val;
       }
     }
   }
+
+  // 配色模板：scene 上的 palette 优先于 <theme palette>；模板提供底色，显式写的语义色覆盖同名项
+  if (root.attrs.palette !== undefined) {
+    palName = toStr(interp(root.attrs.palette, global, posOf(root, 'palette'), false));
+    palNode = root;
+  }
+  if (palName && palName.trim()) {
+    const p = getPalette(palName);
+    if (!p) {
+      const hint = suggest(palName, PALETTE_NAMES);
+      diag.error('E_BAD_VALUE', `未知配色 "${palName}"`, posOf(palNode, 'palette'), `${hint ? `是不是 ${hint}？` : ''}可用：${PALETTE_NAMES.join(', ')}`);
+    } else theme = { ...p.tokens, ...theme };
+  }
+  cx.theme = theme;
 
   const out = { tag: 'scene', attrs: {}, attrPos: root.attrPos, children: [], line: root.line, col: root.col };
   for (const [k, v] of Object.entries(root.attrs)) out.attrs[k] = toStr(interp(v, global, posOf(root, k), false));

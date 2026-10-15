@@ -4,10 +4,12 @@ import {
   ENTITY_ATTRS, LAYER_ATTRS, GROUP_ATTRS, POSITIONAL, SEGMENTED, BOXED, TIMING, EFFECTS, SOUND_NAMES,
 } from '../lang/schema.js';
 import { clamp } from '../util/ease.js';
+import { onColor } from '../util/color.js';
 import { col, NONE, cellToXY, warnOutside, register } from './scene.js';
 
 const NAME_RE = /^[\p{L}_][\p{L}\p{N}_.-]*$/u;
 const PALETTE = ['#ff6b9d', '#4cc9f0', '#ffd166', '#9b8cff', '#06d6a0', '#ff9f68'].map(col);
+const withAlpha = (c, a) => [c[0], c[1], c[2], c[3] * a];
 const SIDES = ['top', 'bottom', 'left', 'right'];
 const rad = (d) => (d * Math.PI) / 180;
 
@@ -113,11 +115,15 @@ export function createEntity(node, ctx, opts = {}) {
       init.size = r.len('size', defSize, { min: 1 });
       init.w = BOXED.has(type) ? r.len('w', init.size, { min: 1 }) : init.size;
       init.h = BOXED.has(type) ? r.len('h', init.size, { min: 1 }) : init.size;
-      init.fill = r.color('fill', PALETTE[ctx.colorIdx++ % PALETTE.length]);
+      {
+        const pal = scene.series.length ? scene.series : PALETTE;
+        init.fill = r.color('fill', pal[ctx.colorIdx++ % pal.length]);
+      }
       init.stroke = r.color('stroke', NONE);
       init.width = r.len('width', 3, { min: 0 });
       init.label = r.str('label', '');
-      init.color = r.color('color', col('rgba(255,255,255,0.96)'));
+      // 套用了配色时，标签文字按填充色自动选深/浅，保证看得清
+      init.color = r.color('color', scene.themed && init.fill[3] > 0.5 ? onColor(init.fill) : col('rgba(255,255,255,0.96)'));
       ent.flat = r.flag('flat');
       if (type === 'rect') ent.radius = r.len('radius', -1);
       if (type === 'star') ent.points = r.num('points', 5, { min: 3, max: 24 });
@@ -125,7 +131,7 @@ export function createEntity(node, ctx, opts = {}) {
     case 'text':
       init.size = r.len('size', 36, { min: 1 });
       init.w = r.len('w', 0, { min: 0 });
-      init.fill = r.color('fill', col('#ffffff'));
+      init.fill = r.color('fill', scene.theme.text || col('#ffffff'));
       init.stroke = r.color('stroke', NONE);
       init.width = r.len('width', 0, { min: 0 });
       init.text = r.str('text', '');
@@ -133,14 +139,14 @@ export function createEntity(node, ctx, opts = {}) {
     case 'icon':
       init.size = r.len('size', 48, { min: 1 });
       init.w = 0;
-      init.fill = r.color('fill', col('#ffffff'));
+      init.fill = r.color('fill', scene.theme.text || col('#ffffff'));
       init.stroke = r.color('stroke', NONE);
       init.width = r.len('width', 0, { min: 0 });
       init.text = r.str('text', '');
       break;
     case 'ring':
       init.size = r.len('size', Math.min(U, 96), { min: 1 });
-      init.stroke = r.color('stroke', col('#ff5c7a'));
+      init.stroke = r.color('stroke', scene.theme.accent2 || col('#ff5c7a'));
       init.width = r.len('width', 4, { min: 0 });
       break;
     case 'note': {
@@ -166,7 +172,7 @@ export function createEntity(node, ctx, opts = {}) {
       warnOutside(ctx, t, r.at('to'));
       [init.x1, init.y1] = cellToXY(scene, f);
       [init.x2, init.y2] = cellToXY(scene, t);
-      init.stroke = r.color('stroke', col('#e8eaf6'));
+      init.stroke = r.color('stroke', scene.theme.text || col('#e8eaf6'));
       init.width = r.len('width', 4, { min: 0 });
       ent.dash = r.flag('dash');
       ent.head = r.len('head', Math.max(12, init.width * 3.2), { min: 1 });
@@ -182,8 +188,8 @@ export function createEntity(node, ctx, opts = {}) {
       ent.labels = r.flag('labels');
       ent.radius = r.len('radius', U * 0.4, { min: 0 });
       init.fill = r.color('fill', NONE);
-      init.stroke = r.color('stroke', col('rgba(255,255,255,0.28)'));
-      init.color = r.color('color', col('rgba(255,255,255,0.55)'));
+      init.stroke = r.color('stroke', scene.theme.text ? withAlpha(scene.theme.text, 0.28) : col('rgba(255,255,255,0.28)'));
+      init.color = r.color('color', scene.theme.text ? withAlpha(scene.theme.text, 0.55) : col('rgba(255,255,255,0.55)'));
       init.width = r.len('width', 1.5, { min: 0 });
       break;
     }

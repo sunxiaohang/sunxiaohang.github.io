@@ -261,21 +261,22 @@ test('九九表：口诀字幕按课本读法（一一得一…），不能出�
   for (const s of rows) assert.ok(!/\d\d\d/.test(s.say.replace(/第 \d 行/, '')), `字幕里有连在一起的三位数：${s.say}`);
 });
 
-test('缓动展览：残影点位置等于 ease(name,t)，终点处全部收敛，过冲型确实越过终点', () => {
-  const sc = compiled.get('easing-gallery').scene;
-  const x = (i, j) => sc.byId.get(`t${i}_${j}`).init.x;
-  const x0 = x(0, 0), x1 = x(0, 10);
+test('缓动展览：8 颗球赛跑，终点收敛，快慢与过冲符合各缓动的定义', () => {
+  const { scene: sc } = compiled.get('easing-gallery');
+  const race = sc.steps[1];
+  const ball = (i, t) => evaluate(sc, t).entities[sc.byId.get(`b${i}`).index];
+  const x0 = ball(0, 0).x, x1 = ball(0, race.freeze).x;
+  const prog = (i, q) => (ball(i, race.t0 + (race.t1 - race.t0) * q).x - x0) / (x1 - x0);
   for (let i = 0; i < 8; i++) {
-    near(x(i, 0), x0, 1e-6);
-    near(x(i, 10), x1, 1e-6);
+    near(ball(i, 0).x, x0, 1e-6);
+    near(ball(i, race.freeze).x, x1, 1e-6);
   }
-  const mid = (i) => (x(i, 5) - x0) / (x1 - x0);
-  near(mid(0), 0.5, 1e-6);
-  assert.ok(Math.abs(mid(1) - 0.5) < 1e-6, 'soft 关于中点对称');
-  assert.ok(mid(2) > 0.5, 'snap 起步快');
-  assert.ok(mid(3) < 0.5, 'in 起步慢');
+  near(prog(0, 0.5), 0.5, 1e-3);
+  assert.ok(Math.abs(prog(1, 0.5) - 0.5) < 1e-3, 'soft 关于中点对称');
+  assert.ok(prog(2, 0.5) > 0.5, 'snap 起步快');
+  assert.ok(prog(3, 0.5) < 0.5, 'in 起步慢');
   let maxBack = 0, maxSpring = 0;
-  for (let j = 0; j <= 10; j++) { maxBack = Math.max(maxBack, (x(4, j) - x0) / (x1 - x0)); maxSpring = Math.max(maxSpring, (x(5, j) - x0) / (x1 - x0)); }
+  for (let j = 0; j <= 40; j++) { maxBack = Math.max(maxBack, prog(4, j / 40)); maxSpring = Math.max(maxSpring, prog(5, j / 40)); }
   assert.ok(maxBack > 1.02, 'back 应过冲');
   assert.ok(maxSpring > 1.02, 'spring 应过冲');
 });

@@ -69,6 +69,18 @@ export function mix(a, b, t) {
   ];
 }
 
+/** 相对亮度 0~1（WCAG） */
+export function luminance(c) {
+  const f = (v) => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4; };
+  return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]);
+}
+
+/** 在 c 上写字时该用深色还是浅色：返回对比度更高的那个 */
+export function onColor(c, dark = [27, 29, 46, 1], light = [255, 255, 255, 0.96]) {
+  const L = luminance(c);
+  return (L + 0.05) / (luminance(dark) + 0.05) >= (luminance(light) + 0.05) / (L + 0.05) ? dark : light;
+}
+
 export function shade(c, amount) {
   return amount >= 0 ? mix(c, [255, 255, 255, c[3]], amount) : mix(c, [0, 0, 0, c[3]], -amount);
 }

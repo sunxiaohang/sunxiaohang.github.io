@@ -1,4 +1,5 @@
 import { compileWithImports, lint, schema } from '../core/index.js';
+import { PALETTES } from '../core/palettes.js';
 import { SoundEngine } from '../audio/sound.js';
 import { Player } from '../player/player.js';
 import { renderStoryboard } from '../export/storyboard.js';
@@ -151,6 +152,7 @@ async function recompile(keepTime) {
   const token = ++recompileToken;
   const res = await compileWithImports(src, loader);
   if (token !== recompileToken) return; // 已有更新的编辑，丢弃过期结果
+  if (typeof syncPaletteMenu === 'function') syncPaletteMenu();
   const diagnostics = [...res.diagnostics, ...(res.scene ? lint(res.scene) : [])];
   const known = res.scene ? { ids: new Set(res.scene.entities.map((e) => e.id)), defs: new Set(res.scene.defNames) } : undefined;
   editor.setDiagnostics(diagnostics, known);
@@ -256,6 +258,49 @@ async function openExample(id) {
 }
 $('examples').addEventListener('change', async (e) => {
   if (await openExample(e.target.value)) { player.seek(0); player.play(); }
+});
+
+// ---------- 配色模板：下拉一键套用，写回 <scene palette="…"> ----------
+const sceneTagRe = /<scene\b[^>]*>/;
+const paletteSel = $('palette');
+(function buildPaletteMenu() {
+  paletteSel.innerHTML = '<option value="" disabled>配色…</option><option value="__none__">（脚本自带 / 默认）</option>';
+  for (const [label, dark] of [['浅色', false], ['深色', true]]) {
+    const g = document.createElement('optgroup');
+    g.label = label;
+    for (const p of PALETTES.filter((x) => x.dark === dark)) {
+      const o = document.createElement('option');
+      o.value = p.name;
+      o.textContent = p.label;
+      o.title = p.desc;
+      g.appendChild(o);
+    }
+    paletteSel.appendChild(g);
+  }
+  paletteSel.value = '__none__';
+})();
+function setScenePalette(src, name) {
+  const m = sceneTagRe.exec(src);
+  if (!m) return null;
+  let tag = m[0].replace(/\s+palette="[^"]*"/, '');
+  if (name) {
+    const selfClose = tag.endsWith('/>');
+    const at = tag.length - (selfClose ? 2 : 1);
+    tag = `${tag.slice(0, at)} palette="${name}"${tag.slice(at)}`;
+  }
+  return src.slice(0, m.index) + tag + src.slice(m.index + m[0].length);
+}
+function syncPaletteMenu() {
+  const m = /<scene\b[^>]*\spalette="([^"]*)"/.exec(editor.value);
+  const name = m ? m[1].trim() : '';
+  paletteSel.value = [...paletteSel.options].some((o) => o.value === name) ? name : '__none__';
+}
+paletteSel.addEventListener('change', () => {
+  const v = paletteSel.value;
+  const next = setScenePalette(editor.value, v === '__none__' ? '' : v);
+  if (next === null) { alert('找不到 <scene> 根标签'); syncPaletteMenu(); return; }
+  editor.value = next;
+  recompile(true);
 });
 
 // ---------- 导出 ----------
