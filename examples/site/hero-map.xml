@@ -1,0 +1,50 @@
+<scene width="960" height="600" grid="17x9" pad="6 6 84 6" palette="graphite" shadow="false" glow="false" overlap="off" hold=".6" poster="-1">
+  <!-- 开篇演示：旅行路线。内置中国地图（省界、南海诸岛），城市名定位，小车沿弧线从 A 到 B 到 C。
+       左边的行程单随小车到站依次点亮。站点放在 <data> 里，换一份数据就是另一条路线。 -->
+  <data name="stops">城市,编号
+北京,1
+西安,2
+成都,3
+昆明,4
+三亚,5</data>
+
+  <layer name="list" z="3"/>
+  <layer name="pins" z="4"/>
+  <layer name="car" z="8"/>
+
+  <map id="地图" region="china" border="sub" borderWidth="1" coast="sub" coastWidth="1.6"/>
+
+  <step say="五个站：北京、西安、成都、昆明、三亚" dur=".5" stagger=".1">
+    <for var="s" index="i" in="{stops}">
+      <circle id="p{s.编号}" city="{s.城市}" size="20" fill="accent" stroke="bg" width="3" label="{s.编号}" flat="" layer="pins"/>
+      <circle id="l{s.编号}" at="1.4,{3 + i * 0.95}" size=".52c" fill="sub" alpha=".4" stroke="bg" width="2" label="{s.编号}" flat="" layer="list"/>
+      <text id="t{s.编号}" at="2.7,{3 + i * 0.95}" text="{s.城市}" size=".34c" fill="text" alpha=".4" layer="list"/>
+    </for>
+  </step>
+
+  <step say="小车从北京出发" dur=".4">
+    <icon id="车" name="car" city="北京" size="34" fill="warn" stroke="bg" width="4" rot="35" layer="car"/>
+    <change id="l1 t1" alpha="1" fill="accent"/>
+  </step>
+
+  <step say="北京到西安" dur="1.5">
+    <车 path="西安" heading="0" arc=".16" trail="warn"/>
+    <change id="l2 t2" alpha="1" delay="1.2"/>
+    <p2 pulse=".5" delay="1.2"/>
+  </step>
+  <step say="西安到成都" dur="1.5">
+    <车 path="成都" heading="0" arc=".16" trail="warn"/>
+    <change id="l3 t3" alpha="1" delay="1.2"/>
+    <p3 pulse=".5" delay="1.2"/>
+  </step>
+  <step say="成都到昆明" dur="1.5">
+    <车 path="昆明" heading="0" arc=".16" trail="warn"/>
+    <change id="l4 t4" alpha="1" delay="1.2"/>
+    <p4 pulse=".5" delay="1.2"/>
+  </step>
+  <step say="昆明到三亚，行程完成" dur="1.7">
+    <车 path="三亚" heading="0" arc=".16" trail="warn"/>
+    <change id="l5 t5" alpha="1" delay="1.4"/>
+    <p5 pulse=".6" delay="1.4"/>
+  </step>
+</scene>

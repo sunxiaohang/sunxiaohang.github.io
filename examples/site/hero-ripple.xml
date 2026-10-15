@@ -1,0 +1,38 @@
+<scene width="960" height="600" grid="17x9" pad="0 0 84 0" palette="graphite" shadow="false" glow="false" overlap="off" hold=".6" seed="1">
+  <!-- 开篇演示：涟漪。153 个点，每一步只改“延迟 = 离中心的距离 × 系数”，波就自己传出去了。 -->
+  <layer name="dots" z="1"/>
+
+  <step say="153 个点，铺满画面" dur=".6">
+    <for var="i" in="0..152">
+      <let d="{sqrt((i % 17 - 8) * (i % 17 - 8) + (floor(i / 17) - 4) * (floor(i / 17) - 4))}"/>
+      <circle id="r{i}" at="{i % 17 + 1},{floor(i / 17) + 1}" size=".18c" fill="sub" alpha=".5" flat="" in="fade" delay="{d * 0.04}" layer="dots"/>
+    </for>
+  </step>
+
+  <step say="一圈涟漪从中心扩散，每一圈换一个颜色" dur="1.4">
+    <for var="i" in="0..152">
+      <let d="{sqrt((i % 17 - 8) * (i % 17 - 8) + (floor(i / 17) - 4) * (floor(i / 17) - 4))}"/>
+      <change id="r{i}" pulse="1.6" fill="{pal(floor(d / 2.4))}" alpha="1" size=".32c" delay="{d * 0.075}" dur=".55" ease="soft"/>
+    </for>
+  </step>
+
+  <step say="再反向收拢：这次是从外向内" dur="1.4">
+    <for var="i" in="0..152">
+      <let d="{sqrt((i % 17 - 8) * (i % 17 - 8) + (floor(i / 17) - 4) * (floor(i / 17) - 4))}"/>
+      <change id="r{i}" pulse="1.6" fill="{pal(floor(d / 2.4) + 1)}" size=".4c" delay="{(9 - d) * 0.075}" dur=".55" ease="soft"/>
+    </for>
+  </step>
+
+  <step say="换一个方向：对角线扫过去，三种颜色交替" dur="1.5">
+    <for var="i" in="0..152">
+      <change id="r{i}" pulse="1.5" fill="{pal((i % 17 + floor(i / 17)) % 3)}" size=".3c" delay="{(i % 17 + floor(i / 17)) * 0.045}" dur=".55" ease="soft"/>
+    </for>
+  </step>
+
+  <step say="最后全部收回，回到最初的点阵" dur="1.2" hold="1">
+    <for var="i" in="0..152">
+      <let d="{sqrt((i % 17 - 8) * (i % 17 - 8) + (floor(i / 17) - 4) * (floor(i / 17) - 4))}"/>
+      <change id="r{i}" size=".18c" fill="sub" alpha=".5" delay="{d * 0.05}" dur=".5" ease="soft"/>
+    </for>
+  </step>
+</scene>

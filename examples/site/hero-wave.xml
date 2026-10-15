@@ -1,0 +1,38 @@
+<scene width="960" height="600" grid="17x9" pad="0 0 84 0" palette="graphite" shadow="false" glow="false" overlap="off" hold=".6" seed="11">
+  <!-- 开篇演示：均衡器。33 根柱子，每一步只写“高度公式”，换一个公式就是另一种形状。 -->
+  <step say="33 根柱子，从中线向两边长" dur=".6" stagger=".012">
+    <for var="i" in="0..32">
+      <rect id="b{i}" at="{1 + i * 0.5},5" w=".3c" h=".14c" radius="999" fill="{pal(floor(i / 11))}" flat="" in="fade"/>
+    </for>
+  </step>
+
+  <step say="第一个公式：正弦波" dur="1.4" stagger=".014">
+    <for var="i" in="0..32">
+      <change id="b{i}" h="{0.5 + 2.8 * (1 + sin(i * 0.42))}c" ease="soft" dur=".9"/>
+    </for>
+  </step>
+
+  <step say="换一个公式：一座山" dur="1.4" stagger=".014">
+    <for var="i" in="0..32">
+      <change id="b{i}" h="{0.3 + 5.4 * exp(-((i - 16) * (i - 16)) / 42)}c" fill="{pal(floor(i / 11) + 1)}" ease="soft" dur=".9"/>
+    </for>
+  </step>
+
+  <step say="再换：交给随机数，每次都一样（seed 固定）" dur="1.4" stagger=".014">
+    <for var="i" in="0..32">
+      <change id="b{i}" h="{0.3 + rand() * 5}c" fill="{pal(i % 3)}" ease="soft" dur=".9"/>
+    </for>
+  </step>
+
+  <step say="两座山，颜色跟着位置走" dur="1.5" stagger=".014">
+    <for var="i" in="0..32">
+      <change id="b{i}" h="{0.3 + 4.8 * exp(-((i - 8) * (i - 8)) / 22) + 4.8 * exp(-((i - 24) * (i - 24)) / 22)}c" fill="{pal(floor(i / 11))}" ease="soft" dur=".9"/>
+    </for>
+  </step>
+
+  <step say="归于平静" dur="1.1" stagger=".01" hold="1">
+    <for var="i" in="0..32">
+      <change id="b{i}" h=".14c" ease="soft" dur=".7"/>
+    </for>
+  </step>
+</scene>

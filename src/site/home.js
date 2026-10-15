@@ -27,9 +27,20 @@ const hiddenCats = new Set(manifest.categories.filter((c) => c.hidden).map((c) =
 $('statWorks').textContent = String(manifest.examples.filter((e) => !hiddenCats.has(e.category)).length);
 $('statPal').textContent = String(PALETTES.length);
 
-// ================= Hero：实时太阳系 + 配色切换 =================
+// ================= Hero：开篇轮播（自动播放，不用点击） =================
+// 五个场景依次播放，每个完整播完一遍再换下一个；全部由真实引擎实时渲染。
+// 首个场景固定为“点阵变形”（和主标题“写结果，不写过程”呼应），之后按顺序轮换。
+// 这是产品演示而不是装饰动效，所以即使系统开了“减少动效”也照常播放——右下角始终有暂停键。
+const REEL = [
+  { id: 'dots', label: '点阵变形', file: 'site/hero.xml' },
+  { id: 'ripple', label: '涟漪', file: 'site/hero-ripple.xml' },
+  { id: 'galaxy', label: '星系', file: 'site/hero-galaxy.xml' },
+  { id: 'wave', label: '均衡器', file: 'site/hero-wave.xml' },
+  { id: 'route', label: '旅行路线', file: 'site/hero-map.xml' },
+];
 const SWATCHES = ['auto', 'aurora', 'champagne', 'nord', 'pantone-classic-blue', 'pantone-mocha-mousse', 'ocean', 'dracula', 'solarized-light'];
-const hero = { file: 'site/hero.xml', src: '', pick: 'auto', pv: null };
+const hero = { idx: 0, pick: 'auto', pv: null, token: 0, visible: false, userPaused: false, srcs: new Map(), scenes: new Map(), preloaded: '' };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const swBox = $('heroSwatches');
 swBox.innerHTML = SWATCHES.map((id) => {
@@ -38,35 +49,109 @@ swBox.innerHTML = SWATCHES.map((id) => {
   return `<button class="swatch" type="button" data-p="${id}" aria-pressed="false" title="${esc(p.label)}" aria-label="${esc(p.label)}" style="background:linear-gradient(135deg,${p.tokens.c1} 0 50%,${p.tokens.c2} 50% 100%)"></button>`;
 }).join('');
 
-async function paintHero() {
-  const name = hero.pick === 'auto' ? autoPalette() : hero.pick;
-  const p = getPalette(name);
-  const scene = await compileSource(setScenePalette(hero.src, name), hero.file);
-  const first = !hero.pv.scene;
-  hero.pv.setScene(scene, { keepTime: !first });
-  $('heroCard').style.background = toCss(scene.bg);
-  $('heroCard').classList.add('ready');
-  $('heroName').innerHTML = `<b>${esc(p.label)}</b> · palette="${esc(p.name)}"`;
-  if (first) hero.pv.autoplayWhenVisible(); else if (!hero.pv.player.playing) hero.pv.play();
+const reel = $('heroReel');
+reel.innerHTML = REEL.map((r, k) => `<button type="button" role="tab" data-i="${k}" aria-selected="${k === 0}"><i class="reel-bar"><b></b></i><span>${esc(r.label)}</span></button>`).join('');
+const reelFills = [...reel.querySelectorAll('b')];
+
+/** 取（并缓存）某个场景在某套配色下的编译结果；失败时清掉缓存，下次可重试 */
+function heroScene(k, palName) {
+  const item = REEL[k];
+  const key = `${item.file}|${palName}`;
+  if (!hero.scenes.has(key)) {
+    if (!hero.srcs.has(item.file)) hero.srcs.set(item.file, fetchSource(item.file));
+    const job = hero.srcs.get(item.file)
+      .then((raw) => compileSource(setScenePalette(raw, palName), item.file))
+      .catch((err) => { hero.scenes.delete(key); throw err; });
+    hero.scenes.set(key, job);
+  }
+  return hero.scenes.get(key);
+}
+
+/** 画面稳定后，错开时间把其余场景编译好，切换时就不会卡 */
+async function preloadRest(palName) {
+  if (hero.preloaded === palName) return;
+  hero.preloaded = palName;
+  for (let k = 0; k < REEL.length; k++) {
+    await sleep(450);
+    try { await heroScene(k, palName); } catch { /* 播到时再报错 */ }
+  }
+}
+
+const syncHeroBtn = () => { $('heroPlay').innerHTML = hero.userPaused ? ICON_PLAY : ICON_PAUSE; };
+
+/** 可见且用户没按暂停就播放，否则暂停 */
+function applyPlayback() {
+  const pv = hero.pv;
+  if (!pv?.scene) return;
+  if (hero.visible && !hero.userPaused) pv.play(); else pv.pause();
   syncHeroBtn();
 }
-const syncHeroBtn = () => { $('heroPlay').innerHTML = hero.pv?.player.playing ? ICON_PAUSE : ICON_PLAY; };
 
-hero.pv = new Preview($('heroCanvas'));
-hero.pv.player.on('play', syncHeroBtn);
-hero.pv.player.on('pause', syncHeroBtn);
-$('heroPlay').addEventListener('click', () => { if (hero.pv.player.playing) hero.pv.pause(); else hero.pv.play(); });
+/** 切到第 k 个场景。keep：保留当前时间（只换配色时用）；instant：不做淡出淡入 */
+async function showScene(k, { keep = false, instant = false } = {}) {
+  const token = ++hero.token;
+  const palName = hero.pick === 'auto' ? autoPalette() : hero.pick;
+  const scene = await heroScene(k, palName);
+  if (token !== hero.token) return;
+  const card = $('heroCard');
+  if (!instant && hero.pv.scene && k !== hero.idx) {
+    card.classList.add('swap');
+    await sleep(300);
+    if (token !== hero.token) return;
+  }
+  hero.idx = k;
+  reel.querySelectorAll('button').forEach((b, n) => {
+    b.setAttribute('aria-selected', String(n === k));
+    if (n !== k) reelFills[n].style.width = '0%';
+  });
+  hero.pv.setScene(scene, { keepTime: keep });
+  card.style.background = toCss(scene.bg);
+  card.classList.add('ready');
+  card.classList.remove('swap');
+  const p = getPalette(palName);
+  $('heroName').innerHTML = `<b>${esc(p.label)}</b> · palette="${esc(p.name)}"`;
+  applyPlayback();
+  preloadRest(palName);
+}
+
+hero.pv = new Preview($('heroCanvas'), { loop: false });
+hero.pv.player.on('frame', (t) => {
+  const d = hero.pv.player.duration;
+  if (d) reelFills[hero.idx].style.width = `${Math.min(100, (t / d) * 100)}%`;
+});
+// 一个场景完整播完 → 自动换下一个（用户按了暂停就不换）
+hero.pv.player.on('end', () => { if (!hero.userPaused) showScene((hero.idx + 1) % REEL.length).catch(() => {}); });
+
+$('heroPlay').addEventListener('click', () => { hero.userPaused = !hero.userPaused; applyPlayback(); });
+reel.addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-i]');
+  if (!b) return;
+  hero.userPaused = false;
+  showScene(Number(b.dataset.i), { instant: false }).catch(() => {});
+});
 swBox.addEventListener('click', (e) => {
   const b = e.target.closest('.swatch');
   if (!b) return;
   hero.pick = b.dataset.p;
   swBox.querySelectorAll('.swatch').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-  paintHero();
+  showScene(hero.idx, { keep: true, instant: true }).catch(() => {});
 });
-addEventListener('gm-theme', () => { if (hero.pick === 'auto') paintHero(); if (show.ready) paintShow(); });
+// 可见性直接用位置计算，不依赖 IntersectionObserver 的首次回调（它可能迟到，开篇动画必须一加载就开播）。
+// 卡片露出至少 15% 且标签页在前台就播放，滚出画面或切走标签页就暂停，回来继续。
+const inView = () => {
+  if (document.hidden) return false;
+  const r = $('heroCard').getBoundingClientRect();
+  const shown = Math.min(r.bottom, innerHeight) - Math.max(r.top, 0);
+  return shown >= r.height * 0.15;
+};
+const recheckView = () => { const v = inView(); if (v !== hero.visible) { hero.visible = v; applyPlayback(); } };
+hero.visible = inView();
+addEventListener('scroll', recheckView, { passive: true });
+addEventListener('resize', recheckView);
+document.addEventListener('visibilitychange', recheckView);
+addEventListener('gm-theme', () => { if (hero.pick === 'auto') showScene(hero.idx, { keep: true, instant: true }).catch(() => {}); if (show.ready) paintShow(); });
 
-hero.src = await fetchSource(hero.file);
-paintHero().catch((err) => { $('heroName').textContent = `演示加载失败：${err.message}`; });
+showScene(0, { instant: true }).catch((err) => { $('heroName').textContent = `演示加载失败：${err.message}`; });
 
 // ================= 代码对照 =================
 const SHOW = [

@@ -43,6 +43,10 @@
     { "id": "southwest-drive", "category": "travel", "file": "travel/southwest-drive.xml", "name": "西南自驾", "covers": ["map", "region", "highlight", "dash", "city", "arc", "heading", "icon"] },
     { "id": "high-speed-rail", "category": "travel", "file": "travel/high-speed-rail.xml", "name": "高铁干线", "covers": ["map", "border", "coast", "island", "city", "icon", "trail", "data"] },
 
+    { "id": "site-hero-ripple", "category": "site", "file": "site/hero-ripple.xml", "name": "开篇：涟漪", "covers": ["for", "let", "delay", "pulse", "pal"] },
+    { "id": "site-hero-galaxy", "category": "site", "file": "site/hero-galaxy.xml", "name": "开篇：星系", "covers": ["for", "orbit", "trail", "rand", "pal"] },
+    { "id": "site-hero-wave", "category": "site", "file": "site/hero-wave.xml", "name": "开篇：均衡器", "covers": ["for", "rect", "exp", "sin", "rand"] },
+    { "id": "site-hero-map", "category": "site", "file": "site/hero-map.xml", "name": "开篇：旅行路线", "covers": ["map", "city", "icon", "arc", "heading"] },
     { "id": "site-hero", "category": "site", "file": "site/hero.xml", "name": "首页主视觉", "covers": ["palette", "orbit", "pal"] },
     { "id": "site-path", "category": "site", "file": "site/path.xml", "name": "沿路径移动", "covers": ["path", "smooth", "trail"] },
     { "id": "site-loop", "category": "site", "file": "site/loop.xml", "name": "for 循环", "covers": ["for", "pal", "bounce"] },

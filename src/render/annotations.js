@@ -45,8 +45,7 @@ export function drawTrace(ctx, item, pr) {
   ctx.lineJoin = 'round';
   ctx.strokeStyle = toCss(item.stroke);
   ctx.lineWidth = item.width;
-  ctx.shadowColor = toCss(item.stroke, 0.5);
-  ctx.shadowBlur = 4 * pr;
+  if (item.glow !== false) { ctx.shadowColor = toCss(item.stroke, 0.5); ctx.shadowBlur = 4 * pr; }
   ctx.beginPath();
   ctx.moveTo(part[0][0], part[0][1]);
   for (let i = 1; i < part.length; i++) ctx.lineTo(part[i][0], part[i][1]);

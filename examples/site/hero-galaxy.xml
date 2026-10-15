@@ -1,0 +1,77 @@
+<scene width="960" height="600" grid="17x9" pad="0 0 84 0" palette="graphite" shadow="false" glow="false" overlap="off" hold=".6" seed="7">
+  <!-- 开篇演示：星系群。三个星系、一百多颗行星，脚本里没有一行在写“怎么转”。
+       每颗行星先只转 1/n 圈，它们留下的拖尾拼成一整圈轨道；之后再各自按不同的圈数公转。
+       三个星系共用同一段循环，只是中心、缩放、转向不同。 -->
+  <let radii="{[1.2, 2.1, 3.0, 3.9]}"/>
+  <let counts="{[6, 9, 12, 15]}"/>
+  <let gx="{[2.7, 9, 15.3]}"/>
+  <let gs="{[0.5, 1, 0.5]}"/>
+
+  <layer name="sky" z="0"/>
+  <layer name="rings" z="1"/>
+  <layer name="planet" z="5"/>
+  <layer name="core" z="6"/>
+
+  <step say="一片星空，三个太阳" dur=".7" stagger=".008">
+    <for var="i" in="0..59">
+      <circle id="s{i}" at="{rand(0.7, 16.3)},{rand(0.7, 9.3)}" size="{rand(0.04, 0.11)}c" fill="text" alpha="{rand(0.14, 0.5)}" flat="" in="fade" layer="sky"/>
+    </for>
+    <for var="g" in="0..2">
+      <circle id="sun{g}" at="{gx[g]},5" size="{gs[g]}c" fill="{pal(g == 1 ? 0 : 2)}" flat="" layer="core"/>
+    </for>
+  </step>
+
+  <step say="每个太阳四圈轨道，由内向外" dur=".5" stagger=".07">
+    <for var="k" in="0..3">
+      <for var="g" in="0..2">
+        <ring id="o{g}_{k}" at="{gx[g]},5" size="{radii[k] * gs[g] * 2}c" stroke="sub" width="1.5" alpha=".28" layer="rings"/>
+      </for>
+    </for>
+  </step>
+
+  <step say="每圈放几颗行星，间距相等" dur=".4" stagger=".006">
+    <for var="g" in="0..2">
+      <for var="k" in="0..3">
+        <for var="j" in="0..{counts[k] - 1}">
+          <circle id="p{g}_{k}_{j}" at="{gx[g] + radii[k] * gs[g] * cos(j / counts[k] * 2 * PI + k * 0.5)},{5 + radii[k] * gs[g] * sin(j / counts[k] * 2 * PI + k * 0.5)}"
+                  size="{(0.17 + k * 0.035) * (g == 1 ? 1 : 0.8)}c" fill="{pal(g == 1 ? k : k + 2)}" flat="" layer="planet"/>
+        </for>
+      </for>
+    </for>
+  </step>
+
+  <step say="每颗只转 1/n 圈，留下的拖尾拼成一整圈" dur="3">
+    <for var="g" in="0..2">
+      <for var="k" in="0..3">
+        <for var="j" in="0..{counts[k] - 1}">
+          <change id="p{g}_{k}_{j}" orbit="{radii[k] * gs[g]}c" around="{gx[g]},5" turns="{(k % 2 == 0 ? 1 : -1) * (g == 1 ? 1 : -1) / counts[k]}" dur="2.6" ease="soft" trail="{pal(g == 1 ? k : k + 2)}"/>
+        </for>
+      </for>
+    </for>
+  </step>
+
+  <step say="继续公转：半径越小，转得越快" dur="4.2">
+    <for var="g" in="0..2">
+      <change id="sun{g}" pulse=".25"/>
+      <for var="k" in="0..3">
+        <for var="j" in="0..{counts[k] - 1}">
+          <change id="p{g}_{k}_{j}" orbit="{radii[k] * gs[g]}c" around="{gx[g]},5" turns="{(k % 2 == 0 ? 1 : -1) * (g == 1 ? 1 : -1) * (2.2 - k * 0.5)}" dur="4" ease="soft"/>
+        </for>
+      </for>
+    </for>
+  </step>
+
+  <step say="引力坍缩，回到起点" dur=".9" stagger=".003" hold="1">
+    <for var="g" in="0..2">
+      <for var="k" in="0..3">
+        <for var="j" in="0..{counts[k] - 1}">
+          <change id="p{g}_{k}_{j}" at="{gx[g]},5" size=".04c" alpha="0" ease="in"/>
+        </for>
+      </for>
+    </for>
+    <change id="o*" alpha="0" delay=".5"/>
+    <for var="g" in="0..2">
+      <change id="sun{g}" pulse="1" delay=".7"/>
+    </for>
+  </step>
+</scene>

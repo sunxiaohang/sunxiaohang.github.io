@@ -124,7 +124,7 @@ function buildItem(scene, e, L, alpha, measure) {
         width: L.width, stroke: L.stroke, dash: e.dash, head: e.head,
       };
     case 'trace':
-      return { kind: 'trace', alpha, pts: e.pts, draw: L.draw, width: L.width, stroke: L.stroke };
+      return { kind: 'trace', alpha, pts: e.pts, draw: L.draw, width: L.width, stroke: L.stroke, glow: scene.glow };
     case 'note':
       return buildNote(scene, e, L, alpha, measure);
     case 'grid':
