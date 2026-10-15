@@ -319,6 +319,33 @@ test('after/below：锚点不存在给出诊断', () => {
   assert.ok(r.diagnostics.some((d) => d.code === 'E_UNDEF_VAR'));
 });
 
+// ---------------- orbit 绕圆转圈 ----------------
+test('orbit：绕圆心转正圆，整数圈回到起点、中间时刻距圆心等于半径', () => {
+  const r = compile('<scene width="400" height="400" grid="2x2"><circle id="p" at="1.5,1"/><step dur="1"><p orbit=".5c" around="1,1" turns="1" ease="linear"/></step></scene>');
+  assert.ok(r.ok, JSON.stringify(r.diagnostics));
+  const sc = r.scene;
+  const p = sc.byId.get('p');
+  const cx = sc.ax + (1 - 0.5) * sc.cw, cy = sc.ay + (1 - 0.5) * sc.ch;
+  const rad = 0.5 * sc.unit;
+  const t0 = sc.steps[0].t0;
+  const at = (t) => evaluate(sc, t).entities[p.index];
+  // 起点在圆上（正圆，不瞬移）
+  near(Math.hypot(at(t0).x - cx, at(t0).y - cy), rad, 1e-3);
+  // 半圈后：距圆心仍为半径，且转到对侧
+  const mid = at(t0 + 0.5);
+  near(Math.hypot(mid.x - cx, mid.y - cy), rad, 1e-3);
+  near(mid.x, cx - rad, 1e-3);
+  // 结束回到起点（整数圈闭合）
+  const end = at(sc.steps[0].freeze);
+  near(end.x, at(t0).x, 1e-3);
+  near(end.y, at(t0).y, 1e-3);
+});
+
+test('orbit：缺 around 给出诊断', () => {
+  const r = compile('<scene grid="2x2"><circle id="p" at="1,1"/><step><p orbit="1c"/></step></scene>');
+  assert.ok(r.diagnostics.some((d) => d.code === 'E_MISSING_ATTR'));
+});
+
 // ---------------- 等距分布 distribute ----------------
 test('row distribute：between / evenly / around 等距分布', () => {
   const colOf = (src) => {
@@ -330,5 +357,5 @@ test('row distribute：between / evenly / around 等距分布', () => {
   const evenly = colOf('<row at="1,1" to="5,1" distribute="evenly"><circle id="a"/><circle id="b"/><circle id="c"/></row><step say="x"/>');
   near(evenly('a'), 2); near(evenly('b'), 3); near(evenly('c'), 4);
   const around = colOf('<row at="1,1" to="5,1" distribute="around"><circle id="a"/><circle id="b"/><circle id="c"/></row><step say="x"/>');
-  near(around('a'), 1 + 2 / 3); near(around('c'), 5 - 2 / 3, 'around 两端留半个间距');
+  near(around('a'), 1 + 2 / 3, 1e-3); near(around('c'), 5 - 2 / 3, 1e-3); // around 两端留半个间距
 });

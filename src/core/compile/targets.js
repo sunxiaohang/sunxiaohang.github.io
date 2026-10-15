@@ -180,11 +180,34 @@ export function compileTarget(node, ent, ctx, stepDur, base, viaChange) {
   // ---- 位置 ----
   let jumpDone = false;
   if (POSITIONAL.has(ent.type)) {
-    const keys = ['at', 'px', 'by', 'path'].filter((k) => r.has(k));
+    const keys = ['at', 'px', 'by', 'path', 'orbit'].filter((k) => r.has(k));
     if (keys.length > 1) diag.warn('W_MULTI_POS', `同时写了 ${keys.join(' / ')}，只使用 ${keys[0]}`, r.at(keys[1]));
     let pts = null;
     const here = [st.x, st.y];
-    if (keys[0] === 'at') {
+    if (keys[0] === 'orbit') {
+      // 绕圆心匀速转圈：真正的圆，不走折线逼近（解决"绕轨道跑偏"）
+      const rad = r.lenOr('orbit', scene.unit * 0.5, { min: 0 });
+      const around = r.pos('around');
+      if (around) {
+        const [acx, acy] = cellToXY(scene, around);
+        const turns = r.num('turns', 1);
+        const fromAngle = Math.atan2(st.y - acy, st.x - acx);
+        const ease = easeOf('orbit');
+        mk('move', ['x', 'y'], (L, p) => {
+          const a = fromAngle + turns * Math.PI * 2 * ease(p);
+          L.x = acx + rad * Math.cos(a);
+          L.y = acy + rad * Math.sin(a);
+        }, { dur });
+        if (r.has('trail')) {
+          makeTrail(ctx, ent, node, (q) => {
+            const a = fromAngle + turns * Math.PI * 2 * q;
+            return [acx + rad * Math.cos(a), acy + rad * Math.sin(a)];
+          }, dur, start, ease, r);
+        }
+      } else {
+        diag.error('E_MISSING_ATTR', 'orbit 需要 around="圆心坐标"', r.at('orbit'));
+      }
+    } else if (keys[0] === 'at') {
       const p = r.pos('at');
       if (p) { warnOutside(ctx, p, r.at('at')); pts = [here, cellToXY(scene, p)]; }
     } else if (keys[0] === 'px') {

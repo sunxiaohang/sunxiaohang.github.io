@@ -23,15 +23,11 @@
     </for>
   </step>
 
-  <!-- 8 段折线逼近圆；smooth 用样条平滑它。每颗行星转一圈，半径越大转得越慢（相同 dur → 同样圈数，
-       所以我们让外圈的 dur 更长） -->
+  <!-- orbit：绕圆心匀速转圈（真正的圆，不走折线逼近）。半径越大转得越慢（外圈 dur 更长） -->
   <step say="行星开始公转：越靠外越慢" dur="3" stagger=".15">
     <for var="i" in="1..n">
-      <change id="p{i}" dur="{2 + i * 0.7}" ease="linear" smooth
-              path="{cx + (i * 0.39 + 0.45) * cos(i + PI / 2)},{cy + (i * 0.39 + 0.45) * sin(i + PI / 2)}
-                    {cx + (i * 0.39 + 0.45) * cos(i + PI)},{cy + (i * 0.39 + 0.45) * sin(i + PI)}
-                    {cx + (i * 0.39 + 0.45) * cos(i + PI * 1.5)},{cy + (i * 0.39 + 0.45) * sin(i + PI * 1.5)}
-                    {cx + (i * 0.39 + 0.45) * cos(i + PI * 2)},{cy + (i * 0.39 + 0.45) * sin(i + PI * 2)}"/>
+      <change id="p{i}" orbit="{(i * 0.39 + 0.45)}c" around="{cx},{cy}" turns="1"
+              dur="{2 + i * 0.7}" ease="linear"/>
     </for>
   </step>
 

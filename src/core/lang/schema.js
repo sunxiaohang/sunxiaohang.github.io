@@ -71,6 +71,9 @@ export const ATTR = {
   sound: B(`触发时播放的音效：${SOUND_NAMES.join(' / ')}`),
   after: B('相对定位：放在指定 id 对象的右边（配合 gap，锚点要写在前面且带 id）'),
   below: B('相对定位：放在指定 id 对象的下面（配合 gap）'),
+  orbit: B('绕圆心匀速转圈：半径（长度）。配 around="圆心坐标" 与 turns="圈数"，真正的圆（不走折线逼近）'),
+  around: B('orbit 的圆心（格子坐标）'),
+  turns: B('orbit 的圈数（默认 1，可为小数）'),
 };
 
 const BASE = ['id', 'alpha', 'z', 'layer', 'group', 'in', 'sound', 'after', 'below', 'gap'];
@@ -113,7 +116,7 @@ export function modAttrs(type) {
   if (type === 'layer') return new Set(['alpha', 'z', ...TIMING]);
   const s = new Set(['alpha', 'z', 'out', ...TIMING]);
   for (const a of ENTITY_ATTRS[type]) if (!STATIC_ATTRS.has(a)) s.add(a);
-  if (POSITIONAL.has(type)) for (const a of ['by', 'path', 'smooth', 'walk', 'trail', ...EFFECTS]) s.add(a);
+  if (POSITIONAL.has(type)) for (const a of ['by', 'path', 'smooth', 'walk', 'trail', 'orbit', 'around', 'turns', ...EFFECTS]) s.add(a);
   if (SEGMENTED.has(type)) s.add('draw');
   return s;
 }
