@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>文档 · GridMotion</title>
+  <meta name="description" content="GridMotion 语法速查：场景、对象、步骤、效果、表达式、数据源、流式布局与 19 套配色模板。">
+  <meta name="theme-color" content="#fbfbfd">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <script>(function(){try{var t=localStorage.getItem('gm.theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='light';}})();</script>
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <header id="siteNav"></header>
+
+  <main>
+    <div class="wrap page-head">
+      <span class="eyebrow">文档</span>
+      <h1 style="margin-top:12px">语法速查。</h1>
+      <p>参考内容由引擎的语法定义自动生成，和实际行为始终一致。</p>
+    </div>
+
+    <div class="wrap doc-layout">
+      <nav class="toc" id="toc" aria-label="目录"></nav>
+      <div class="doc-body">
+        <section id="sec-quick">
+          <h2>快速开始</h2>
+          <div class="quick">
+            <div class="qcard">
+              <h3>1. 一个场景</h3>
+              <p>根节点是 <code>&lt;scene&gt;</code>，<code>grid</code> 把画布划成格子，位置都以格子为单位。</p>
+              <pre id="q1"></pre>
+            </div>
+            <div class="qcard">
+              <h3>2. 写下步骤</h3>
+              <p>每个 <code>&lt;step&gt;</code> 里写“让谁变成什么样”，已有对象把 id 当标签写。同一步里的内容同时发生，步与步依次执行。</p>
+              <pre id="q2"></pre>
+            </div>
+            <div class="qcard">
+              <h3>3. 套一行配色</h3>
+              <p>在 <code>&lt;scene&gt;</code> 上写 <code>palette</code>，背景、默认图形色、文字与线条色自动跟随。</p>
+              <pre id="q3"></pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-palette">
+          <h2>配色模板</h2>
+          <p class="prose" style="font-size:16px">语义色 <code>accent</code> <code>accent2</code> <code>text</code> <code>sub</code> <code>bg</code> <code>bg2</code> <code>warn</code> <code>good</code> <code>bad</code> 可直接写进 <code>fill</code>、<code>stroke</code>；表达式里用 <code>pal(i)</code> 按序号循环取系列色 c1~c8。</p>
+          <div class="pal-grid" id="palGrid"></div>
+        </section>
+
+        <section id="sec-ref"><h2>完整参考</h2><div class="prose" id="refBody"></div></section>
+      </div>
+    </div>
+  </main>
+
+  <footer id="siteFooter"></footer>
+  <script type="module" src="src/site/docs.js"></script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>编辑器 · GridMotion</title>
+  <meta name="description" content="在浏览器里用 XML 写几何动画：实时预览、时间轴、点选编辑、一键导出视频与分镜。">
+  <meta name="theme-color" content="#fbfbfd">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <script>(function(){try{var t=localStorage.getItem('gm.theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='light';}})();</script>
+  <link rel="stylesheet" href="css/site.css">
+  <link rel="stylesheet" href="css/editor.css">
+</head>
+<body class="app">
+  <header id="siteNav"></header>
+
+  <div class="toolbar-app" role="toolbar" aria-label="编辑器工具栏">
+    <div class="tb-group">
+      <select id="projects" class="tb select" title="我的场景" aria-label="我的场景"></select>
+      <button id="btnImport" class="tb" type="button" title="导入 .xml 文件">导入</button>
+      <button id="btnExport" class="tb" type="button" title="导出当前场景为 .xml 文件">导出 XML</button>
+    </div>
+    <span class="tb-sep" aria-hidden="true"></span>
+    <div class="tb-group">
+      <select id="examples" class="tb select" title="示例" aria-label="示例"></select>
+      <select id="palette" class="tb select" title="一键套用配色模板（写入 &lt;scene palette&gt;）" aria-label="配色"></select>
+      <button id="btnAssets" class="tb" type="button">素材</button>
+      <a class="tb" href="docs.html" target="_blank" rel="noopener">语法速查</a>
+      <a class="tb" href="works.html" target="_blank" rel="noopener">作品库</a>
+    </div>
+    <div class="spacer"></div>
+    <div class="tb-group">
+      <button id="btnShare" class="tb" type="button" title="复制当前场景的分享链接">分享</button>
+      <button id="btnPng" class="tb" type="button" title="导出当前帧">当前帧</button>
+      <button id="btnBoard" class="tb" type="button" title="导出分镜长图">分镜</button>
+      <button id="btnWebm" class="tb primary" type="button">导出 WebM</button>
+    </div>
+  </div>
+
+  <main>
+    <section class="pane editor">
+      <div class="pane-title"><span>场景脚本</span><span id="status" class="status"></span></div>
+      <div class="code">
+        <div class="gutter"><div id="gutter"></div></div>
+        <div class="codewrap">
+          <div id="hl" aria-hidden="true"></div>
+          <textarea id="src" spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off" aria-label="场景脚本"></textarea>
+        </div>
+      </div>
+      <div id="console" class="console"></div>
+    </section>
+
+    <section class="pane right">
+      <div class="stagewrap" id="stagewrap">
+        <canvas id="stage"></canvas>
+        <div id="inspector" class="inspector" hidden>
+          <div class="insp-head">
+            <span class="insp-title" id="inspTitle">对象</span>
+            <button id="inspClose" class="icon" type="button" title="取消选中" aria-label="取消选中">✕</button>
+          </div>
+          <div class="insp-body" id="inspBody"></div>
+        </div>
+      </div>
+
+      <div class="transport">
+        <button id="btnPrev" class="icon" type="button" title="上一步（←）" aria-label="上一步">
+          <svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg>
+        </button>
+        <button id="btnPlay" class="icon big" type="button" title="播放 / 暂停（空格）" aria-label="播放或暂停"></button>
+        <button id="btnNext" class="icon" type="button" title="下一步（→）" aria-label="下一步">
+          <svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
+        </button>
+        <span id="time" class="time">0.00 / 0.00s</span>
+        <div class="spacer"></div>
+        <button id="btnSound" class="icon" type="button" title="音效开/关（M）" aria-label="音效开关">
+          <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>
+        </button>
+        <label class="chk"><input id="chkGrid" type="checkbox"><span>坐标参考</span></label>
+        <label class="chk"><input id="chkLoop" type="checkbox" checked><span>循环</span></label>
+        <select id="speed" class="tb select" title="播放速度" aria-label="播放速度">
+          <option value="0.25">0.25×</option>
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+        </select>
+      </div>
+
+      <div class="lanes" id="lanes">
+        <div class="lane ruler-row"><div class="lane-name">时间</div><div class="lane-track" id="ruler"></div></div>
+        <div class="lane steps-row"><div class="lane-name">步骤</div><div class="lane-track" id="stepTrack"></div></div>
+        <div id="laneRows"></div>
+        <div class="overlay"><div class="playhead" id="playhead"></div></div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="assets" class="sheet" aria-label="素材">
+    <form method="dialog" class="sheet-head"><b>素材</b><button class="tb">关闭</button></form>
+    <div class="assets-body" id="assetsBody"></div>
+  </dialog>
+
+  <script type="module" src="src/app/main.js"></script>
+</body>
+</html>

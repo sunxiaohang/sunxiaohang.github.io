@@ -1,4 +1,4 @@
-import { compileWithImports, lint, schema } from '../core/index.js';
+import { compileWithImports, lint } from '../core/index.js';
 import { PALETTES } from '../core/palettes.js';
 import { SoundEngine } from '../audio/sound.js';
 import { Player } from '../player/player.js';
@@ -6,15 +6,17 @@ import { renderStoryboard } from '../export/storyboard.js';
 import { startWebmRecording, download } from '../export/webm.js';
 import { exportWebm, webCodecsSupported } from '../export/encode.js';
 import { CodeEditor, Console } from '../editor/code-editor.js';
-import { buildDocs } from '../editor/docs.js';
+import { mountChrome } from '../site/chrome.js';
 import { StageView } from './stage-view.js';
 import { TimelineView } from './timeline-view.js';
+import { setScenePalette, getScenePalette } from './scene-src.js';
+
+mountChrome('editor');
 
 const $ = (id) => document.getElementById(id);
 const STORAGE_KEY = 'gridmotion.src.v4';
 const PROJECTS_KEY = 'gridmotion.projects.v1';
 const CURRENT_KEY = 'gridmotion.current.v1';
-const WELCOME_KEY = 'gridmotion.welcome.v1';
 const hash = new URLSearchParams(location.hash.slice(1));
 
 // ---- 多场景（本地项目列表）----
@@ -227,13 +229,12 @@ document.addEventListener('keydown', (e) => {
 
 // ---------- 示例：从 manifest 加载，按分类分组 ----------
 const examples = new Map();
-let manifest = { categories: [], examples: [] };
 async function loadManifest() {
   const m = await (await fetch('./examples/manifest.json')).json();
-  manifest = m;
+  for (const ex of m.examples) examples.set(ex.id, ex); // 含隐藏分类，保证深链都能打开
   const sel = $('examples');
   sel.innerHTML = '<option value="" disabled selected>示例…</option>';
-  for (const cat of m.categories) {
+  for (const cat of m.categories.filter((c) => !c.hidden)) {
     const g = document.createElement('optgroup');
     g.label = cat.name;
     for (const ex of m.examples.filter((x) => x.category === cat.id)) {
@@ -241,7 +242,6 @@ async function loadManifest() {
       o.value = ex.id;
       o.textContent = ex.name;
       g.appendChild(o);
-      examples.set(ex.id, ex);
     }
     sel.appendChild(g);
   }
@@ -261,7 +261,6 @@ $('examples').addEventListener('change', async (e) => {
 });
 
 // ---------- 配色模板：下拉一键套用，写回 <scene palette="…"> ----------
-const sceneTagRe = /<scene\b[^>]*>/;
 const paletteSel = $('palette');
 (function buildPaletteMenu() {
   paletteSel.innerHTML = '<option value="" disabled>配色…</option><option value="__none__">（脚本自带 / 默认）</option>';
@@ -279,20 +278,8 @@ const paletteSel = $('palette');
   }
   paletteSel.value = '__none__';
 })();
-function setScenePalette(src, name) {
-  const m = sceneTagRe.exec(src);
-  if (!m) return null;
-  let tag = m[0].replace(/\s+palette="[^"]*"/, '');
-  if (name) {
-    const selfClose = tag.endsWith('/>');
-    const at = tag.length - (selfClose ? 2 : 1);
-    tag = `${tag.slice(0, at)} palette="${name}"${tag.slice(at)}`;
-  }
-  return src.slice(0, m.index) + tag + src.slice(m.index + m[0].length);
-}
 function syncPaletteMenu() {
-  const m = /<scene\b[^>]*\spalette="([^"]*)"/.exec(editor.value);
-  const name = m ? m[1].trim() : '';
+  const name = getScenePalette(editor.value);
   paletteSel.value = [...paletteSel.options].some((o) => o.value === name) ? name : '__none__';
 }
 paletteSel.addEventListener('change', () => {
@@ -509,20 +496,6 @@ stage.canvas.addEventListener('click', (ev) => {
 });
 $('inspClose').addEventListener('click', () => selectEntity(null));
 
-// ---------- 首次引导 ----------
-function closeWelcome() {
-  $('welcome').close();
-  try { localStorage.setItem(WELCOME_KEY, '1'); } catch { /* ignore */ }
-}
-$('welcomeStart').addEventListener('click', closeWelcome);
-$('welcome').addEventListener('cancel', closeWelcome); // ESC 也视为已看过
-document.querySelectorAll('#welcome [data-ex]').forEach((b) => {
-  b.addEventListener('click', async () => {
-    if (await openExample(b.dataset.ex)) { player.seek(0); player.play(); }
-    closeWelcome();
-  });
-});
-
 // ---------- 素材 ----------
 const ASSET_GROUPS = [
   ['动物', '🐶🐱🐭🐹🐰🦊🐻🐼🐨🐯🦁🐮🐷🐸🐵🐔🐧🐦🦆🦉🐴🦄🐝🐞🦋🐢🐍🐬🐳🐙🦀'],
@@ -545,67 +518,6 @@ $('assetsBody').addEventListener('click', (e) => {
 });
 $('btnAssets').addEventListener('click', () => $('assets').showModal());
 
-// ---------- 分享库：参考 + 一键复制 ----------
-const catName = (id) => manifest.categories.find((c) => c.id === id)?.name || id;
-
-function renderLibrary() {
-  const body = $('libraryBody');
-  body.innerHTML = '';
-  let lastCat = null;
-  for (const ex of manifest.examples) {
-    if (ex.category !== lastCat) {
-      body.insertAdjacentHTML('beforeend', `<div class="lib-cat">${catName(ex.category)}</div>`);
-      lastCat = ex.category;
-    }
-    const card = document.createElement('div');
-    card.className = 'lib-card';
-    card.innerHTML = `
-      <div class="lib-name">${ex.name}</div>
-      <div class="lib-tags">${(ex.covers || []).map((t) => `<span class="lib-tag">${t}</span>`).join('')}</div>
-      <div class="lib-actions">
-        <button data-act="preview" data-id="${ex.id}">预览</button>
-        <button data-act="copy" data-id="${ex.id}">复制到我的</button>
-      </div>`;
-    body.appendChild(card);
-  }
-}
-
-$('libraryBody').addEventListener('click', async (e) => {
-  const btn = e.target.closest('button[data-act]');
-  if (!btn) return;
-  const id = btn.dataset.id;
-  if (btn.dataset.act === 'preview') {
-    if (await openExample(id)) { player.seek(0); player.play(); }
-    $('library').close();
-  } else {
-    await copyExample(id);
-    btn.textContent = '已复制';
-    setTimeout(() => { btn.textContent = '复制到我的'; }, 1200);
-  }
-});
-
-async function copyExample(id) {
-  const ex = examples.get(id);
-  if (!ex) return;
-  const src = await (await fetch(`./examples/${ex.file}`)).text();
-  persistCurrent();
-  const p = { id: 'p' + Date.now(), name: ex.name, src, updatedAt: Date.now() };
-  projects.push(p);
-  currentId = p.id;
-  try { localStorage.setItem(CURRENT_KEY, p.id); } catch { /* ignore */ }
-  saveProjects();
-  editor.value = src;
-  baseDir = new URL(`./examples/${ex.file}`, location.href).href;
-  await recompile(false);
-  renderProjects();
-}
-
-$('btnLibrary').addEventListener('click', () => { renderLibrary(); $('library').showModal(); });
-
-// ---------- 文档 ----------
-$('docsBody').innerHTML = buildDocs(schema());
-$('btnDocs').addEventListener('click', () => $('docs').showModal());
-
 // ---------- 启动 ----------
 (async () => {
   await loadManifest();
@@ -620,7 +532,4 @@ $('btnDocs').addEventListener('click', () => $('docs').showModal());
   if (hash.has('step')) player.goStep((parseInt(hash.get('step'), 10) || 1) - 1);
   else if (hash.has('t')) { player.seek(Math.max(0, parseFloat(hash.get('t')) || 0)); player.pause(); }
   else if (!hash.has('pause')) player.play();
-
-  // 首次打开显示引导
-  try { if (!localStorage.getItem(WELCOME_KEY)) $('welcome').showModal(); } catch { /* ignore */ }
 })();

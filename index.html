@@ -2,125 +2,180 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>GridMotion · 用 XML 写几何动画与教程</title>
-  <meta name="description" content="用声明式 XML 脚本写几何动画与教学动画：补间、模板、数据驱动，可导出视频/分镜/图片。">
-  <meta property="og:title" content="GridMotion · XML 几何动画引擎">
-  <meta property="og:description" content="写一份声明式脚本，得到一段可播放、可讲解、可导出的动画教程。">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>GridMotion · 用 XML 写几何动画</title>
+  <meta name="description" content="写结果，不写过程。用声明式 XML 脚本做几何动画与教学动画：补间、轨道、数据驱动、19 套配色，一键导出视频、分镜与图片。">
+  <meta name="theme-color" content="#fbfbfd">
+  <meta property="og:title" content="GridMotion · 用 XML 写几何动画">
+  <meta property="og:description" content="写一份声明式脚本，得到一段可播放、可讲解、可导出的动画。">
   <meta property="og:type" content="website">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="css/style.css">
+  <script>(function(){try{var t=localStorage.getItem('gm.theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='light';}})();</script>
+  <link rel="stylesheet" href="css/site.css">
 </head>
 <body>
-  <header class="top">
-    <div class="brand"><span class="logo"></span><b>GridMotion</b><i>XML 几何动画引擎</i></div>
-    <div class="spacer"></div>
-    <select id="projects" title="我的场景"></select>
-    <button id="btnImport" class="ghost" title="导入 .xml 文件">导入</button>
-    <button id="btnExport" class="ghost" title="导出当前场景为 .xml 文件">导出</button>
-    <select id="examples" title="示例"></select>
-    <select id="palette" title="一键套用配色模板（写入 &lt;scene palette=&quot;…&quot;&gt;）"></select>
-    <button id="btnDocs" class="ghost">语法速查</button>
-    <button id="btnLibrary" class="ghost">分享库</button>
-    <button id="btnAssets" class="ghost">素材</button>
-    <button id="btnShare" class="ghost" title="复制当前场景的分享链接">分享</button>
-    <button id="btnPng" class="ghost" title="导出当前帧">当前帧</button>
-    <button id="btnBoard" class="ghost" title="导出分镜长图">分镜</button>
-    <button id="btnWebm" class="primary">导出 WebM</button>
-  </header>
+  <header id="siteNav"></header>
 
   <main>
-    <section class="pane editor">
-      <div class="pane-title"><span>场景脚本</span><span id="status" class="status"></span></div>
-      <div class="code">
-        <div class="gutter"><div id="gutter"></div></div>
-        <div class="codewrap">
-          <div id="hl" aria-hidden="true"></div>
-          <textarea id="src" spellcheck="false" wrap="off" autocomplete="off" autocapitalize="off"></textarea>
+    <!-- ================= Hero ================= -->
+    <section class="hero">
+      <div class="hero-glow" aria-hidden="true"><i></i><i></i><i></i></div>
+      <div class="wrap">
+        <span class="eyebrow rise" style="--d:0">XML 几何动画引擎</span>
+        <h1 class="rise" style="--d:90">写结果，<br><span class="grad">不写过程。</span></h1>
+        <p class="sub rise" style="--d:180">告诉它“要去哪”，补间、轨道、缓动和字幕交给引擎。<br class="br-lg">一份脚本，得到可播放、可讲解、可导出的动画。</p>
+        <div class="hero-cta rise" style="--d:270">
+          <a class="btn btn-primary" href="editor.html">开始创作</a>
+          <a class="btn btn-ghost" href="works.html">浏览作品库</a>
+        </div>
+
+        <div class="hero-stage rise" style="--d:380">
+          <div class="stage-card" id="heroCard">
+            <div class="media"><canvas id="heroCanvas" aria-label="由引擎实时渲染的太阳系动画"></canvas></div>
+            <div class="stage-bar">
+              <div class="swatches" id="heroSwatches" role="group" aria-label="切换配色"></div>
+              <div style="display:flex;align-items:center;gap:12px">
+                <span class="stage-name" id="heroName"></span>
+                <button class="round-btn" id="heroPlay" type="button" aria-label="播放 / 暂停"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats reveal">
+          <div class="stat"><b id="statPal">19</b><span>套内置配色</span></div>
+          <div class="stat"><b id="statWorks">20</b><span>个示例作品</span></div>
+          <div class="stat"><b>0</b><span>依赖 · 纯前端</span></div>
+          <div class="stat"><b>MIT</b><span>开源许可</span></div>
         </div>
       </div>
-      <div id="console" class="console"></div>
     </section>
 
-    <section class="pane right">
-      <div class="stagewrap" id="stagewrap">
-        <canvas id="stage"></canvas>
-        <div id="inspector" class="inspector" hidden>
-          <div class="insp-head">
-            <span class="insp-title" id="inspTitle">对象</span>
-            <button id="inspClose" class="icon" title="取消选中">✕</button>
+    <!-- ================= 代码对照 ================= -->
+    <section class="section alt" id="how">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">声明式</span>
+          <h2 class="h2">左边是脚本，<br>右边就是动画。</h2>
+          <p class="lead">不是示意图，而是真实运行的引擎。选一个看看。</p>
+        </div>
+        <div class="tab-row reveal"><div class="seg" id="showTabs" role="tablist"></div></div>
+        <div class="split reveal">
+          <div class="codecard">
+            <div class="codebar codecard-bar"><span class="dots"><i></i><i></i><i></i></span><span id="showFile">path.xml</span></div>
+            <pre id="showCode" tabindex="0"></pre>
           </div>
-          <div class="insp-body" id="inspBody"></div>
+          <div class="stage-card" id="showCard">
+            <div class="media"><canvas id="showCanvas" aria-label="脚本对应的实时动画"></canvas></div>
+            <div class="stage-bar">
+              <span class="stage-name" id="showSay"></span>
+              <button class="round-btn" id="showReplay" type="button" aria-label="重新播放"><svg viewBox="0 0 24 24"><path d="M12 5V2L7 6.5 12 11V8a5 5 0 1 1-5 5H5a7 7 0 1 0 7-8z"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <p class="demo-note reveal" id="showNote"></p>
+      </div>
+    </section>
+
+    <!-- ================= 能力 Bento ================= -->
+    <section class="section" id="features">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">为什么好用</span>
+          <h2 class="h2">少写一点，<br>多得一点。</h2>
+        </div>
+        <div class="bento">
+          <article class="bcard tint s4 reveal">
+            <span class="eyebrow">声明式</span>
+            <h3>写“终点”，不写“过程”</h3>
+            <p>每个 step 只描述画面要变成什么样。补间、缓动、轨道、拖尾都由引擎推算，改一个数字就换一种效果。</p>
+            <div class="bvis"><div class="mini-code" id="miniCode"></div></div>
+          </article>
+          <article class="bcard s2 reveal" style="--d:80">
+            <span class="eyebrow">导出</span>
+            <h3>一份脚本，四种成品</h3>
+            <p>离线逐帧导出视频，也能输出分镜长图、当前帧和分享链接。</p>
+            <div class="bvis pills"><span class="pill">WebM 视频</span><span class="pill">分镜长图</span><span class="pill">PNG</span><span class="pill">分享链接</span></div>
+          </article>
+          <article class="bcard s2 reveal">
+            <span class="eyebrow">配色</span>
+            <h3>19 套配色，一行套用</h3>
+            <p>Material、Pantone 年度色、Nord、Dracula……</p>
+            <div class="bvis pal-strips" id="palStrips"></div>
+          </article>
+          <article class="bcard s2 reveal" style="--d:80">
+            <span class="eyebrow">数据驱动</span>
+            <h3>CSV 进去，图表出来</h3>
+            <p>for 循环加表达式，一份数据生成一整组图形。</p>
+            <div class="bvis"><div class="bars" aria-hidden="true">
+              <i style="--h:34%;--c:var(--grad-1)"></i><i style="--h:58%;--c:var(--grad-2)"></i><i style="--h:44%;--c:var(--grad-3)"></i><i style="--h:78%;--c:var(--grad-1)"></i><i style="--h:62%;--c:var(--grad-2)"></i><i style="--h:92%;--c:var(--grad-3)"></i>
+            </div></div>
+          </article>
+          <article class="bcard s2 reveal" style="--d:160">
+            <span class="eyebrow">可讲解</span>
+            <h3>每一步都有字幕</h3>
+            <p>暂停在任何一步，画面都自带解释。</p>
+            <div class="bvis"><div class="cap-mock">黑棋落在天元，开局占据中心</div><div class="cap-steps" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div></div>
+          </article>
+          <article class="bcard dark s3 reveal">
+            <span class="eyebrow">缓动与音效</span>
+            <h3>每个动作都有手感</h3>
+            <p>十几种缓动曲线，8 个合成音效，不需要任何音频文件。</p>
+            <div class="bvis"><div class="eq" aria-hidden="true"><i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i><i style="--i:8"></i><i style="--i:9"></i></div></div>
+          </article>
+          <article class="bcard s3 reveal" style="--d:80">
+            <span class="eyebrow">布局</span>
+            <h3>流式排布，不用手算坐标</h3>
+            <p>row / column 自动排开，after / below 相对定位，distribute 等距分布。</p>
+            <div class="bvis"><div class="flow" aria-hidden="true">
+              <i style="--c:var(--grad-1)"></i><em></em><i style="--c:var(--grad-2)"></i><em></em><i style="--c:var(--grad-3)"></i><em></em><i style="--c:var(--grad-1)"></i>
+            </div></div>
+          </article>
         </div>
       </div>
+    </section>
 
-      <div class="transport">
-        <button id="btnPrev" class="icon" title="上一步（←）">
-          <svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg>
-        </button>
-        <button id="btnPlay" class="icon big" title="播放 / 暂停（空格）"></button>
-        <button id="btnNext" class="icon" title="下一步（→）">
-          <svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
-        </button>
-        <span id="time" class="time">0.00 / 0.00s</span>
-        <div class="spacer"></div>
-        <button id="btnSound" class="icon" title="音效开/关（M）">
-          <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3z"/></svg>
-        </button>
-        <label class="chk"><input id="chkGrid" type="checkbox"><span>坐标参考</span></label>
-        <label class="chk"><input id="chkLoop" type="checkbox" checked><span>循环</span></label>
-        <select id="speed" title="播放速度">
-          <option value="0.25">0.25×</option>
-          <option value="0.5">0.5×</option>
-          <option value="1" selected>1×</option>
-          <option value="2">2×</option>
-        </select>
+    <!-- ================= 作品精选 ================= -->
+    <section class="section alt" id="works">
+      <div class="section-head reveal">
+        <span class="eyebrow">作品库</span>
+        <h2 class="h2">看看别人怎么写的。</h2>
+        <p class="lead">棋类教程、幼儿启蒙、效果展示。每个都是实时渲染，悬停即可播放。</p>
       </div>
+      <div class="rail" id="rail" aria-label="精选作品"></div>
+      <div class="rail-more reveal"><a class="btn btn-ghost" href="works.html">查看全部作品</a></div>
+    </section>
 
-      <div class="lanes" id="lanes">
-        <div class="lane ruler-row"><div class="lane-name">时间</div><div class="lane-track" id="ruler"></div></div>
-        <div class="lane steps-row"><div class="lane-name">步骤</div><div class="lane-track" id="stepTrack"></div></div>
-        <div id="laneRows"></div>
-        <div class="overlay"><div class="playhead" id="playhead"></div></div>
+    <!-- ================= 三步上手 ================= -->
+    <section class="section" id="start">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <span class="eyebrow">三步上手</span>
+          <h2 class="h2">几分钟，做出第一支动画。</h2>
+        </div>
+        <div class="steps3">
+          <div class="step3 reveal"><h3>摆好对象</h3><p>用 <code>&lt;circle at="1,1"/&gt;</code> 把图形放在网格上，位置以格子为单位，不用算像素。</p></div>
+          <div class="step3 reveal" style="--d:90"><h3>写下步骤</h3><p>每个 <code>&lt;step say="…"&gt;</code> 写“让谁变成什么样”，字幕和停顿自动配好。</p></div>
+          <div class="step3 reveal" style="--d:180"><h3>套配色，导出</h3><p>在 <code>&lt;scene&gt;</code> 上加一行 <code>palette</code>，然后导出视频或分镜。</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="padding-top:0">
+      <div class="wrap">
+        <div class="cta reveal">
+          <span class="eyebrow">现在就试试</span>
+          <h2 class="h2" style="margin-top:14px">不用安装，<br>打开就能写。</h2>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="editor.html">打开编辑器</a>
+            <a class="btn btn-ghost" href="docs.html">阅读文档</a>
+          </div>
+        </div>
       </div>
     </section>
   </main>
 
-  <dialog id="docs">
-    <form method="dialog" class="docs-head"><b>语法速查</b><button class="ghost">关闭</button></form>
-    <div class="docs-body" id="docsBody"></div>
-  </dialog>
-
-  <dialog id="assets">
-    <form method="dialog" class="docs-head"><b>素材</b><button class="ghost">关闭</button></form>
-    <div class="assets-body" id="assetsBody"></div>
-  </dialog>
-
-  <dialog id="library" class="library">
-    <form method="dialog" class="docs-head"><b>分享库 · 参考并复制作品</b><button class="ghost">关闭</button></form>
-    <div class="library-body" id="libraryBody"></div>
-  </dialog>
-
-  <dialog id="welcome" class="welcome">
-    <div class="welcome-box">
-      <div class="welcome-logo"><span class="logo"></span></div>
-      <h1>用 XML 写动画，不是用鼠标画</h1>
-      <p class="welcome-sub">声明式脚本 → 一段可播放、可逐步讲解、可导出成视频 / 分镜 / 图片的动画。</p>
-      <div class="welcome-features">
-        <div><b>声明式</b><span>写「结果」不写「过程」</span></div>
-        <div><b>可讲解</b><span>步骤 + 字幕 + 朗读节奏</span></div>
-        <div><b>可复用</b><span>模板 / 主题 / 数据驱动</span></div>
-      </div>
-      <div class="welcome-try">
-        <button class="ghost" data-ex="gomoku">看一个完整教程</button>
-        <button class="ghost" data-ex="data-demo">数据驱动</button>
-        <button class="ghost" data-ex="easing-gallery">缓动效果</button>
-      </div>
-      <button id="welcomeStart" class="primary wide">开始创作</button>
-      <p class="welcome-hint">左上角「示例」随时可看更多；「语法速查」是完整语言参考。</p>
-    </div>
-  </dialog>
-
-  <script type="module" src="src/app/main.js"></script>
+  <footer id="siteFooter"></footer>
+  <script type="module" src="src/site/home.js"></script>
 </body>
 </html>

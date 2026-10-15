@@ -2,7 +2,8 @@
   "categories": [
     { "id": "chess", "name": "棋类教程", "desc": "棋盘、棋子、棋谱：压测网格、分组、图层、箭头标注、模板与表达式" },
     { "id": "kids", "name": "幼儿启蒙", "desc": "识字、识图、数数、四则运算、九九表：压测大字号、循环生成、变量驱动、字幕阅读时长" },
-    { "id": "effects", "name": "效果展示", "desc": "缓动、轨道、关键帧、颜色与文字：压测补间与效果的多样性" }
+    { "id": "effects", "name": "效果展示", "desc": "缓动、轨道、关键帧、颜色与文字：压测补间与效果的多样性" },
+    { "id": "site", "name": "站点演示", "desc": "官网首页与文档用的演示场景，不在作品库展示", "hidden": true }
   ],
   "examples": [
     { "id": "gomoku", "category": "chess", "file": "chess/gomoku.xml", "name": "五子棋教程", "covers": ["layer", "def", "for", "if", "line", "note", "ring", "grid", "label"] },
@@ -24,6 +25,11 @@
     { "id": "orbits", "category": "effects", "file": "effects/orbits.xml", "name": "轨道", "covers": ["expr", "path", "smooth", "ring", "wildcard"] },
     { "id": "theme-demo", "category": "effects", "file": "effects/theme-demo.xml", "name": "主题与组件", "covers": ["import", "theme", "def", "semantic-color"] },
     { "id": "palette-demo", "category": "effects", "file": "effects/palette-demo.xml", "name": "配色模板", "covers": ["palette", "theme", "semantic-color", "for", "expr"] },
-    { "id": "data-demo", "category": "effects", "file": "effects/data-demo.xml", "name": "数据驱动", "covers": ["data", "csv", "for", "member-access"] }
+    { "id": "data-demo", "category": "effects", "file": "effects/data-demo.xml", "name": "数据驱动", "covers": ["data", "csv", "for", "member-access"] },
+
+    { "id": "site-hero", "category": "site", "file": "site/hero.xml", "name": "首页主视觉", "covers": ["palette", "orbit", "pal"] },
+    { "id": "site-path", "category": "site", "file": "site/path.xml", "name": "沿路径移动", "covers": ["path", "smooth", "trail"] },
+    { "id": "site-loop", "category": "site", "file": "site/loop.xml", "name": "for 循环", "covers": ["for", "pal", "bounce"] },
+    { "id": "site-chart", "category": "site", "file": "site/chart.xml", "name": "数据驱动图表", "covers": ["data", "csv", "for"] }
   ]
 }

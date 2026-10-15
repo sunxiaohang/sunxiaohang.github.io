@@ -1,0 +1,43 @@
+<scene width="800" height="500" grid="8x5" palette="material-dark" hold=".6" seed="3">
+  <!-- 首页主视觉：整场颜色都来自当前配色（palette 由页面在运行时写入），所以切换配色会整场换色 -->
+  <layer name="orbit" z="0"/>
+  <layer name="body" z="4"/>
+
+  <circle id="sun" at="4.5,3" size="1.1c" fill="accent" layer="body"/>
+  <star id="s1" at="1.4,1.3" size=".34c" fill="{pal(4)}" layer="body"/>
+  <star id="s2" at="7.6,4.7" size=".28c" fill="{pal(5)}" layer="body"/>
+  <star id="s3" at="1.8,4.5" size=".22c" fill="{pal(6)}" layer="body"/>
+  <star id="s4" at="7.4,1.4" size=".26c" fill="{pal(7)}" layer="body"/>
+
+  <step say="一个太阳，四条轨道" dur=".5" stagger=".12">
+    <for var="i" in="1..4">
+      <ring id="o{i}" at="4.5,3" size="{i * 0.8 + 1}c" stroke="sub" width="2" alpha=".4" layer="orbit"/>
+    </for>
+  </step>
+
+  <step say="四颗行星登场，颜色取自当前配色" dur=".4" stagger=".1">
+    <for var="i" in="1..4">
+      <circle id="p{i}" at="{4.5 + (i * 0.4 + 0.5) * cos(i * 1.9)},{3 + (i * 0.4 + 0.5) * sin(i * 1.9)}"
+              size="{0.16 + i * 0.03}c" fill="{pal(i - 1)}" layer="body"/>
+    </for>
+  </step>
+
+  <step say="只写圈数，轨道交给引擎" dur="3.4" stagger=".1">
+    <for var="i" in="1..4">
+      <if test="i == 3">
+        <change id="p{i}" orbit="{i * 0.4 + 0.5}c" around="4.5,3" turns="1" dur="{2.2 + i * 0.35}" ease="linear" trail="{pal(2)}"/>
+      </if>
+      <else>
+        <change id="p{i}" orbit="{i * 0.4 + 0.5}c" around="4.5,3" turns="1" dur="{2.2 + i * 0.35}" ease="linear"/>
+      </else>
+    </for>
+  </step>
+
+  <step say="换一行 palette，整场换色" dur=".7">
+    <sun pulse=".16"/>
+    <s1 flash="2"/>
+    <s2 flash="2"/>
+    <s3 flash="2"/>
+    <s4 flash="2"/>
+  </step>
+</scene>

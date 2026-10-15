@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>作品库 · GridMotion</title>
+  <meta name="description" content="棋类教程、幼儿启蒙、效果展示：每个作品都是实时渲染的 XML 动画，可以预览、查看脚本并一键复制到编辑器。">
+  <meta name="theme-color" content="#fbfbfd">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <script>(function(){try{var t=localStorage.getItem('gm.theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='light';}})();</script>
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <header id="siteNav"></header>
+
+  <main>
+    <div class="wrap page-head">
+      <span class="eyebrow">作品库</span>
+      <h1 style="margin-top:12px">看得见的脚本。</h1>
+      <p>每个作品都是一份可读的 XML，在你的浏览器里实时渲染。</p>
+    </div>
+
+    <div class="toolbar" id="toolbar">
+      <div class="wrap">
+        <div class="chips" id="chips" role="group" aria-label="按分类筛选"></div>
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <span class="sr-only">搜索作品</span>
+          <input id="q" type="search" placeholder="搜索作品或特性，如 path、for" autocomplete="off">
+        </label>
+      </div>
+    </div>
+
+    <div class="wrap"><div class="grid" id="grid"></div></div>
+  </main>
+
+  <dialog id="viewer" class="viewer" aria-labelledby="vTitle">
+    <div class="viewer-in">
+      <div class="viewer-main">
+        <div class="viewer-head">
+          <div><div class="cat" id="vCat"></div><h2 id="vTitle"></h2></div>
+          <button class="icon-btn" id="vClose" type="button" aria-label="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+        <div class="stage-card" id="vCard">
+          <div class="media"><canvas id="vCanvas" aria-label="作品实时预览"></canvas></div>
+        </div>
+        <div class="viewer-ctl">
+          <button class="round-btn" id="vPrev" type="button" aria-label="上一步"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+          <button class="round-btn" id="vPlay" type="button" aria-label="播放 / 暂停" style="width:36px;height:36px"></button>
+          <button class="round-btn" id="vNext" type="button" aria-label="下一步"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+          <select class="select" id="vSpeed" aria-label="播放速度"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select>
+          <select class="select" id="vPal" aria-label="配色"></select>
+          <span class="time" id="vTime"></span>
+        </div>
+      </div>
+      <aside class="viewer-side">
+        <div class="seg" role="tablist"><button type="button" role="tab" data-tab="steps" aria-selected="true">步骤</button><button type="button" role="tab" data-tab="code" aria-selected="false">脚本</button></div>
+        <div class="vpanel" id="pSteps"><ol class="steplist" id="stepList"></ol></div>
+        <div class="vpanel" id="pCode" hidden><pre id="codeView"></pre></div>
+        <div class="viewer-actions">
+          <a class="btn btn-primary" id="vOpen" href="editor.html">在编辑器中打开</a>
+          <button class="btn" id="vCopy" type="button">复制脚本</button>
+        </div>
+      </aside>
+    </div>
+  </dialog>
+
+  <footer id="siteFooter"></footer>
+  <script type="module" src="src/site/works.js"></script>
+</body>
+</html>

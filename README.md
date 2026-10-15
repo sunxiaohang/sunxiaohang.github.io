@@ -51,7 +51,7 @@ npm run gallery    # 生成静态画廊页 gallery.html
 
 ## 部署到 GitHub Pages
 
-项目是**纯静态前端**，无需构建。仓库 Settings → Pages → Source 选 `main` 分支 `/ (root)` 即可，入口是根目录的 `index.html`。注意：GitHub Free 的 Pages 仅对**公开仓库**免费。
+项目是**纯静态前端**，无需构建。仓库 Settings → Pages → Source 选默认分支（如 `master`）`/ (root)` 即可。站点页面：`index.html` 首页、`works.html` 作品库、`docs.html` 文档、`editor.html` 编辑器，支持亮/暗主题。Vercel 部署时 Framework Preset 选 `Other`，Build Command 留空。注意：GitHub Free 的 Pages 仅对**公开仓库**免费。
 
 ## 项目结构
 

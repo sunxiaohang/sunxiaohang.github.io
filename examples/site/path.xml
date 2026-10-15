@@ -1,0 +1,17 @@
+<scene width="800" height="500" grid="8x5" pad="20 30 90 30" palette="material" hold="1">
+  <circle id="a" at="1,4" size=".9c" label="A"/>
+  <rect id="b" at="8,4" w=".9c" h=".9c" radius="16" fill="accent2" label="B"/>
+
+  <step say="A 要去 B：只写路径，过程交给引擎" dur="1.8">
+    <a path="1,4 2.6,1.6 6,1.6 7.2,4" smooth trail ease="soft" sound="whoosh"/>
+  </step>
+  <step say="到站：B 弹一下，A 换上成功色" dur=".6">
+    <b pulse=".2" sound="ding"/>
+    <a fill="good"/>
+  </step>
+  <step say="用 for 一次生成一排，颜色来自配色" dur=".5" stagger=".08">
+    <for var="i" in="1..6">
+      <star id="s{i}" at="{i + 1},2.9" size=".5c" fill="{pal(i - 1)}"/>
+    </for>
+  </step>
+</scene>

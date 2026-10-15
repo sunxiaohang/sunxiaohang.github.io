@@ -1,0 +1,21 @@
+<scene width="800" height="500" grid="8x5" pad="20 30 90 30" palette="material" hold="1">
+  <let n="8"/>
+
+  <for var="i" in="1..n">
+    <circle id="d{i}" at="{i},1.6" size=".6c" fill="{pal(i - 1)}"/>
+  </for>
+
+  <step say="for 循环：一行代码生成 {n} 个圆" dur=".4" stagger=".07"></step>
+
+  <step say="每个圆按自己的序号落到不同高度，带弹跳" dur=".9" stagger=".07">
+    <for var="i" in="1..n">
+      <change id="d{i}" at="{i},{3.2 + 0.8 * sin(i * 0.9)}" ease="bounce"/>
+    </for>
+  </step>
+
+  <step say="表达式 pal(i) 循环取色：换配色，颜色跟着换" dur=".5" stagger=".05">
+    <for var="i" in="1..n">
+      <change id="d{i}" fill="{pal(i + 3)}" pulse=".15"/>
+    </for>
+  </step>
+</scene>
