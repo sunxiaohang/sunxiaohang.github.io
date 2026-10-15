@@ -117,7 +117,7 @@ $('palStrips').innerHTML = ['porcelain', 'graphite', 'aurora', 'champagne']
   .map((id) => `<div class="pal-strip" title="${esc(getPalette(id).label)}">${getPalette(id).series.map((c) => `<i style="background:${c}"></i>`).join('')}</div>`).join('');
 
 // ================= 作品精选 =================
-const FEATURED = ['gomoku', 'sine-wave', 'bubble-sort', 'dashboard', 'orbits', 'request-flow', 'easing-gallery', 'roadmap', 'xiangqi', 'literacy'];
+const FEATURED = ['gomoku', 'xiangqi', 'sine-wave', 'orbits', 'easing-gallery', 'times-table'];
 const catName = (id) => manifest.categories.find((c) => c.id === id)?.name || id;
 for (const id of FEATURED) {
   const ex = manifest.examples.find((e) => e.id === id);

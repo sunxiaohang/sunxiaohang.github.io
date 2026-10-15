@@ -230,10 +230,12 @@ button, select, input { font: inherit; color: inherit; }
 .dots { display: flex; gap: 7px; } .dots i { width: 11px; height: 11px; border-radius: 50%; background: var(--surface-3); }
 .dots i:nth-child(1) { background: #ff5f57; } .dots i:nth-child(2) { background: #febc2e; } .dots i:nth-child(3) { background: #28c840; }
 .codecard pre {
-  margin: 0; padding: 20px 22px 24px; overflow: auto; flex: 1; max-height: 460px;
+  margin: 0; padding: 20px 22px 24px; overflow: hidden; flex: 1;
   font: 13px/1.75 var(--mono); tab-size: 2; color: var(--text); font-variant-ligatures: none;
 }
-.codecard pre .ln { white-space: pre; }
+.codecard pre .ln { white-space: pre-wrap; overflow-wrap: anywhere; }
+.split > .stage-card { display: flex; flex-direction: column; }
+.split > .stage-card .media { flex: 1; aspect-ratio: auto; min-height: 280px; }
 .tab-row { display: flex; justify-content: center; margin-bottom: 28px; }
 .demo-note { text-align: center; margin-top: 22px; color: var(--text-3); font-size: 15px; }
 
@@ -283,7 +285,7 @@ button, select, input { font: inherit; color: inherit; }
 .work:hover { text-decoration: none; transform: translateY(-5px); box-shadow: var(--shadow-2), 0 0 0 1px var(--line-2); }
 .work[hidden], .empty[hidden] { display: none; }
 .work-media { position: relative; aspect-ratio: 16 / 10; display: grid; place-items: center; overflow: hidden; background: var(--surface-2); }
-.work-media canvas { opacity: 0; transition: opacity .5s ease, transform .6s var(--ease); }
+.work-media canvas { opacity: 0; transition: opacity .5s ease, transform .6s var(--ease); -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent); }
 .work.ready .work-media canvas { opacity: 1; }
 .work:hover .work-media canvas { transform: scale(1.03); }
 .work.failed .work-media::after { content: "预览不可用"; color: var(--text-3); font-size: 13px; position: absolute; }
@@ -301,6 +303,8 @@ button, select, input { font: inherit; color: inherit; }
 .rail::-webkit-scrollbar { display: none; }
 .rail .work { flex: 0 0 min(380px, 78vw); scroll-snap-align: center; }
 .rail-more { display: flex; justify-content: center; margin-top: 8px; }
+.featured { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; padding-bottom: 36px; }
+.featured .work-media { aspect-ratio: 16 / 10; }
 
 /* ---------- 三步上手 ---------- */
 .steps3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; counter-reset: s; }
@@ -473,7 +477,7 @@ a.pal-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-2), 0 0
 
 /* ---------- 响应式 ---------- */
 @media (max-width: 1080px) {
-  .cases { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cases, .featured { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pal-showcase { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 960px) {
@@ -501,7 +505,7 @@ a.pal-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-2), 0 0
   .bento { grid-template-columns: 1fr; }
   .bento .s2, .bento .s3, .bento .s4, .bento .s2.half { grid-column: auto; }
   .bcard { min-height: 0; }
-  .cases { grid-template-columns: minmax(0, 1fr); }
+  .cases, .featured { grid-template-columns: minmax(0, 1fr); }
   .pal-showcase { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .faq summary { font-size: 17px; }
   .wrap { width: calc(100% - 32px); }

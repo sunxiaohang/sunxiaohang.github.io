@@ -12,7 +12,7 @@
 
   <step say="一个太阳，加上 {n} 条轨道" dur=".5" stagger=".1">
     <for var="i" in="1..n">
-      <ring id="o{i}" at="{cx},{cy}" size="{i * 0.78 + 0.9}c" stroke="rgba(255,255,255,.18)" width="2" layer="orbit"/>
+      <ring id="o{i}" at="{cx},{cy}" size="{i * 0.78 + 0.9}c" stroke="sub" alpha=".4" width="2" layer="orbit"/>
     </for>
   </step>
 

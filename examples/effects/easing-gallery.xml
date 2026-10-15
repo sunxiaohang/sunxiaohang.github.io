@@ -13,9 +13,9 @@
   <layer name="ball" z="3"/>
 
   <for var="k" index="i" in="{names}">
-    <line from="{x0},{i + 1}" to="{x1},{i + 1}" stroke="rgba(255,255,255,.12)" width="2" in="none" layer="rail"/>
-    <circle id="s{i}" at="{x0},{i + 1}" size=".1c" fill="rgba(255,255,255,.25)" in="none" layer="rail"/>
-    <circle id="e{i}" at="{x1},{i + 1}" size=".1c" fill="rgba(255,255,255,.25)" in="none" layer="rail"/>
+    <line from="{x0},{i + 1}" to="{x1},{i + 1}" stroke="sub" alpha=".3" width="2" in="none" layer="rail"/>
+    <circle id="s{i}" at="{x0},{i + 1}" size=".1c" fill="sub" alpha=".5" in="none" layer="rail"/>
+    <circle id="e{i}" at="{x1},{i + 1}" size=".1c" fill="sub" alpha=".5" in="none" layer="rail"/>
     <text id="nm{i}" at="1.35,{i + 1}" text="{k}" size=".22c" fill="sub" layer="rail" in="fade"/>
   </for>
 
@@ -35,7 +35,7 @@
   <for var="k" index="i" in="{names}">
     <step say="{says[i]}" dur=".4" hold="1">
       <if test="i > 0"><change id="hl{i - 1}" out/></if>
-      <rect id="hl{i}" at="5.05,{i + 1}" w="8.9c" h=".8c" fill="rgba(255,255,255,.07)" stroke="{pal(i)}"
+      <rect id="hl{i}" at="5.05,{i + 1}" w="8.9c" h=".8c" fill="text" alpha=".07" stroke="{pal(i)}"
             width="3" radius="18" layer="focus"/>
       <change id="b{i}" at="{x0},{i + 1}" dur=".3" ease="soft"/>
       <change id="b{i}" at="{x1},{i + 1}" delay=".5" dur="1.8" ease="{k}"/>

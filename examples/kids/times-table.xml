@@ -4,14 +4,14 @@
   <layer name="cells" z="1"/>
   <layer name="txt" z="10"/>
 
-  <grid id="表格" style="cell" stroke="#d2d2d7" width="1.5" layer="cells"/>
+  <grid id="表格" style="cell" stroke="sub" width="1.5" layer="cells"/>
 
   <step say="九九乘法表：横着看、竖着看，都有规律" hold="0.8"/>
 
   <step say="每一行从 1 乘到那一行的数" dur=".3" stagger=".012">
     <for var="r" in="1..9">
       <for var="c" in="1..r">
-        <rect id="t{r}_{c}" at="{c},{r}" w=".88c" h=".88c" fill="{hsl(214, 70, 97 - r * 3.4)}" radius="10" layer="cells"
+        <rect id="t{r}_{c}" at="{c},{r}" w=".88c" h=".88c" fill="accent" alpha="{0.1 + r * 0.07}" radius="10" layer="cells"
               label="{c * r}" color="text" group="row{r}"/>
       </for>
     </for>
