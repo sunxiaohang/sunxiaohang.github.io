@@ -1,17 +1,20 @@
-<scene width="800" height="500" grid="8x5" pad="20 30 90 30" palette="porcelain" hold="1">
-  <circle id="a" at="1,4" size=".9c" label="A"/>
-  <rect id="b" at="8,4" w=".9c" h=".9c" radius="16" fill="accent2" label="B"/>
+<scene width="800" height="500" grid="12x6" pad="10 10 80 10" palette="porcelain" hold="1" overlap="off">
+  <for var="p" index="i" in="{['1.5,5', '4,1.8', '6.5,5', '9,1.8', '11.5,4.6']}">
+    <ring id="w{i}" at="{p}" size=".5c" stroke="sub" width="2" alpha=".5"/>
+  </for>
+  <circle id="a" at="1.5,5" size=".34c" fill="accent" flat=""/>
 
-  <step say="A 要去 B：只写路径，过程交给引擎" dur="1.8">
-    <a path="1,4 2.6,1.6 6,1.6 7.2,4" smooth trail ease="soft" sound="whoosh"/>
+  <step say="沿着五个路标走，只写路径" dur="2.4">
+    <a path="1.5,5 4,1.8 6.5,5 9,1.8 11.5,4.6" smooth trail="accent" ease="soft"/>
   </step>
-  <step say="到站：B 弹一下，A 换上成功色" dur=".6">
-    <b pulse=".2" sound="ding"/>
-    <a fill="good"/>
-  </step>
-  <step say="用 for 一次生成一排，颜色来自配色" dur=".5" stagger=".08">
-    <for var="i" in="1..6">
-      <star id="s{i}" at="{i + 1},2.9" size=".5c" fill="{pal(i - 1)}"/>
+
+  <step say="到站：每个路标依次亮起" dur=".5" stagger=".18">
+    <for var="i" in="0..4">
+      <change id="w{i}" stroke="accent" alpha="1" width="4" pulse=".25"/>
     </for>
+  </step>
+
+  <step say="走过的路自动留下轨迹，改一个坐标，整条曲线跟着变" dur=".6">
+    <a fill="good" pulse=".4"/>
   </step>
 </scene>

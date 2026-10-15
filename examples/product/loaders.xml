@@ -1,38 +1,46 @@
-<scene width="900" height="520" grid="9x3" pad="40 40 120 40" palette="graphite" hold="0.8" read="3">
-  <!-- 加载动效三件套：弹跳的三点、绕圈的圆点、慢慢填满的进度条。
-       全部是几何图形 + 缓动：jump 负责弹跳，orbit 负责绕圈，ease 决定“手感” -->
-  <layer name="bg" z="0"/>
+<scene width="960" height="520" grid="9x4" pad="0 0 84 0" palette="graphite" shadow="false" glow="false" overlap="off" hold=".8" read="3">
+  <!-- 加载动效三件套：旋转的圆点环、弹跳的三点、慢慢填满的进度条。
+       全是几何图形 + 缓动：pulse 沿着圆环错峰 = 旋转，jump + bounce = 弹跳，宽度补间 = 进度。 -->
+  <layer name="card" z="0"/>
   <layer name="fx" z="5"/>
 
-  <step say="第一种：三点弹跳，最常见的“正在处理”" dur=".4" stagger=".1">
+  <step say="三张卡片，三种常见的“正在处理”" dur=".5" stagger=".12">
     <for var="i" in="0..2">
-      <circle id="d{i}" at="{1.6 + i * 0.5},2" size=".26c" fill="{pal(i)}" layer="fx"/>
+      <rect id="c{i}" at="{i * 3 + 2},2" w="2.6c" h="2.6c" radius="26" fill="bg2" flat="" layer="card"/>
+      <text id="t{i}" at="{i * 3 + 2},3.05" text="{['旋转', '弹跳', '进度'][i]}" size=".24c" fill="sub" layer="fx"/>
+    </for>
+    <for var="k" in="0..7">
+      <circle id="r{k}" at="{2 + 0.62 * cos(k * PI / 4 - PI / 2)},{1.8 + 0.62 * sin(k * PI / 4 - PI / 2)}" size=".2c" fill="accent" alpha=".25" flat="" layer="fx"/>
+    </for>
+    <for var="k" in="0..2">
+      <circle id="j{k}" at="{4.55 + k * 0.45},1.9" size=".28c" fill="accent2" flat="" layer="fx"/>
+    </for>
+    <rect id="bar0" at="8,1.9" w="1.8c" h=".2c" radius="10" fill="text" alpha=".12" flat="" layer="fx"/>
+    <rect id="bar" at="7.1,1.9" w=".06c" h=".2c" radius="10" fill="good" flat="" layer="fx"/>
+  </step>
+
+  <step say="圆点环：同一个 pulse，按序号错开时间，就成了旋转" dur=".5">
+    <for var="lap" in="0..1">
+      <for var="k" in="0..7">
+        <change id="r{k}" alpha="1" pulse=".5" delay="{lap * 1.6 + k * 0.2}"/>
+      </for>
     </for>
   </step>
 
-  <step say="每个点比前一个晚一点跳起，就是波浪的节奏" dur=".9" stagger=".12">
-    <for var="i" in="0..2">
-      <change id="d{i}" jump=".5c" ease="bounce"/>
+  <step say="三个点：jump 加 bounce，依次弹起" dur=".7">
+    <for var="lap" in="0..2">
+      <for var="k" in="0..2">
+        <change id="j{k}" jump=".45c" ease="bounce" delay="{lap * 0.8 + k * 0.16}"/>
+      </for>
     </for>
   </step>
 
-  <step say="第二种：一个点绕圈，加上拖尾，速度感立刻出来" dur=".4">
-    <ring id="track" at="5,2" size="1.4c" stroke="sub" width="2" alpha=".4" layer="bg"/>
-    <circle id="o" at="5.7,2" size=".26c" fill="accent" layer="fx"/>
-  </step>
-
-  <step say="orbit 只写半径和圈数，轨道交给引擎" dur="2">
-    <o orbit=".7c" around="5,2" turns="1" ease="linear" trail="accent"/>
-  </step>
-
-  <step say="第三种：进度条。宽度从零涨到满，位置同步右移，看起来就是从左往右填充" dur="1.8">
-    <rect id="bar0" at="8,2" w="2c" h=".22c" radius="11" fill="bg2" stroke="sub" width="1" layer="bg"/>
-    <rect id="bar" at="7.025,2" w=".05c" h=".22c" radius="11" fill="good" layer="fx"/>
-    <bar at="8,2" w="2c" ease="soft" delay=".4" dur="1.4"/>
+  <step say="进度条：宽度从零涨到满，起步和收尾都用 soft，不生硬" dur="1.8">
+    <bar at="8,1.9" w="1.8c" ease="soft"/>
   </step>
 
   <step say="三种加载动效，换配色就换了气质" dur=".6">
-    <change id="d*" pulse=".2"/>
-    <o pulse=".4"/>
+    <change id="r*" alpha="1"/>
+    <change id="j*" fill="good" pulse=".2"/>
   </step>
 </scene>

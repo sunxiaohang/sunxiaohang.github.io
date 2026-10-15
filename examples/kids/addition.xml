@@ -1,40 +1,43 @@
-<scene width="800" height="620" grid="8x3" pad="100 20 120 20" palette="porcelain" hold="0.6" read="3" shadow="false" glow="false">
-  <!-- 加法：3 + 2 = 5。红球和蓝球各一堆，合并时蓝球飞到红球后面，最后变成同一种颜色（总数）。
-       a、b 是两个变量，改这两个数就能出别的题（总数超过 8 会被格子限制） -->
+<scene width="800" height="520" grid="8x3" pad="100 20 90 20" palette="porcelain" hold="0.6" read="3" shadow="false" glow="false" overlap="off">
+  <!-- 加法：3 + 2 = 5。a、b 是两个变量，改这两个数就能出别的题（a + b 不要超过 8）。
+       o 是左边距：让合并后的一排整体居中。左边一堆用主色，右边一堆用辅色，合并后统一成「成功色」 -->
   <let a="3"/>
   <let b="2"/>
+  <let o="{(8 - (a + b)) / 2}"/>
 
+  <layer name="track" z="0"/>
   <layer name="balls" z="5"/>
   <layer name="txt" z="10"/>
 
-  <text id="算式" at="4.5,1" size=".7c" fill="text" text="" layer="txt" px="400,70"/>
+  <rect id="轨道" at="4.5,2" w="7.6c" h="1.2c" radius="40" fill="text" alpha=".06" flat="" layer="track" in="fade"/>
+  <text id="算式" px="400,70" size=".95c" fill="text" text="" layer="txt"/>
 
-  <step say="看，左边有 {a} 个红球" dur=".4" stagger=".1">
+  <step say="看，左边有 {a} 个" dur=".4" stagger=".1">
     <for var="i" in="1..a">
-      <circle id="r{i}" at="{i},2" size=".7c" fill="c5" layer="balls"/>
+      <circle id="r{i}" at="{o + i},2" size=".84c" fill="accent" flat="" layer="balls"/>
     </for>
     <算式 text="{a}"/>
   </step>
 
-  <step say="右边有 {b} 个蓝球" dur=".4" stagger=".1">
+  <step say="右边有 {b} 个" dur=".4" stagger=".1">
     <for var="i" in="1..b">
-      <circle id="b{i}" at="{7 - b + i},2" size=".7c" fill="c1" layer="balls"/>
+      <circle id="b{i}" at="{o + a + i + 1.5},2" size=".84c" fill="accent2" flat="" layer="balls"/>
     </for>
     <算式 text="{a} + {b}"/>
   </step>
 
   <step say="把它们放到一起" dur=".9" stagger=".1">
     <for var="i" in="1..b">
-      <change id="b{i}" at="{a + i},2" ease="soft"/>
+      <change id="b{i}" at="{o + a + i},2" ease="soft"/>
     </for>
   </step>
 
   <step say="一共有几个？我们数一数" dur=".3" stagger=".25" hold="0.4">
     <for var="i" in="1..a">
-      <ring id="cr{i}" at="{i},2" size=".9c" stroke="warn" layer="txt"/>
+      <ring id="cr{i}" at="{o + i},2" size=".98c" stroke="warn" width="3" layer="txt"/>
     </for>
     <for var="i" in="1..b">
-      <ring id="cb{i}" at="{a + i},2" size=".9c" stroke="warn" layer="txt"/>
+      <ring id="cb{i}" at="{o + a + i},2" size=".98c" stroke="warn" width="3" layer="txt"/>
     </for>
   </step>
 

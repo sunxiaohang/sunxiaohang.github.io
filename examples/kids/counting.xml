@@ -1,29 +1,30 @@
-<scene width="800" height="640" grid="10x2" pad="120 30 130 30" palette="champagne" hold="0.6" read="3" shadow="false" glow="false">
-  <!-- 数数 1~10：每步多出一个苹果，数字同步变大。苹果 = 红圆 + 绿叶（def 模板）。配色用 champagne 的砖红与苔绿，低饱和更耐看 -->
-  <layer name="fruit" z="5"/>
+<scene width="800" height="520" grid="10x2" pad="130 30 110 30" palette="porcelain" hold="0.6" read="3" shadow="false" glow="false" overlap="off">
+  <!-- 数数 1~10：每步多出一个带数字的圆点，上方的大数字同步变化。配色只用主色，换任何配色模板都成立 -->
+  <layer name="track" z="0"/>
+  <layer name="dots" z="5"/>
   <layer name="num" z="10"/>
 
-  <def name="苹果" cx="1" cy="1">
-    <circle id="{id}_b" at="{cx},{cy}" size=".7c" fill="c3" layer="fruit" group="{id}"/>
-    <ellipse id="{id}_l" at="{cx + 0.1},{cy - 0.36}" w=".22c" h=".12c" fill="good" rot="-25" layer="fruit" group="{id}"/>
+  <def name="圆点" cx="1" cy="1.5" n="1">
+    <circle id="{id}_b" at="{cx},{cy}" size=".82c" fill="accent" label="{n}" flat="" layer="dots" group="{id}"/>
   </def>
 
-  <text id="大数" px="400,60" size="1.1c" fill="accent" text="0" layer="num"/>
+  <rect id="轨道" at="5.5,1.5" w="9.7c" h="1.1c" radius="40" fill="text" alpha=".06" flat="" layer="track" in="fade"/>
+  <text id="大数" px="400,78" size="1.3c" fill="text" text="0" layer="num"/>
 
-  <step say="我们一起来数苹果，从 1 数到 10" hold="1">
+  <step say="我们一起来数，从 1 数到 10" hold="1">
     <大数 text="0"/>
   </step>
 
   <for var="n" in="1..10">
     <step say="{n}" dur=".45" hold="0.7">
-      <苹果 id="a{n}" cx="{n}" cy="1.3"/>
+      <圆点 id="a{n}" cx="{n}" cy="1.5" n="{n}"/>
       <大数 text="{n}" pulse=".35"/>
     </step>
   </for>
 
-  <step say="1 2 3 4 5 6 7 8 9 10，一共有十个苹果！" dur=".8" stagger=".06">
+  <step say="1 2 3 4 5 6 7 8 9 10，一共有十个！" dur=".8" stagger=".06">
     <for var="n" in="1..10">
-      <change id="a{n}" jump=".3c"/>
+      <change id="a{n}_b" jump=".3c" fill="good"/>
     </for>
   </step>
 </scene>

@@ -1,26 +1,29 @@
-<scene width="900" height="640" grid="6x4" pad="40 30 130 30" palette="porcelain" hold="1">
+<scene width="800" height="600" grid="9x6" pad="0 0 84 0" palette="porcelain" shadow="false" glow="false" overlap="off" hold=".8">
   <!-- 配色模板：scene 上写一行 palette="…"，背景、默认图形色、文字色、线条色、标签对比度全部自动跟随。
-       工具栏的"配色…"下拉框可以一键换成 material / pantone-* / nord / dracula / macaron / neon …，这个示例不用改任何一行。
-       循环里想按序号取色，用 pal(i)；想引用语义色，直接在 fill/stroke 里写 accent / accent2 / warn / good / bad / text / sub。 -->
-  <text id="title" at="3.5,1" text="换一行 palette，整场换色" size=".38c"/>
-
-  <step say="系列色 c1~c6：循环里写 fill=&quot;{{pal(i)}}&quot;，一批对象自动配成一套" dur=".4" stagger=".06">
-    <for var="i" in="0..5">
-      <circle id="s{i}" at="{i + 1},2" size=".72c" fill="{pal(i)}" label="{i + 1}"/>
+       循环里按序号取色用 pal(i)；想引用语义色，直接在 fill / stroke 里写 accent / accent2 / warn / good / bad / text / sub。
+       工具栏的“配色…”下拉框可以一键换成别的模板，这个示例不用改任何一行。 -->
+  <step say="系列色 c1~c8：循环里写 pal(i)，一批对象自动配成一套" dur=".5" stagger=".07">
+    <for var="i" in="0..7">
+      <circle id="s{i}" at="{5 + 2.2 * cos(i * PI / 4 - PI / 2)},{3.5 + 2.2 * sin(i * PI / 4 - PI / 2)}" size=".98c" fill="{pal(i)}" label="{i + 1}" flat=""/>
     </for>
   </step>
 
-  <step say="语义色 accent / warn / good / bad：状态一眼分清，标签文字按底色自动选深浅" dur=".4" stagger=".08">
-    <rect id="r1" at="1.5,3" w="1.6c" h=".7c" fill="accent" label="accent" radius="14"/>
-    <rect id="r2" at="2.9,3" w="1.6c" h=".7c" fill="warn" label="warn" radius="14"/>
-    <rect id="r3" at="4.3,3" w="1.6c" h=".7c" fill="good" label="good" radius="14"/>
-    <rect id="r4" at="5.7,3" w="1.6c" h=".7c" fill="bad" label="bad" radius="14"/>
+  <step say="语义色 accent / warn / good / bad：状态一眼分清" dur=".4" stagger=".1">
+    <rect id="p0" at="5,2.6" w="2c" h=".5c" radius="30" fill="accent" label="accent" flat=""/>
+    <rect id="p1" at="5,3.2" w="2c" h=".5c" radius="30" fill="warn" label="warn" flat=""/>
+    <rect id="p2" at="5,3.8" w="2c" h=".5c" radius="30" fill="good" label="good" flat=""/>
+    <rect id="p3" at="5,4.4" w="2c" h=".5c" radius="30" fill="bad" label="bad" flat=""/>
   </step>
 
-  <step say="动起来：配色同时管着默认的圈、线、文字颜色" dur=".6" stagger=".05">
-    <for var="i" in="0..5">
-      <change id="s{i}" at="{i + 1},4" pulse=".12"/>
+  <step say="换一行 palette，整场换色。这里把系列色整体错开一位" dur=".5" stagger=".05">
+    <for var="i" in="0..7">
+      <change id="s{i}" fill="{pal(i + 1)}" pulse=".12"/>
     </for>
-    <ring id="halo" at="1,4" size="1.05c" width="3"/>
+  </step>
+
+  <step say="颜色只是数据：圆环转起来，配色照样跟着走" dur="1.8" stagger=".03">
+    <for var="i" in="0..7">
+      <change id="s{i}" orbit="2.2c" around="5,3.5" turns=".5" ease="soft"/>
+    </for>
   </step>
 </scene>

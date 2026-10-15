@@ -1,31 +1,32 @@
-<scene width="800" height="640" grid="8x4" pad="90 20 130 20" palette="porcelain" hold="0.6" read="3" shadow="false" glow="false">
-  <!-- 乘法：3 × 4 = 12。把 4 个一排的点摆 3 排，让孩子看到"几个几"。
-       rows、cols 是变量；排与排之间用同一色系的三个深浅，最后一次性数出总数 -->
+<scene width="800" height="560" grid="8x4" pad="100 20 90 20" palette="porcelain" hold="0.6" read="3" shadow="false" glow="false" overlap="off">
+  <!-- 乘法：3 × 4 = 12。把 4 个一排的点摆 3 排，让孩子看到“几个几”。
+       rows、cols 是变量；每一排比上一排深一点（同一主色的透明度阶梯），最后一次性数出总数 -->
   <let rows="3"/>
   <let cols="4"/>
+  <let x0="{(8 - cols) / 2}"/>
 
   <layer name="dots" z="5"/>
   <layer name="txt" z="10"/>
 
-  <text id="算式" px="400,50" size=".7c" fill="text" text="" layer="txt"/>
+  <text id="算式" px="400,64" size=".95c" fill="text" text="" layer="txt"/>
 
   <step say="乘法就是「几个几」：先看一排，有 {cols} 个" dur=".4" stagger=".1">
     <for var="c" in="1..cols">
-      <circle id="d1_{c}" at="{c + 2},1.2" size=".6c" fill="{hsl(228, 60, 74)}" layer="dots"/>
+      <circle id="d1_{c}" at="{x0 + c},1.3" size=".8c" fill="accent" alpha=".4" flat="" layer="dots"/>
     </for>
     <算式 text="{cols}"/>
   </step>
 
   <step say="再摆一排，又是 {cols} 个" dur=".4" stagger=".1">
     <for var="c" in="1..cols">
-      <circle id="d2_{c}" at="{c + 2},2.2" size=".6c" fill="{hsl(228, 62, 60)}" layer="dots"/>
+      <circle id="d2_{c}" at="{x0 + c},2.3" size=".8c" fill="accent" alpha=".7" flat="" layer="dots"/>
     </for>
     <算式 text="{cols} + {cols}"/>
   </step>
 
   <step say="再摆一排，一共 {rows} 排，每排 {cols} 个" dur=".4" stagger=".1">
     <for var="c" in="1..cols">
-      <circle id="d3_{c}" at="{c + 2},3.2" size=".6c" fill="{hsl(228, 64, 46)}" layer="dots"/>
+      <circle id="d3_{c}" at="{x0 + c},3.3" size=".8c" fill="accent" flat="" layer="dots"/>
     </for>
     <算式 text="{cols} + {cols} + {cols}"/>
   </step>
@@ -36,12 +37,13 @@
 
   <step say="一共有几个点？一排一排地数" dur=".35" stagger=".5" hold="0.4">
     <for var="r" in="1..rows">
-      <ring id="rr{r}" at="{(cols + 1) / 2 + 2},{r + 0.2}" size="{cols * 0.62}c" stroke="warn" layer="txt" width="4"/>
+      <rect id="rr{r}" at="{x0 + (cols + 1) / 2},{r + 0.3}" w="{cols * 1 + 0.1}c" h=".98c" radius="40" fill="none" stroke="warn" width="4" layer="txt"/>
     </for>
   </step>
 
   <step say="{rows} × {cols} = {rows * cols}" dur=".8">
     <算式 text="{rows} × {cols} = {rows * cols}" pulse=".35"/>
     <change id="rr*" out/>
+    <change id="d1_* d2_* d3_*" fill="good" alpha="1"/>
   </step>
 </scene>

@@ -1,38 +1,40 @@
-<scene width="800" height="680" grid="8x6" pad="20 20 110 20" palette="graphite" hold="0.4" read="4">
-  <!-- 轨道：用表达式生成"太阳系"。行星位置由公式算出来；path + smooth 让它们沿多边形近似的圆走，
-       每颗行星的圈数、半径、颜色、大小都由循环变量决定——改 n 就能改行星数量 -->
+<scene width="800" height="640" grid="9x7" pad="0 0 84 0" palette="graphite" shadow="false" glow="false" overlap="off" hold="0.4" read="4">
+  <!-- 轨道：用表达式生成“同心轨道”。每颗行星的圈数、半径、大小都由循环变量决定——改 n 就能改行星数量。
+       克制的配色：圆环用次要色，行星用正文色，只有“当前讲到的那一颗”用主色。 -->
   <let n="6"/>
-  <let cx="4.5"/>
-  <let cy="3.4"/>
+  <let cx="5"/>
+  <let cy="3.5"/>
 
   <layer name="orbit" z="0"/>
   <layer name="planet" z="5"/>
 
-  <circle id="sun" at="{cx},{cy}" size="1.1c" fill="warn" layer="planet"/>
+  <ring id="halo2" at="{cx},{cy}" size="1.9c" stroke="accent" width="1.5" alpha=".18" layer="orbit"/>
+  <ring id="halo1" at="{cx},{cy}" size="1.5c" stroke="accent" width="1.5" alpha=".32" layer="orbit"/>
+  <circle id="sun" at="{cx},{cy}" size="1.1c" fill="accent" flat="" layer="planet"/>
 
   <step say="一个太阳，加上 {n} 条轨道" dur=".5" stagger=".1">
     <for var="i" in="1..n">
-      <ring id="o{i}" at="{cx},{cy}" size="{i * 0.78 + 0.9}c" stroke="sub" alpha=".4" width="2" layer="orbit"/>
+      <ring id="o{i}" at="{cx},{cy}" size="{i * 0.72 + 1.5}c" stroke="sub" width="1.5" alpha=".38" layer="orbit"/>
     </for>
   </step>
 
-  <step say="每条轨道上放一颗行星，颜色取自当前配色" dur=".4" stagger=".12">
+  <step say="每条轨道上放一颗行星，越靠外越大一点" dur=".4" stagger=".12">
     <for var="i" in="1..n">
-      <circle id="p{i}" at="{cx + (i * 0.39 + 0.45) * cos(i)},{cy + (i * 0.39 + 0.45) * sin(i)}"
-              size="{0.14 + (i % 3) * 0.06}c" fill="{pal(i - 1)}" layer="planet"/>
+      <circle id="p{i}" at="{cx + (i * 0.36 + 0.75) * cos(i * 1.7)},{cy + (i * 0.36 + 0.75) * sin(i * 1.7)}"
+              size="{0.14 + i * 0.03}c" fill="text" flat="" layer="planet"/>
     </for>
   </step>
 
   <!-- orbit：绕圆心匀速转圈（真正的圆，不走折线逼近）。半径越大转得越慢（外圈 dur 更长） -->
-  <step say="行星开始公转：越靠外越慢" dur="3" stagger=".15">
+  <step say="行星开始公转：越靠外越慢，拖尾留下走过的弧线" dur="3" stagger=".15">
     <for var="i" in="1..n">
-      <change id="p{i}" orbit="{(i * 0.39 + 0.45)}c" around="{cx},{cy}" turns="1"
-              dur="{2 + i * 0.7}" ease="linear"/>
+      <change id="p{i}" orbit="{(i * 0.36 + 0.75)}c" around="{cx},{cy}" turns="0.75"
+              dur="{2 + i * 0.7}" ease="linear" trail="sub"/>
     </for>
   </step>
 
-  <step say="太阳脉动，整个太阳系一起亮起来" dur=".8">
-    <sun pulse=".18" fill="text"/>
-    <change id="p*" pulse=".3"/>
+  <step say="太阳脉动，第三颗行星换上主色，作为“当前讲到的那一颗”" dur=".8">
+    <sun pulse=".16"/>
+    <p3 fill="accent" pulse=".6"/>
   </step>
 </scene>

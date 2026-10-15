@@ -1,34 +1,39 @@
-<scene width="900" height="560" grid="12x5" pad="30 40 120 40" palette="graphite" hold="0.7" read="4">
-  <!-- 正弦波：30 个点沿 y = sin(x) 排开；然后让相位整体前进，波就“流”起来了。
-       每个点的颜色按序号渐变取自系列色，纯表达式生成，没有一个手写坐标 -->
-  <let n="30"/>
-
-  <layer name="axis" z="0"/>
-  <layer name="dots" z="5"/>
-
-  <line from="0.6,3" to="12.4,3" stroke="sub" width="1.5" alpha=".45" layer="axis" in="none"/>
-
-  <step say="y = sin(x)：先画出坐标轴上的 {n} 个采样点" dur=".4" stagger=".03">
-    <for var="i" in="0..{n - 1}">
-      <circle id="d{i}" at="{1 + i * 0.37},{3 - 1.1 * sin(i * 0.42)}" size=".2c" fill="{pal(i % 3)}" layer="dots"/>
+<scene width="900" height="560" grid="12x6" pad="0 0 90 0" palette="graphite" shadow="false" glow="false" overlap="off" hold="0.7" read="4">
+  <!-- 正弦波：三条波带（每条 44 个点）。每条的基线不同、相位不同，点的大小随波峰变化，形成景深。
+       让相位整体前进，波就“流”起来了；再改一个频率，就是另一种波形。每个点的坐标都是表达式，没有一个手写。 -->
+  <step say="y = sin(x)：三条波带，每条 44 个点" dur=".4" stagger=".002">
+    <for var="j" in="0..2">
+      <for var="i" in="0..43">
+        <circle id="d{j}_{i}" at="{2.2 + i * 0.2},{1.7 + j * 1.55 + 0.55 * sin(i * 0.36 + j * 1.2)}"
+                size="{0.09 + 0.07 * (1 + sin(i * 0.36 + j * 1.2))}c" fill="{pal(j)}" alpha="{0.55 + 0.45 * (1 + sin(i * 0.36 + j * 1.2)) / 2}" flat=""/>
+      </for>
     </for>
   </step>
 
-  <step say="把相位向前推一点，每个点沿着新的正弦值上下移动" dur="1.6" stagger=".02">
-    <for var="i" in="0..{n - 1}">
-      <change id="d{i}" at="{1 + i * 0.37},{3 - 1.1 * sin(i * 0.42 + 2)}" ease="soft"/>
+  <step say="把相位向前推一点，每个点沿着新的正弦值上下移动" dur="1.7" stagger=".002">
+    <for var="j" in="0..2">
+      <for var="i" in="0..43">
+        <change id="d{j}_{i}" at="{2.2 + i * 0.2},{1.7 + j * 1.55 + 0.55 * sin(i * 0.36 + j * 1.2 + 2.2)}"
+                size="{0.09 + 0.07 * (1 + sin(i * 0.36 + j * 1.2 + 2.2))}c" ease="soft"/>
+      </for>
     </for>
   </step>
 
-  <step say="再推一次：波形向左平移，这就是“行波”" dur="1.6" stagger=".02">
-    <for var="i" in="0..{n - 1}">
-      <change id="d{i}" at="{1 + i * 0.37},{3 - 1.1 * sin(i * 0.42 + 4)}" ease="soft"/>
+  <step say="再推一次：波形整体平移，这就是“行波”" dur="1.7" stagger=".002">
+    <for var="j" in="0..2">
+      <for var="i" in="0..43">
+        <change id="d{j}_{i}" at="{2.2 + i * 0.2},{1.7 + j * 1.55 + 0.55 * sin(i * 0.36 + j * 1.2 + 4.4)}"
+                size="{0.09 + 0.07 * (1 + sin(i * 0.36 + j * 1.2 + 4.4))}c" ease="soft"/>
+      </for>
     </for>
   </step>
 
-  <step say="叠加第二个频率，波形变成了更复杂的合成波" dur="1.6" stagger=".02">
-    <for var="i" in="0..{n - 1}">
-      <change id="d{i}" at="{1 + i * 0.37},{3 - 0.8 * sin(i * 0.42 + 4) - 0.5 * sin(i * 1.1)}" ease="soft"/>
+  <step say="改一个频率，同样的点就排成了另一种波形" dur="1.9" stagger=".002">
+    <for var="j" in="0..2">
+      <for var="i" in="0..43">
+        <change id="d{j}_{i}" at="{2.2 + i * 0.2},{1.7 + j * 1.55 + 0.5 * sin(i * 0.72 + j * 1.2)}"
+                size="{0.09 + 0.07 * (1 + sin(i * 0.72 + j * 1.2))}c" ease="soft"/>
+      </for>
     </for>
   </step>
 </scene>

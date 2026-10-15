@@ -1,6 +1,6 @@
-<scene width="800" height="640" grid="8x3" pad="100 20 130 20" palette="champagne" hold="0.6" read="3" shadow="false" glow="false">
+<scene width="800" height="560" grid="8x3" pad="90 20 100 20" palette="porcelain" hold="0.6" read="3" shadow="false" glow="false" overlap="off">
   <!-- 除法：12 ÷ 3 = 4。12 颗糖分给 3 个小朋友（3 个篮子），每人 4 颗。
-       第 i 颗糖去第 (i-1)%people 个篮子；它是该篮子里的第 floor((i-1)/people) 颗，决定堆多高 -->
+       第 i 颗糖去第 (i-1)%people 个篮子；糖的颜色和篮子一致，分完之后一眼就能看出谁分到了哪几颗 -->
   <let total="12"/>
   <let people="3"/>
   <let each="{total / people}"/>
@@ -9,38 +9,38 @@
   <layer name="candy" z="5"/>
   <layer name="txt" z="10"/>
 
-  <text id="算式" px="400,50" size=".7c" fill="text" text="" layer="txt"/>
+  <text id="算式" px="400,58" size=".95c" fill="text" text="" layer="txt"/>
 
   <step say="这里有 {total} 颗糖，要平均分给 {people} 个小朋友" dur=".4" stagger=".06">
     <for var="i" in="1..total">
-      <circle id="c{i}" at="{3.2 + ((i - 1) % 6) * 0.45},{1 + floor((i - 1) / 6) * 0.5}" size=".34c"
-              fill="{pal(i - 1)}" layer="candy"/>
+      <circle id="c{i}" at="{3.2 + ((i - 1) % 6) * 0.45},{1 + floor((i - 1) / 6) * 0.5}" size=".3c"
+              fill="text" alpha=".55" flat="" layer="candy"/>
     </for>
     <算式 text="{total} ÷ {people}"/>
   </step>
 
   <step say="先准备 {people} 个篮子，每个小朋友一个" dur=".5" stagger=".2">
     <for var="p" in="1..people">
-      <rect id="bk{p}" at="{p * 2 + 0.5},2.6" w="1.5c" h=".5c" fill="accent" radius="18" layer="basket"
-            label="小朋友{p}" color="bg2"/>
+      <rect id="bk{p}" at="{p * 2 + 0.5},2.6" w="1.6c" h=".55c" radius="22" fill="{pal(p - 1)}" flat="" layer="basket"
+            label="小朋友 {p}"/>
     </for>
   </step>
 
   <step say="一颗一颗地分：第一轮每人一颗" dur=".7" stagger=".12" hold="0.4">
     <for var="i" in="1..people">
-      <change id="c{i}" at="{(i - 1) % people * 2 + 2.5},2.25"/>
+      <change id="c{i}" at="{(i - 1) % people * 2 + 2.5},2.25" fill="{pal((i - 1) % people)}" alpha="1"/>
     </for>
   </step>
 
   <step say="第二轮，每人再得一颗" dur=".7" stagger=".12" hold="0.4">
     <for var="i" in="{people + 1}..{people * 2}">
-      <change id="c{i}" at="{(i - 1) % people * 2 + 2.5},1.95"/>
+      <change id="c{i}" at="{(i - 1) % people * 2 + 2.5},1.91" fill="{pal((i - 1) % people)}" alpha="1"/>
     </for>
   </step>
 
   <step say="一直分下去，直到所有糖都分完" dur=".7" stagger=".08">
     <for var="i" in="{people * 2 + 1}..total">
-      <change id="c{i}" at="{(i - 1) % people * 2 + 2.5},{2.25 - floor((i - 1) / people) * 0.3}"/>
+      <change id="c{i}" at="{(i - 1) % people * 2 + 2.5},{2.25 - floor((i - 1) / people) * 0.34}" fill="{pal((i - 1) % people)}" alpha="1"/>
     </for>
   </step>
 

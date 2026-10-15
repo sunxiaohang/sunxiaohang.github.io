@@ -7,17 +7,17 @@
   <layer name="dots" z="5"/>
   <layer name="txt" z="8"/>
 
-  <line id="轴" from="0.8,2" to="9.2,2" stroke="sub" width="3" alpha=".5" layer="axis"/>
+  <line id="轴" from="0.8,2" to="9.2,2" stroke="sub" width="4" alpha=".4" layer="axis"/>
 
   <step say="五个里程碑，从原型一路走到生态" dur=".5" stagger=".12">
     <for var="m" index="i" in="{ms}">
-      <circle id="m{i}" at="{i * 1.75 + 1.5},2" size=".36c" fill="bg2" stroke="sub" width="3" layer="dots"/>
-      <text id="t{i}" at="{i * 1.75 + 1.5},{i % 2 == 0 ? 1.2 : 2.8}" text="{qs[i]} · {m}" size=".26c" fill="text" layer="txt"/>
+      <circle id="m{i}" at="{i * 1.75 + 1.5},2" size=".56c" fill="bg2" stroke="sub" width="4" layer="dots"/>
+      <text id="t{i}" at="{i * 1.75 + 1.5},{i % 2 == 0 ? 1.1 : 2.9}" text="{qs[i]} · {m}" size=".36c" fill="text" layer="txt"/>
     </for>
   </step>
 
   <step say="从起点开始，一段一段点亮时间轴" dur=".4">
-    <line id="prog" from="1.5,2" to="1.5,2" stroke="accent" width="4" layer="axis"/>
+    <line id="prog" from="1.5,2" to="1.5,2" stroke="accent" width="6" layer="axis"/>
   </step>
 
   <for var="m" index="i" in="{ms}">

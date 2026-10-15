@@ -16,7 +16,6 @@
     { "id": "tictactoe", "category": "chess", "file": "chess/tictactoe.xml", "name": "井字棋", "covers": ["def-template", "group-attr", "cell-grid", "line", "ring"] },
 
     { "id": "literacy", "category": "kids", "file": "kids/literacy.xml", "name": "识字：八个汉字", "covers": ["def-template", "for", "index", "hsl", "text", "read"] },
-    { "id": "pictures", "category": "kids", "file": "kids/pictures.xml", "name": "识图：几何拼图", "covers": ["def-template", "ellipse", "triangle", "star", "cos/sin", "group"] },
     { "id": "counting", "category": "kids", "file": "kids/counting.xml", "name": "数数 1 到 10", "covers": ["for", "text-change", "pulse", "def-template"] },
     { "id": "addition", "category": "kids", "file": "kids/addition.xml", "name": "加法 3 + 2", "covers": ["let", "range-expr", "ring", "wildcard", "text-change"] },
     { "id": "subtraction", "category": "kids", "file": "kids/subtraction.xml", "name": "减法 7 - 3", "covers": ["range-expr", "alpha-fade", "by", "def-template"] },
@@ -26,9 +25,7 @@
 
     { "id": "easing-gallery", "category": "effects", "file": "effects/easing-gallery.xml", "name": "缓动展览", "covers": ["ease", "cubic", "per-prop-ease", "label"] },
     { "id": "orbits", "category": "effects", "file": "effects/orbits.xml", "name": "轨道", "covers": ["expr", "path", "smooth", "ring", "wildcard"] },
-    { "id": "theme-demo", "category": "effects", "file": "effects/theme-demo.xml", "name": "主题与组件", "covers": ["import", "theme", "def", "semantic-color"] },
     { "id": "palette-demo", "category": "effects", "file": "effects/palette-demo.xml", "name": "配色模板", "covers": ["palette", "theme", "semantic-color", "for", "expr"] },
-    { "id": "data-demo", "category": "effects", "file": "effects/data-demo.xml", "name": "数据驱动", "covers": ["data", "csv", "for", "member-access"] },
 
     { "id": "bubble-sort", "category": "algo", "file": "algo/bubble-sort.xml", "name": "冒泡排序", "covers": ["let", "nested-array", "for", "index", "label", "change"] },
     { "id": "binary-search", "category": "algo", "file": "algo/binary-search.xml", "name": "二分查找", "covers": ["for", "index", "ring", "alpha-fade", "wildcard"] },

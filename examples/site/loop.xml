@@ -1,21 +1,20 @@
-<scene width="800" height="500" grid="8x5" pad="20 30 90 30" palette="porcelain" hold="1">
-  <let n="8"/>
-
-  <for var="i" in="1..n">
-    <circle id="d{i}" at="{i},1.6" size=".6c" fill="{pal(i - 1)}"/>
-  </for>
-
-  <step say="for 循环：一行代码生成 {n} 个圆" dur=".4" stagger=".07"></step>
-
-  <step say="每个圆按自己的序号落到不同高度，带弹跳" dur=".9" stagger=".07">
-    <for var="i" in="1..n">
-      <change id="d{i}" at="{i},{3.2 + 0.8 * sin(i * 0.9)}" ease="bounce"/>
+<scene width="800" height="500" grid="11x6" pad="10 10 70 10" palette="porcelain" shadow="false" glow="false" overlap="off" hold=".8">
+  <step say="一个 for，生成 66 块" dur=".4" stagger=".01">
+    <for var="i" in="0..65">
+      <rect id="c{i}" at="{i % 11 + 1},{floor(i / 11) + 1}" w=".76c" h=".76c" radius="14" fill="sub" alpha=".22" flat=""/>
     </for>
   </step>
 
-  <step say="表达式 pal(i) 循环取色：换配色，颜色跟着换" dur=".5" stagger=".05">
-    <for var="i" in="1..n">
-      <change id="d{i}" fill="{pal(i + 3)}" pulse=".15"/>
+  <step say="表达式给每一块不同的延迟：对角线扫过去" dur=".5">
+    <for var="i" in="0..65">
+      <change id="c{i}" fill="accent" alpha="1" pulse=".12" delay="{(i % 11 + floor(i / 11)) * 0.07}"/>
+    </for>
+  </step>
+
+  <step say="换一个公式：从中心向四周扩散，颜色取自配色" dur=".5">
+    <for var="i" in="0..65">
+      <change id="c{i}" fill="{pal(floor(sqrt(pow(i % 11 - 5, 2) + pow(floor(i / 11) - 2.5, 2)) / 1.9))}" pulse=".12"
+              delay="{sqrt(pow(i % 11 - 5, 2) + pow(floor(i / 11) - 2.5, 2)) * 0.12}"/>
     </for>
   </step>
 </scene>

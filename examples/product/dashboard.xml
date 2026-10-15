@@ -1,37 +1,52 @@
-<scene width="900" height="600" grid="9x5" pad="30 40 120 40" palette="porcelain" shadow="false" glow="false" hold="0.8" read="4">
-  <!-- 数据看板：三张指标卡 + 一张由 CSV 生成的柱状图。数字、柱高、标签全部来自数据，换一份 CSV 就是另一张看板 -->
-  <data name="kpi">指标,数值
-访问量,12.4k
-转化率,3.8%
-营收,¥86k</data>
-  <data name="rows">周,值
-一,3
-二,5
-三,4
-四,7
-五,6
-六,9</data>
+<scene width="960" height="640" grid="12x7" pad="0 0 84 0" palette="graphite" shadow="false" glow="false" overlap="off" hold=".8" read="4">
+  <!-- 数据看板：三张指标卡 + 一张由 CSV 生成的月度柱状图。数字、柱高、标签全部来自数据，换一份 CSV 就是另一张看板。
+       配色克制：卡片用背景次级色，柱子只用主色（透明度表达“非重点”），涨跌用成功/错误色。 -->
+  <data name="kpi">指标,数值,变化,升
+访问量,12.4k,+12.4%,1
+转化率,3.8%,+0.6%,1
+退款率,1.2%,-0.3%,1</data>
+  <data name="rows">月,访问
+1,42
+2,48
+3,45
+4,58
+5,62
+6,55
+7,70
+8,76
+9,72
+10,88
+11,84
+12,100</data>
 
-  <layer name="cards" z="1"/>
+  <layer name="card" z="0"/>
+  <layer name="rule" z="1"/>
   <layer name="txt" z="6"/>
 
-  <step say="一张看板，三个核心指标" dur=".5" stagger=".12">
-    <for var="i" in="1..3">
-      <rect flat="" id="k{i}" at="{i * 2.5 - 0.5},1.1" w="2.2c" h="1.1c" radius="22" fill="bg2" stroke="sub" width="1" alpha="1" layer="cards"/>
-      <text id="kn{i}" at="{i * 2.5 - 0.5},1.3" text="{kpi[i - 1].数值}" size=".5c" fill="text" layer="txt"/>
-      <text id="kl{i}" at="{i * 2.5 - 0.5},0.9" text="{kpi[i - 1].指标}" size=".24c" fill="sub" layer="txt"/>
+  <step say="三个核心指标，一眼看到趋势" dur=".5" stagger=".05">
+    <for var="i" in="0..2">
+      <rect id="k{i}" at="{2.5 + i * 4},1.75" w="3.7c" h="1.9c" radius="22" fill="bg2" flat="" layer="card"/>
+      <text id="kl{i}" at="{2.5 + i * 4},1.2" text="{kpi[i].指标}" size=".26c" fill="sub" layer="txt"/>
+      <text id="kv{i}" at="{2.5 + i * 4},1.85" text="{kpi[i].数值}" size=".78c" fill="text" layer="txt"/>
+      <text id="kd{i}" at="{2.5 + i * 4},2.45" text="{kpi[i].变化}" size=".25c" fill="good" layer="txt"/>
     </for>
   </step>
 
-  <step say="下面是近六周的趋势，柱高直接取自 CSV 的「值」列" dur=".5" stagger=".08">
+  <step say="下面是全年趋势：CSV 里每一行，对应一根柱子" dur=".5" stagger=".04">
+    <rect id="panel" at="6.5,5.15" w="11.7c" h="4.3c" radius="22" fill="bg2" flat="" layer="card"/>
+    <text id="title" at="6.5,3.5" text="月度访问量" size=".28c" fill="sub" layer="txt"/>
+    <for var="j" in="1..4">
+      <line from="1.2,{6.75 - j * 0.65}" to="11.8,{6.75 - j * 0.65}" stroke="sub" alpha=".18" width="1.5" layer="rule" in="none"/>
+    </for>
     <for var="i" in="1..{rows.length}">
-      <rect flat="" id="b{i}" at="{i + 1.5},{4.4 - rows[i - 1].值 * 0.14}" w=".6c" h="{rows[i - 1].值 * 0.28}c" radius="10" fill="accent" alpha=".4" in="drop" layer="cards"/>
-      <text id="bl{i}" at="{i + 1.5},4.72" text="第{rows[i - 1].周}周" size=".22c" fill="sub" layer="txt" in="fade"/>
+      <rect id="b{i}" at="{1.7 + (i - 1) * 0.873},{6.75 - rows[i - 1].访问 * 0.013}" w=".52c" h="{rows[i - 1].访问 * 0.026}c" radius="10" fill="accent" alpha=".34" flat="" layer="txt" in="drop"/>
+      <text id="m{i}" at="{1.7 + (i - 1) * 0.873},7.05" text="{rows[i - 1].月}" size=".22c" fill="sub" layer="txt" in="fade"/>
     </for>
   </step>
 
-  <step say="最后一周最高，用主色强调" dur=".6">
-    <b6 alpha="1" pulse=".12"/>
-    <kn1 fill="accent" pulse=".2"/>
+  <step say="12 月最高：用主色强调，其余保持安静" dur=".6">
+    <b12 alpha="1" pulse=".08"/>
+    <text id="peak" at="11.3,3.95" text="100k" size=".3c" fill="accent" layer="txt"/>
+    <kv0 fill="accent" pulse=".18"/>
   </step>
 </scene>
