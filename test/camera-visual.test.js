@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { compile, evaluate } from '../src/core/index.js';
 import { composeFrame } from '../src/render/ir.js';
 import { draw } from '../src/render/canvas2d.js';
-import { makeFormatter } from '../src/core/compile/entities.js';
+import { makeFormatter } from '../src/core/compile/looks.js';
 
 /** 无头文本度量器：每字符 10px */
 const measure = (text) => [...String(text)].length * 10;

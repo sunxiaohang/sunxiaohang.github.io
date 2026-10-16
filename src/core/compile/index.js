@@ -1,6 +1,6 @@
 import { parseXML } from '../lang/parser.js';
 import { expand, RESERVED_TAGS } from '../lang/expand.js';
-import { Diagnostics, suggest, Reader, checkAttrs } from '../lang/reader.js';
+import { Diagnostics, suggest, Reader, checkAttrs, toNum } from '../lang/reader.js';
 import { ENTITY_TYPES, SOLID } from '../lang/schema.js';
 import { parseData } from '../lang/csv.js';
 import { buildScene, MAX_SEGMENTS } from './scene.js';
@@ -60,7 +60,8 @@ function resolveClips(scene, diag) {
 function resolveAudios(scene, diag) {
   for (const a of scene.audios) {
     const raw = a.atRaw;
-    if (/^-?\d+(\.\d+)?$/.test(raw)) a.at = Math.max(0, parseFloat(raw));
+    const secs = toNum(raw);
+    if (secs !== null) a.at = Math.max(0, secs);
     else if (scene.marks.has(raw)) a.at = scene.marks.get(raw).t;
     else {
       const names = [...scene.marks.keys()];

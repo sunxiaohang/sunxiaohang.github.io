@@ -58,6 +58,18 @@ export function parseLen(raw, unit) {
   return m[2] && m[2].toLowerCase() === 'c' ? v * unit : v;
 }
 
+/**
+ * 唯一的手工数字解析入口：整个 core 里需要把"一串文本"变成数字时都走这里，
+ * 不要各文件自己 parseFloat / Number(...)。空串与非法值都返回 null。
+ */
+export function toNum(raw) {
+  if (raw === null || raw === undefined) return null;
+  const s = String(raw).trim();
+  if (s === '') return null;
+  const v = Number(s);
+  return Number.isFinite(v) ? v : null;
+}
+
 export function checkAttrs(node, allowed, diag) {
   const names = [...allowed];
   const set = new Set(names);
@@ -117,6 +129,16 @@ export class Reader {
   /** 缺省属性（值为空）取 def，否则解析数字 */
   numOr(name, def, range) {
     return this.raw(name).trim() === '' ? def : this.num(name, def, range);
+  }
+
+  /**
+   * 可选数字：属性不存在或不是数字时返回 def，且**不报诊断**。
+   * 用于"这一段文本里有个可选数字"的场合（如 gradient="linear 45" 的 45），
+   * 让这类解析也统一走 reader，而不是各处自己 Number()。
+   */
+  optNum(name, def) {
+    const v = toNum(this.raw(name));
+    return v === null ? def : v;
   }
 
   len(name, def, range) {

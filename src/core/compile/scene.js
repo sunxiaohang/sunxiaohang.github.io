@@ -1,5 +1,5 @@
 import { parseColor, shade, luminance } from '../util/color.js';
-import { Reader, checkAttrs } from '../lang/reader.js';
+import { Reader, checkAttrs, toNum } from '../lang/reader.js';
 import { SCENE_ATTRS, CAPTION_STYLES, CAPTION_SIZES } from '../lang/schema.js';
 import { resolvePlace } from '../geo/place.js';
 
@@ -27,8 +27,11 @@ function readCaption(r, diag, width) {
   if (r.has('caption-size')) {
     const v = r.raw('caption-size').trim().toLowerCase();
     if (Object.hasOwn(CAPTION_SIZES, v)) fs = Math.max(11, width * CAPTION_SIZES[v]);
-    else if (v !== '' && Number.isFinite(Number(v))) fs = Math.min(120, Math.max(10, Number(v)));
-    else if (v !== '') diag.error('E_BAD_VALUE', `caption-size 需要字号预设或像素数，实际是 "${r.raw('caption-size')}"`, r.at('caption-size'), `可用：${Object.keys(CAPTION_SIZES).join(' / ')} 或 22 这样的数字`);
+    else if (v !== '') {
+      const px = toNum(v);
+      if (px !== null) fs = Math.min(120, Math.max(10, px));
+      else diag.error('E_BAD_VALUE', `caption-size 需要字号预设或像素数，实际是 "${r.raw('caption-size')}"`, r.at('caption-size'), `可用：${Object.keys(CAPTION_SIZES).join(' / ')} 或 22 这样的数字`);
+    }
   }
   let pos = 'bottom';
   if (r.has('caption-pos')) {
