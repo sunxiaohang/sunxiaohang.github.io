@@ -138,7 +138,7 @@ export const ENTITY_ATTRS = {
   star: [...SHAPE, 'points'],
   text: [...BASE, ...LOOK, 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'rot', 'text', 'w', 'stroke', 'width', 'reveal', 'count', 'fmt'],
   icon: [...BASE, 'blur', 'blend', 'clip', 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'stroke', 'width', 'rot', 'text', 'name', 'reveal'],
-  ring: [...BASE, 'blur', 'blend', 'clip', 'at', 'px', 'city', 'lonlat', 'off', 'size', 'stroke', 'width', 'rot'],
+  ring: [...BASE, 'blur', 'blend', 'clip', 'at', 'px', 'city', 'lonlat', 'off', 'size', 'stroke', 'width', 'rot', 'draw'],
   line: [...BASE, 'blur', 'blend', 'from', 'to', 'stroke', 'width', 'dash'],
   arrow: [...BASE, 'blur', 'blend', 'from', 'to', 'stroke', 'width', 'dash', 'head'],
   note: [...BASE, 'blend', 'clip', 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'color', 'text', 'side', 'gap'],
@@ -177,7 +177,7 @@ export function modAttrs(type) {
   if (POSITIONAL.has(type) && type !== 'emitter') for (const a of ['by', 'path', 'smooth', 'walk', 'trail', 'orbit', 'around', 'turns', 'heading', 'arc', 'city', 'lonlat', ...EFFECTS]) s.add(a);
   if (type === 'camera') for (const a of ['zoom', 'follow']) s.add(a);
   if (type === 'emitter') for (const a of ['at', 'px', 'by']) s.add(a); // 发射源可移动
-  if (SEGMENTED.has(type) || TEXTLIKE.has(type)) s.add('draw');
+  if (SEGMENTED.has(type) || TEXTLIKE.has(type) || type === 'ring') s.add('draw');
   if (TEXTLIKE.has(type)) s.add('reveal');
   if (GRADABLE.has(type)) s.add('fill2');
   return s;

@@ -1,11 +1,10 @@
 import { composeFrame } from './ir.js';
-import { drawSolid, drawRing, drawText } from './shapes.js';
+import { drawSolid, drawRing, drawText, outline } from './shapes.js';
 import { drawLine, drawNote, drawGridEntity, drawTrace } from './annotations.js';
 import { drawMap } from './map.js';
 import { drawGlyph } from './glyphs.js';
 import { toCss, shade, mix } from '../core/util/color.js';
 import { drawBackground, drawGuide, drawCaption } from './overlay.js';
-import { roundRectPath } from './util.js';
 
 /** 每种图元的绘制入口：由 IR 的 kind 分发 */
 const DRAWERS = {
@@ -62,31 +61,13 @@ function applyXform(ctx, item) {
   ctx.scale(item.sx, item.sy);
 }
 
-/** 裁剪容器的路径（世界坐标系，描完直接 clip） */
+/** 裁剪：以容器的变换为坐标系，复用绘制同一份轮廓路径，再 clip。路径描完后立刻还原变换，clip 区域保持在世界坐标 */
 function clipPath(ctx, c) {
   ctx.save();
   ctx.translate(c.x, c.y);
   ctx.rotate(c.rot || 0);
   ctx.scale(c.sx || 1, c.sy || 1);
-  ctx.beginPath();
-  const s = Math.max(c.size || 0, 1);
-  switch (c.shape) {
-    case 'circle': ctx.arc(0, 0, s / 2, 0, Math.PI * 2); break;
-    case 'ellipse': ctx.ellipse(0, 0, Math.max(0.5, c.w / 2), Math.max(0.5, c.h / 2), 0, 0, Math.PI * 2); break;
-    case 'rect': {
-      const r = c.radius >= 0 ? c.radius : Math.min(c.w, c.h) * 0.2;
-      roundRectPath(ctx, -c.w / 2, -c.h / 2, c.w, c.h, r);
-      break;
-    }
-    case 'triangle': { const hh = s * 0.4, hw = s * 0.46; ctx.moveTo(0, -hh); ctx.lineTo(hw, hh); ctx.lineTo(-hw, hh); ctx.closePath(); break; }
-    case 'star': {
-      const n = Math.max(3, c.points || 5), R = s * 0.46, rr = R * 0.46;
-      for (let i = 0; i < n * 2; i++) { const a = -Math.PI / 2 + (i * Math.PI) / n, rad = i % 2 ? rr : R; const fn = i ? 'lineTo' : 'moveTo'; ctx[fn](Math.cos(a) * rad, Math.sin(a) * rad); }
-      ctx.closePath();
-      break;
-    }
-    default: ctx.arc(0, 0, s / 2, 0, Math.PI * 2);
-  }
+  outline(ctx, c);
   ctx.restore();
   ctx.clip();
 }

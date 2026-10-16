@@ -1,0 +1,58 @@
+<scene width="920" height="520" grid="9x4" pad="40 40 110 40" palette="aurora" shadow="false" glow="false" overlap="off" hold=".9" read="4">
+  <!-- 仪表盘：三表并列（CPU / 内存 / 带宽）。半圆弧 + 数字 + 指针。
+       底弧：rot=90° draw=0.5 → 从 3 点画到 9 点（下半圆的两端在左右，开口朝上就是上半圆；此处用下半圆的话会倒 U，我们要正 U：rot=270° draw=0.5）
+       进度弧：同样 rot=270°，draw=0.5*比例，画在底弧上面。
+       指针：rect 绕中心旋转，角度 -90°（左）→ +90°（右）之间，映射到 0~100%。 -->
+  <let names="{['CPU','内存','带宽']}"/>
+  <let vals="{[68, 42, 91]}"/>
+  <let units="{['%','%','Mbps']}"/>
+  <let maxs="{[100, 100, 100]}"/>
+
+  <layer name="base" z="3"/>
+  <layer name="arcs" z="5"/>
+  <layer name="pins" z="8"/>
+  <layer name="txt" z="9"/>
+
+  <!-- 三个表盘：底弧 + 刻度点（两端一左一右）+ 中心点 -->
+  <step say="三个指标，一个表盘读一个数" dur=".6" stagger=".15">
+    <for var="n" index="i" in="{names}">
+      <ring id="bg{i}" at="{1.75 + i * 2.75},2.2" size="2.2c" width=".3c" stroke="sub" alpha=".22" rot="270" draw=".5" layer="base" in="draw"/>
+      <text at="{1.75 + i * 2.75},3.15" text="{n}" size=".32c" fill="sub" layer="txt"/>
+    </for>
+  </step>
+
+  <!-- 进度弧：创建时就带目标 draw，in="draw" 让它从 0 画到目标弧长 -->
+  <step say="实时读数依次填入" dur="1.2" stagger=".18">
+    <for var="v" index="i" in="{vals}">
+      <ring id="arc{i}" at="{1.75 + i * 2.75},2.2" size="2.2c" width=".3c" rot="270"
+            stroke="{v > 85 ? 'bad' : v > 60 ? 'warn' : 'good'}" draw="{v / maxs[i] * 0.5}" layer="arcs" in="draw"/>
+    </for>
+  </step>
+
+  <!-- 指针：用一条 line（短棒）从圆心指向当前角度；角度从 -180° 转到 0° 对应 0% 到 100%
+       计算：角度 = -π + π*v/100；棒端 = 中心 + 0.75c*(cos(角度), sin(角度)) -->
+  <step say="指针指向当前读数" dur=".9" stagger=".15">
+    <for var="v" index="i" in="{vals}">
+      <circle id="hub{i}" at="{1.75 + i * 2.75},2.2" size=".2c" fill="text" flat="" layer="pins" in="pop"/>
+      <line id="pin{i}"
+            from="{1.75 + i * 2.75},2.2"
+            to="{1.75 + i * 2.75 + 0.75 * cos(-PI + PI * v / 100)},{2.2 + 0.75 * sin(-PI + PI * v / 100)}"
+            stroke="text" width="3.5" layer="pins" in="draw"/>
+    </for>
+  </step>
+
+  <!-- 数字读数：count 滚上去 -->
+  <step say="最终读数落定" dur="1" stagger=".1">
+    <for var="v" index="i" in="{vals}">
+      <text id="num{i}" at="{1.75 + i * 2.75},2.3" text="0" fmt="#" count="{v}" size=".6c"
+            fill="{v > 85 ? 'bad' : v > 60 ? 'warn' : 'good'}" layer="txt" in="fade"/>
+      <text at="{1.75 + i * 2.75},2.8" text="{units[i]}" size=".2c" fill="sub" layer="txt" in="fade"/>
+    </for>
+  </step>
+
+  <!-- 带宽报警 -->
+  <step say="带宽 91 Mbps 接近上限" dur=".6">
+    <ring at="{1.75 + 2 * 2.75},2.2" size="2.6c" stroke="bad" width="2.5" in="draw" layer="txt"/>
+    <num2 pulse=".2"/>
+  </step>
+</scene>

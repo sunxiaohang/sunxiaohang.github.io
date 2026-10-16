@@ -1,0 +1,65 @@
+<scene width="960" height="580" grid="12x5" pad="40 40 110 40" palette="aurora" shadow="false" glow="false" overlap="off" hold=".6" read="2">
+  <!-- 折线图：两条数据线对比。CSV 换一份就是另一张图。
+       每点一个 circle，相邻两点一段 line。stagger 控制在 ~0.03s 让画线有节奏，但总时长不失控。 -->
+  <data name="rows">月,本月,上月
+1,42,38
+2,48,45
+3,45,42
+4,58,50
+5,62,54
+6,55,58
+7,70,62
+8,76,66
+9,72,70
+10,88,75
+11,84,80
+12,100,88</data>
+
+  <layer name="rules" z="0"/>
+  <layer name="line1" z="4"/>
+  <layer name="line2" z="5"/>
+  <layer name="dots" z="7"/>
+  <layer name="txt" z="9"/>
+
+  <!-- 网格和月份标签：全部一次性显示，不占时间 -->
+  <step say="横轴月份、纵轴访问量（单位：k）" dur=".4">
+    <for var="j" in="0..3">
+      <line from="1.2,{4.3 - j * 0.85}" to="11.5,{4.3 - j * 0.85}" stroke="sub" alpha=".18" width="1.5" layer="rules" in="none"/>
+      <text at=".85,{4.3 - j * 0.85}" text="{j * 25}" size=".2c" fill="sub" layer="txt" in="fade"/>
+    </for>
+    <for var="i" in="1..{rows.length}">
+      <text at="{1.2 + (i - 1) * 0.936},4.65" text="{rows[i - 1].月}" size=".2c" fill="sub" layer="txt" in="fade"/>
+    </for>
+  </step>
+
+  <!-- 上月（浅色）：11 段线快速连续画出，整体 0.9 秒；点同步 pop -->
+  <step say="上月（浅色）：平稳上升到年末 88" dur=".9" stagger=".04">
+    <for var="i" in="1..{rows.length - 1}">
+      <line from="{1.2 + (i - 1) * 0.936},{4.3 - rows[i - 1].上月 * 0.0255}"
+            to="{1.2 + i * 0.936},{4.3 - rows[i].上月 * 0.0255}"
+            stroke="sub" width="2.5" alpha=".55" layer="line1" in="draw"/>
+    </for>
+    <for var="i" in="1..{rows.length}">
+      <circle at="{1.2 + (i - 1) * 0.936},{4.3 - rows[i - 1].上月 * 0.0255}" size=".2c" fill="sub" flat="" layer="dots" in="fade"/>
+    </for>
+  </step>
+
+  <!-- 本月（主色、加粗、带节点光）：节奏同样紧凑 -->
+  <step say="本月（主色）：第 10 月开始显著拉开差距" dur=".9" stagger=".04">
+    <for var="i" in="1..{rows.length - 1}">
+      <line from="{1.2 + (i - 1) * 0.936},{4.3 - rows[i - 1].本月 * 0.0255}"
+            to="{1.2 + i * 0.936},{4.3 - rows[i].本月 * 0.0255}"
+            stroke="accent" width="3.5" layer="line2" in="draw"/>
+    </for>
+    <for var="i" in="1..{rows.length}">
+      <circle id="d{i}" at="{1.2 + (i - 1) * 0.936},{4.3 - rows[i - 1].本月 * 0.0255}" size=".26c" fill="accent" flat="" layer="dots" in="pop"/>
+    </for>
+  </step>
+
+  <!-- 峰值标注 -->
+  <step say="12 月达到峰值 100：同比提升 14%" dur=".7">
+    <ring at="{1.2 + 11 * 0.936},{4.3 - 100 * 0.0255}" size=".9c" stroke="warn" width="4" in="draw" layer="txt"/>
+    <text at="{1.2 + 11 * 0.936},{4.3 - 100 * 0.0255 - 0.5}" text="100k" size=".3c" fill="warn" layer="txt" in="fade"/>
+    <d12 pulse=".2"/>
+  </step>
+</scene>

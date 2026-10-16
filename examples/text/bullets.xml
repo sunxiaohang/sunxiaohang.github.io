@@ -1,0 +1,29 @@
+<scene width="960" height="580" grid="12x5" pad="40 40 110 40" palette="aurora" shadow="false" glow="false" overlap="off" hold="1.1" read="3">
+  <!-- 要点逐条：五条要点依次登场，右侧有引用块（quote）。
+       关键：每条用「圆点 + 文字」构成一行，text 自带 w 自动换行；每一行一个 step 让旁白节奏跟着上。 -->
+  <let bullets="{['网文读者第一眼只给你三章，三章里要让他看到人物目标', '目标要具体：不是「变强」，而是「拿回被夺走的东西」', '阻力要清晰：有谁拦着，拦得越明确越好写', '承诺要兑现：开头埋的钩子，前十章一定要回应一次', '只有节奏感会让人追更，让每一章都有「下一个想看的点」']}"/>
+
+  <layer name="deco" z="0"/>
+  <layer name="txt" z="5"/>
+
+  <!-- 大标题 -->
+  <step say="写书前先想清楚这五件事" dur=".6">
+    <text id="title" at="6,0.6" text="开书前的五个要点" size=".52c" fill="text" layer="txt" in="type"/>
+    <line id="rule" from="2,1.1" to="10,1.1" stroke="accent" width="2.5" alpha=".8" layer="deco" in="draw"/>
+  </step>
+
+  <!-- 五条要点：每条一个 step，圆点 pop 进来，文字 type（逐字） -->
+  <for var="b" index="i" in="{bullets}">
+    <step say="第 {i + 1} 条：{b}" dur="1.2" hold=".4">
+      <circle id="dot{i}" at="1.2,{1.65 + i * 0.63}" size=".3c" fill="accent" flat="" layer="txt" in="pop"/>
+      <text id="bul{i}" at="6.4,{1.65 + i * 0.63}" text="{b}" size=".32c" w="9.8c" fill="text" layer="txt" in="type"/>
+    </step>
+  </for>
+
+  <!-- 收尾强调 -->
+  <step say="做到这些，开书基本不会扑" dur="1" stagger=".1">
+    <for var="i" in="0..4">
+      <change id="dot{i}" fill="good" pulse=".15"/>
+    </for>
+  </step>
+</scene>

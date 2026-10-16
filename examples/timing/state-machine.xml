@@ -1,0 +1,65 @@
+<scene width="900" height="560" grid="9x5" pad="40 40 110 40" palette="aurora" shadow="false" glow="false" overlap="off" hold=".8" read="2">
+  <!-- 订单状态机：五个状态围成环（下单 → 支付 → 配货 → 发货 → 完成），
+       异常分支从支付和配货岔出（支付失败、缺货）。箭头上的 label 写转移条件。
+       关键：每个状态是 ring（圆圈），当前态点亮；转移发生时弧状箭头亮起、label 显现。 -->
+  <let states="{['下单','支付','配货','发货','完成']}"/>
+
+  <layer name="arrows" z="2"/>
+  <layer name="states" z="5"/>
+  <layer name="txt" z="8"/>
+
+  <!-- 五个状态环：按正五边形排布 -->
+  <step say="五个主状态按顺序走一遍" dur=".9" stagger=".18">
+    <for var="s" index="i" in="{states}">
+      <ring id="s{i}" at="{4.5 + 1.8 * cos(-PI/2 + i * 2 * PI / 5)},{2.7 + 1.8 * sin(-PI/2 + i * 2 * PI / 5)}"
+            size="1.2c" width=".12c" stroke="sub" layer="states" in="draw"/>
+      <text at="{4.5 + 1.8 * cos(-PI/2 + i * 2 * PI / 5)},{2.7 + 1.8 * sin(-PI/2 + i * 2 * PI / 5)}"
+            text="{s}" size=".3c" fill="text" layer="txt" in="fade"/>
+    </for>
+  </step>
+
+  <!-- 转移箭头：每对相邻状态之间 -->
+  <step say="每一步转移对应一个事件" dur=".8" stagger=".15">
+    <for var="s" index="i" in="{states}">
+      <if test="i < 4">
+        <arrow id="e{i}"
+               from="s{i}" to="s{i + 1}"
+               stroke="sub" width="2" head="10" layer="arrows"/>
+      </if>
+    </for>
+  </step>
+
+  <!-- 走一遍：当前状态逐步点亮，经过的转移变主色 -->
+  <step say="用户下单：状态从「下单」出发" dur=".6">
+    <s0 stroke="accent" width=".18c" pulse=".15"/>
+  </step>
+  <step say="付款成功，进入「支付」" dur=".7">
+    <e0 stroke="accent" width="3"/>
+    <s0 stroke="sub" width=".12c"/>
+    <s1 stroke="accent" width=".18c" pulse=".15"/>
+  </step>
+  <step say="仓库响应，开始「配货」" dur=".7">
+    <e1 stroke="accent" width="3"/>
+    <s1 stroke="sub" width=".12c"/>
+    <s2 stroke="accent" width=".18c" pulse=".15"/>
+  </step>
+  <step say="分拣完成，进入「发货」" dur=".7">
+    <e2 stroke="accent" width="3"/>
+    <s2 stroke="sub" width=".12c"/>
+    <s3 stroke="accent" width=".18c" pulse=".15"/>
+  </step>
+  <step say="签收，流程「完成」" dur=".7">
+    <e3 stroke="good" width="3"/>
+    <s3 stroke="sub" width=".12c"/>
+    <s4 stroke="good" width=".18c" pulse=".2"/>
+  </step>
+
+  <!-- 异常分支：支付失败回退、配货缺货下架 -->
+  <step say="异常分支：支付失败回到下单，缺货直接取消" dur="1" stagger=".2">
+    <arrow id="fail1" from="s1" to="s0" stroke="bad" width="2" head="10" layer="arrows" in="draw"/>
+    <text at="4.5,2.7" off="-120,-80" text="失败" size=".22c" fill="bad" layer="txt" in="fade"/>
+    <circle id="cancel" at="7.8,1.4" size="1c" fill="bad" alpha=".3" flat="" layer="states" in="pop"/>
+    <text at="7.8,1.4" text="取消" size=".3c" fill="bad" layer="txt" in="fade"/>
+    <arrow id="fail2" from="s2" to="cancel" stroke="bad" width="2" head="10" layer="arrows" dash="" in="draw"/>
+  </step>
+</scene>

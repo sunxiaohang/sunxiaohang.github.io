@@ -1,0 +1,72 @@
+<scene width="960" height="720" grid="12x9" pad="16 16 96 16" palette="porcelain" shadow="false" glow="false" overlap="off" hold=".8" read="3" poster="-1">
+  <!-- 西北河西走廊：region 用经纬度 bbox「73,32,112,45」放大到西北。
+       城市用 city（内置数据库里有的）或 lonlat（没的用经纬度直接写）。
+       car.path 的每个 token 既可是城市名，也可是「经度,纬度」。 -->
+  <let gol="94.92,36.42"/>
+  <let dhg="94.66,40.14"/>
+  <let kas="75.99,39.47"/>
+  <let xin="101.78,36.62"/>
+
+  <layer name="pins" z="4"/>
+  <layer name="names" z="6"/>
+  <layer name="train" z="8"/>
+
+  <map id="地图" region="73,32,112,45" highlight="甘肃 新疆 青海 西藏" border="sub" borderWidth="1" coast="text" coastWidth="1.6" color="accent"/>
+
+  <!-- 蓝线站点：高铁 -->
+  <step say="西北三条交通命脉" dur=".7" stagger=".08">
+    <circle id="r兰州" city="兰州" size="16" fill="accent" stroke="bg" width="3" flat="" layer="pins" in="pop"/>
+    <circle id="r西宁" lonlat="{xin}" size="16" fill="accent" stroke="bg" width="3" flat="" layer="pins" in="pop"/>
+    <circle id="r乌鲁木齐" city="乌鲁木齐" size="16" fill="accent" stroke="bg" width="3" flat="" layer="pins" in="pop"/>
+    <!-- 青藏公路 -->
+    <circle id="ro格尔木" lonlat="{gol}" size="16" fill="warn" stroke="bg" width="3" flat="" layer="pins" in="pop"/>
+    <circle id="ro拉萨" city="拉萨" size="16" fill="warn" stroke="bg" width="3" flat="" layer="pins" in="pop"/>
+    <!-- 丝绸之路 -->
+    <circle id="s西安" city="西安" size="16" fill="good" stroke="bg" width="3" flat="" layer="pins" in="pop"/>
+    <circle id="s敦煌" lonlat="{dhg}" size="16" fill="good" stroke="bg" width="3" flat="" layer="pins" in="pop"/>
+    <circle id="s喀什" lonlat="{kas}" size="16" fill="good" stroke="bg" width="3" flat="" layer="pins" in="pop"/>
+  </step>
+
+  <!-- 城市名标签 -->
+  <step say="标出沿线主要节点" dur=".5" stagger=".05">
+    <text city="兰州" off="-30,6" text="兰州" size="16" fill="text" stroke="bg" width="5" layer="names" in="fade"/>
+    <text lonlat="{xin}" off="-30,-6" text="西宁" size="16" fill="text" stroke="bg" width="5" layer="names" in="fade"/>
+    <text city="乌鲁木齐" off="-50,-4" text="乌鲁木齐" size="16" fill="text" stroke="bg" width="5" layer="names" in="fade"/>
+    <text lonlat="{gol}" off="-32,-6" text="格尔木" size="16" fill="text" stroke="bg" width="5" layer="names" in="fade"/>
+    <text city="拉萨" off="0,24" text="拉萨" size="16" fill="text" stroke="bg" width="5" layer="names" in="fade"/>
+    <text city="西安" off="32,8" text="西安" size="16" fill="text" stroke="bg" width="5" layer="names" in="fade"/>
+    <text lonlat="{dhg}" off="0,-24" text="敦煌" size="16" fill="text" stroke="bg" width="5" layer="names" in="fade"/>
+    <text lonlat="{kas}" off="-30,-6" text="喀什" size="16" fill="text" stroke="bg" width="5" layer="names" in="fade"/>
+  </step>
+
+  <!-- 蓝线：兰新高铁 -->
+  <step say="兰新高铁从兰州一路向西" dur=".4">
+    <icon id="车A" name="train" city="兰州" size="36" fill="accent" stroke="bg" width="4" layer="train"/>
+  </step>
+  <step say="兰州 → 西宁 → 乌鲁木齐" dur="2.4">
+    <车A path="{xin} 乌鲁木齐" heading="0" arc=".08" trail="accent" ease="soft"/>
+  </step>
+
+  <!-- 橙线：青藏公路 -->
+  <step say="青藏公路从西宁转南入藏" dur=".4">
+    <icon id="车B" name="car" lonlat="{xin}" size="34" fill="warn" stroke="bg" width="4" layer="train"/>
+  </step>
+  <step say="西宁 → 格尔木 → 拉萨" dur="2.4">
+    <车B path="{gol} 拉萨" heading="0" arc="-.1" trail="warn" ease="soft"/>
+  </step>
+
+  <!-- 金线：丝路古道 -->
+  <step say="丝路古道则从长安一路通向中亚" dur=".4">
+    <icon id="车C" name="plane" city="西安" size="34" fill="good" stroke="bg" width="4" rot="-30" layer="train"/>
+  </step>
+  <step say="西安 → 兰州 → 敦煌 → 喀什" dur="3">
+    <车C path="兰州 {dhg} {kas}" heading="0" arc=".06" trail="good" ease="soft"/>
+  </step>
+
+  <!-- 收尾 -->
+  <step say="三条线并行，古今的西北都在这张图里" dur="1">
+    <车A pulse=".2"/>
+    <车B pulse=".2"/>
+    <车C pulse=".2"/>
+  </step>
+</scene>

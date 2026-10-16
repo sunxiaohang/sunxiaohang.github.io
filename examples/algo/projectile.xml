@@ -1,0 +1,61 @@
+<scene width="900" height="560" grid="9x5" pad="40 40 110 40" palette="aurora" shadow="false" glow="false" overlap="off" hold=".7" read="2">
+  <!-- 抛物线运动：地面上一门斜向发射的小球。给三个仰角比较射程，水平位移 vt·cosθ、竖直位移 vt·sinθ - ½gt²。
+       轨迹由 32 段小 line 描出；每段的两端都是显式表达式，不手写。 -->
+  <let n="32"/>
+  <let g="10"/>
+  <let v="6"/>
+  <let scale="1.5"/>
+  <let angles="{[30, 45, 60]}"/>
+  <let colors="{['warn', 'accent', 'good']}"/>
+
+  <!-- 每条抛物线的落地时间 = 2v sin θ / g；取最大者估计总时长 -->
+  <let tmax="{2 * v * sin(60 * PI / 180) / g}"/>
+
+  <layer name="axis" z="0"/>
+  <layer name="trace" z="4"/>
+  <layer name="ball" z="7"/>
+  <layer name="txt" z="8"/>
+
+  <!-- 地面 + 发射点 -->
+  <step say="同一枚小球，三种仰角：30°、45°、60°" dur=".6">
+    <line id="ground" from=".8,4.2" to="8.2,4.2" stroke="sub" alpha=".7" width="2.5" layer="axis"/>
+    <circle id="origin" at="1,4.2" size=".3c" fill="sub" flat="" layer="axis"/>
+    <text at="1,4.6" text="O" size=".24c" fill="sub" layer="txt"/>
+  </step>
+
+  <!-- 为每个角度画出完整轨迹（提前预渲染，让观众先看完整形状再对比） -->
+  <step say="轨迹是抛物线：先描三条，再比较" dur="1" stagger=".03">
+    <for var="a" index="j" in="{angles}">
+      <let th="{a * PI / 180}"/>
+      <let tj="{2 * v * sin(th) / g}"/>
+      <for var="i" in="0..{n - 1}">
+        <let t0="{i / n * tj}"/>
+        <let t1="{(i + 1) / n * tj}"/>
+        <line from="{1 + v * cos(th) * t0 * scale},{4.2 - (v * sin(th) * t0 - 0.5 * g * t0 * t0) * scale}"
+              to="{1 + v * cos(th) * t1 * scale},{4.2 - (v * sin(th) * t1 - 0.5 * g * t1 * t1) * scale}"
+              stroke="{colors[j]}" width="2" alpha=".7" layer="trace" in="draw"/>
+      </for>
+    </for>
+  </step>
+
+  <!-- 三个小球同时飞：按真实抛物线轨迹，用 for 生成一堆 move/change -->
+  <step say="同时发射：三条弧度，三种射程" dur="{tmax + .3}" stagger="0">
+    <for var="a" index="j" in="{angles}">
+      <let th="{a * PI / 180}"/>
+      <let tj="{2 * v * sin(th) / g}"/>
+      <let xmax="{1 + v * cos(th) * tj * scale}"/>
+      <circle id="b{j}" at="1,4.2" size=".4c" fill="{colors[j]}" flat="" layer="ball" in="pop"/>
+      <!-- 粗略近似运动：直接给小球一条 path，30 个采样点连起来 -->
+      <change id="b{j}" path="{1 + v * cos(th) * (0 / 30 * tj) * scale},{4.2 - (v * sin(th) * (0 / 30 * tj) - 0.5 * g * (0 / 30 * tj) * (0 / 30 * tj)) * scale} {1 + v * cos(th) * (6 / 30 * tj) * scale},{4.2 - (v * sin(th) * (6 / 30 * tj) - 0.5 * g * (6 / 30 * tj) * (6 / 30 * tj)) * scale} {1 + v * cos(th) * (12 / 30 * tj) * scale},{4.2 - (v * sin(th) * (12 / 30 * tj) - 0.5 * g * (12 / 30 * tj) * (12 / 30 * tj)) * scale} {1 + v * cos(th) * (18 / 30 * tj) * scale},{4.2 - (v * sin(th) * (18 / 30 * tj) - 0.5 * g * (18 / 30 * tj) * (18 / 30 * tj)) * scale} {1 + v * cos(th) * (24 / 30 * tj) * scale},{4.2 - (v * sin(th) * (24 / 30 * tj) - 0.5 * g * (24 / 30 * tj) * (24 / 30 * tj)) * scale} {xmax},4.2"
+              smooth="" ease="linear"/>
+      <!-- 落点标记：30° 和 60° 射程相同（抛物线对称），标签右上错开避免重叠 -->
+      <ring at="{xmax},4.2" size=".7c" width="2" stroke="{colors[j]}" layer="trace" in="draw" delay="{tj}"/>
+      <text at="{xmax + 0.5},{3.7 - j * 0.4}" text="{a}°" size=".26c" fill="{colors[j]}" layer="txt" in="fade" delay="{tj}"/>
+    </for>
+  </step>
+
+  <!-- 结论：45° 射程最远 -->
+  <step say="结论：45° 时射程最大（忽略空气阻力）" dur=".8">
+    <change id="b1" pulse=".25"/>
+  </step>
+</scene>

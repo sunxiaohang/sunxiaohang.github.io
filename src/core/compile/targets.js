@@ -54,8 +54,8 @@ export function compileIntro(ent, node, r, start, ctx) {
     ctx.diag.warn('W_BAD_VALUE', `in 只能是 ${INTROS.join(' / ')}，实际是 "${mode}"，已改用 ${def}`, r.at('in'));
     mode = def;
   }
-  if (mode === 'draw' && !SEGMENTED.has(ent.type)) {
-    ctx.diag.warn('W_NOT_APPLICABLE', 'in="draw" 只适用于 line / arrow，已改用 fade', r.at('in'));
+  if (mode === 'draw' && !(SEGMENTED.has(ent.type) || ent.type === 'ring')) {
+    ctx.diag.warn('W_NOT_APPLICABLE', 'in="draw" 只适用于 line / arrow / ring，已改用 fade', r.at('in'));
     mode = 'fade';
   }
   if (mode === 'type' && !(ent.type === 'text' || ent.type === 'icon')) {
@@ -65,8 +65,16 @@ export function compileIntro(ent, node, r, start, ctx) {
   if (mode === 'none') return start;
   const dur = r.has('dur') ? r.num('dur', 0.45, { min: 0 }) : mode === 'draw' ? 0.8 : mode === 'type' ? 0.9 : 0.45;
   const base = { t0: start, dur, kind: 'intro', tag: node.tag, line: node.line, col: node.col, internal: true };
-  if (mode === 'draw') seg(ctx, ent, { ...base, props: ['draw'], fn: (L, p) => { L.draw = EASINGS.out(p); } });
-  else if (mode === 'type') seg(ctx, ent, { ...base, props: ['reveal'], fn: (L, p) => { L.reveal = clamp(p); } }); // 逐字匀速显现
+  if (mode === 'draw') {
+    // 补间终点取用户写的目标 draw（没写则 1）。这样饼图/仪表盘的 ring draw="0.32" 会从 0 画到 0.32，而不是 0 画到 1。
+    const target = r.has('draw') ? r.num('draw', 1, { min: 0, max: 1 }) : 1;
+    seg(ctx, ent, { ...base, props: ['draw'], fn: (L, p) => { L.draw = target * EASINGS.out(p); } });
+  }
+  else if (mode === 'type') {
+    // 同理：若用户显式写了 reveal="0.5"，打字机的终点就停在 0.5；没写就补到 1（完整显示）
+    const target = r.has('reveal') ? r.num('reveal', 1, { min: 0, max: 1 }) : 1;
+    seg(ctx, ent, { ...base, props: ['reveal'], fn: (L, p) => { L.reveal = clamp(target * p); } }); // 逐字匀速显现
+  }
   else seg(ctx, ent, { ...base, mode: 'add', fn: FX.introFn(mode, ctx.scene.unit * 1.1) });
   return start + dur;
 }

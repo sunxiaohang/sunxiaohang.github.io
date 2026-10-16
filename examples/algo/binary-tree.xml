@@ -1,0 +1,53 @@
+<scene width="960" height="560" grid="12x5" pad="40 40 110 40" palette="aurora" shadow="false" glow="false" overlap="off" hold=".7" read="2">
+  <!-- 二叉树中序遍历：七节点满二叉树，中序 = 左子树 → 根 → 右子树。
+       节点显式用 let 定义坐标和值；遍历顺序由一列 index 数组驱动，依次高亮并把值填入底部“遍历结果”。 -->
+  <let xs="{[2.5, 4.5, 1.5, 3.5, 5.5, 7.5, 6.5]}"/>
+  <let ys="{[1, 2.1, 3.2, 3.2, 3.2, 3.2, 2.1]}"/>
+  <let vals="{[4, 2, 1, 3, 5, 7, 6]}"/>
+  <!-- 中序遍历顺序（从左到右）：节点索引 -->
+  <let order="{[2, 1, 3, 0, 6, 4, 5]}"/>
+  <!-- 边：from, to -->
+  <let eFrom="{[0, 0, 1, 1, 6, 6]}"/>
+  <let eTo="{[1, 6, 2, 3, 4, 5]}"/>
+
+  <layer name="edges" z="2"/>
+  <layer name="nodes" z="5"/>
+  <layer name="txt" z="8"/>
+  <layer name="out" z="6"/>
+
+  <!-- 画边 -->
+  <step say="一棵满二叉树，根节点是 4" dur=".7" stagger=".08">
+    <for var="f" index="i" in="{eFrom}">
+      <line from="{xs[f]},{ys[f]}" to="{xs[eTo[i]]},{ys[eTo[i]]}" stroke="sub" alpha=".55" width="2" layer="edges" in="draw"/>
+    </for>
+  </step>
+
+  <!-- 画节点 -->
+  <step say="每个节点一个数字" dur=".7" stagger=".08">
+    <for var="v" index="i" in="{vals}">
+      <circle id="n{i}" at="{xs[i]},{ys[i]}" size="1c" fill="bg2" stroke="sub" width="2.5" flat="" layer="nodes" in="pop"/>
+      <text at="{xs[i]},{ys[i]}" text="{v}" size=".44c" fill="text" layer="txt" in="fade"/>
+    </for>
+  </step>
+
+  <!-- 结果框底板 -->
+  <step say="中序遍历：左子树 → 根 → 右子树" dur=".5">
+    <rect id="panel" at="6,4.3" w="9c" h=".9c" radius="12" fill="bg2" stroke="sub" width="1.5" flat="" layer="out"/>
+    <text at="1.8,4.3" text="遍历结果：" size=".26c" fill="sub" layer="txt" off="-70,0"/>
+  </step>
+
+  <!-- 按中序顺序逐个高亮，把值填进结果框 -->
+  <for var="idx" index="k" in="{order}">
+    <step say="访问节点 {vals[idx]}" dur=".6" hold=".3">
+      <change id="n{idx}" fill="accent" stroke="accent" pulse=".2"/>
+      <text at="{3 + k * 0.75},4.3" text="{vals[idx]}" size=".4c" fill="accent" layer="txt" in="pop"/>
+    </step>
+  </for>
+
+  <!-- 收尾：全亮一下 -->
+  <step say="1 2 3 4 5 6 7：中序遍历的结果是一个升序列" dur=".7" stagger=".05">
+    <for var="idx" index="k" in="{order}">
+      <change id="n{idx}" fill="good" stroke="good"/>
+    </for>
+  </step>
+</scene>

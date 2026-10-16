@@ -133,6 +133,10 @@ export function createEntity(node, ctx, opts = {}) {
     init.rot = rad(r.num('rot', 0));
   }
 
+  // ring 的 draw 作为初始属性：饼图/仪表盘里，用户写 draw="0.32" 表示只画 32% 弧长。
+  // 若之后还有 in="draw"，补间的终点就取这里设的值（见 compileIntro）。
+  if (type === 'ring' && r.has('draw')) init.draw = r.num('draw', 1, { min: 0, max: 1 });
+
   // 通用视觉修饰：模糊（可动画）、混合模式、裁剪容器（都挂在 ent 上，静态）
   readLook(r, ent, ctx, init);
 

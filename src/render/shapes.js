@@ -1,24 +1,19 @@
 import { toCss, shade } from '../core/util/color.js';
 import { FONT, roundRectPath } from './util.js';
 
-/** 构造渐变画刷：grad = { c0, c1, radial, angle }，span 为图形外接尺寸 */
-function makeGradient(ctx, grad, span) {
-  if (grad.radial) {
-    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, span * 0.6);
-    g.addColorStop(0, toCss(grad.c0));
-    g.addColorStop(1, toCss(grad.c1));
-    return g;
-  }
-  const a = ((grad.angle - 90) * Math.PI) / 180; // 0=向上、90=向右
-  const dx = Math.cos(a) * span / 2, dy = Math.sin(a) * span / 2;
-  const g = ctx.createLinearGradient(-dx, -dy, dx, dy);
+/** 把 IR 的渐变描述 { c0, c1, radial, span, dir } 变成画刷。方向与范围都已在 IR 里算好，这里只管调用画布 API */
+function makeGradient(ctx, grad) {
+  const { span } = grad;
+  let g;
+  if (grad.radial) g = ctx.createRadialGradient(0, 0, 0, 0, 0, span * 0.6);
+  else g = ctx.createLinearGradient(-grad.dir[0] * span / 2, -grad.dir[1] * span / 2, grad.dir[0] * span / 2, grad.dir[1] * span / 2);
   g.addColorStop(0, toCss(grad.c0));
   g.addColorStop(1, toCss(grad.c1));
   return g;
 }
 
-/** 实心图形的轮廓路径；返回需要额外描边的"倒角"宽度（让尖角更圆润） */
-function outline(ctx, item) {
+/** 实心图形的轮廓路径；返回需要额外描边的"倒角"宽度（让尖角更圆润）。裁剪容器也复用它，保证两处形状一致 */
+export function outline(ctx, item) {
   const s = item.size;
   switch (item.shape) {
     case 'circle':
@@ -65,7 +60,7 @@ export function drawSolid(ctx, item, pr) {
   }
   if (item.fill[3] > 0) {
     if (item.grad) {
-      const g = makeGradient(ctx, item.grad, span);
+      const g = makeGradient(ctx, item.grad);
       ctx.fillStyle = g;
       ctx.strokeStyle = g;
     } else if (item.flat) {
@@ -119,8 +114,17 @@ export function drawRing(ctx, item, pr) {
   ctx.shadowBlur = 8 * pr;
   ctx.strokeStyle = toCss(item.stroke);
   ctx.lineWidth = w;
-  ctx.beginPath();
-  ctx.arc(0, 0, Math.max(0, (item.size - w) / 2), 0, Math.PI * 2);
+  ctx.lineCap = 'round';
+  const r = Math.max(0, (item.size - w) / 2);
+  // draw：从 12 点钟方向顺时针画多少（0 不画、1 整圈）。做环形进度条 / 环形饼图 / 仪表盘的弧
+  const k = item.draw ?? 1;
+  if (k >= 1 - 1e-6) {
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI * 2);
+  } else if (k > 0) {
+    ctx.beginPath();
+    ctx.arc(0, 0, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * k);
+  } else return;
   ctx.stroke();
 }
 
@@ -132,28 +136,11 @@ export function drawText(ctx, item, pr) {
   ctx.font = `700 ${item.size}px ${FONT}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-
-  // reveal：逐字显现（打字机）。按全部行的字符数从左到右切出可见部分
-  let lines = item.lines;
-  const reveal = item.reveal ?? 1;
-  if (reveal < 1) {
-    const total = item.lines.reduce((n, l) => n + [...l].length, 0);
-    let left = Math.round(total * reveal);
-    lines = item.lines.map((l) => { const cs = [...l]; const take = Math.max(0, Math.min(cs.length, left)); left -= cs.length; return cs.slice(0, take).join(''); });
-  }
-
-  if (item.grad) {
-    let maxW = 1;
-    for (const ln of item.lines) maxW = Math.max(maxW, ctx.measureText(ln).width);
-    const span = Math.max(maxW, item.lines.length * item.lineHeight);
-    ctx.fillStyle = makeGradient(ctx, item.grad, span);
-  } else {
-    ctx.fillStyle = toCss(item.fill);
-  }
+  ctx.fillStyle = item.grad ? makeGradient(ctx, item.grad) : toCss(item.fill);
 
   const hasStroke = item.stroke[3] > 0 && item.strokeWidth > 0;
   if (hasStroke) { ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; ctx.lineJoin = 'round'; ctx.lineWidth = item.strokeWidth; ctx.strokeStyle = toCss(item.stroke); }
-  lines.forEach((ln, i) => {
+  item.lines.forEach((ln, i) => {
     const y = item.top + i * item.lineHeight;
     if (hasStroke && ln) ctx.strokeText(ln, 0, y);
     if (ln) ctx.fillText(ln, 0, y);

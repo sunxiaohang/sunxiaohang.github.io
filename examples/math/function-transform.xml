@@ -1,0 +1,87 @@
+<scene width="960" height="560" grid="12x5" pad="40 40 110 40" palette="aurora" shadow="false" glow="false" overlap="off" hold=".7" read="2">
+  <!-- 函数图像变换：y=x² 的平移、伸缩、翻转。
+       一条曲线 = 40 个相邻点连成的 40 段 line（x 从 -2 到 2）。
+       每一步「同一个 id 换终点」就等于曲线变形。 -->
+  <let n="40"/>
+  <let step="0.1"/>
+  <let k="0.25"/>
+
+  <layer name="axis" z="0"/>
+  <layer name="curve0" z="4"/>
+  <layer name="curve1" z="6"/>
+  <layer name="txt" z="8"/>
+
+  <!-- 坐标轴 + 刻度 -->
+  <step say="先画坐标系：横轴 x、纵轴 y" dur=".6">
+    <line id="xaxis" from="1,2.8" to="11,2.8" stroke="sub" alpha=".6" width="2" layer="axis"/>
+    <line id="yaxis" from="6,0.6" to="6,4.6" stroke="sub" alpha=".6" width="2" layer="axis"/>
+    <for var="j" in="-2..2">
+      <if test="j != 0">
+        <line from="{6 + j * 1.4},2.7" to="{6 + j * 1.4},2.9" stroke="sub" alpha=".5" width="2" layer="axis" in="none"/>
+      </if>
+    </for>
+    <text at="11.3,2.8" text="x" size=".28c" fill="sub" layer="txt"/>
+    <text at="6,0.7" text="y" size=".28c" fill="sub" layer="txt"/>
+  </step>
+
+  <!-- 参考曲线 y = x²：灰色 -->
+  <step say="参考曲线：y = x²" dur=".8" stagger=".015">
+    <for var="i" in="0..{n - 1}">
+      <let x0="{(i - n / 2) * step}"/>
+      <let x1="{(i + 1 - n / 2) * step}"/>
+      <line id="ref{i}"
+            from="{6 + x0 * 1.4},{2.8 - x0 * x0 * k}"
+            to="{6 + x1 * 1.4},{2.8 - x1 * x1 * k}"
+            stroke="sub" width="2" alpha=".4" layer="curve0" in="draw"/>
+    </for>
+  </step>
+
+  <!-- 待变换曲线 g(x) -->
+  <step say="再画一条同样的 y = x²，这条我们接下来变" dur=".8" stagger=".015">
+    <for var="i" in="0..{n - 1}">
+      <let x0="{(i - n / 2) * step}"/>
+      <let x1="{(i + 1 - n / 2) * step}"/>
+      <line id="g{i}"
+            from="{6 + x0 * 1.4},{2.8 - x0 * x0 * k}"
+            to="{6 + x1 * 1.4},{2.8 - x1 * x1 * k}"
+            stroke="accent" width="3" layer="curve1" in="draw"/>
+    </for>
+  </step>
+
+  <!-- 右移 1 -->
+  <step say="右移：y = (x - 1)²" dur=".9" stagger=".008">
+    <for var="i" in="0..{n - 1}">
+      <let x0="{(i - n / 2) * step}"/>
+      <let x1="{(i + 1 - n / 2) * step}"/>
+      <change id="g{i}"
+              from="{6 + (x0 + 1) * 1.4},{2.8 - x0 * x0 * k}"
+              to="{6 + (x1 + 1) * 1.4},{2.8 - x1 * x1 * k}"
+              ease="soft"/>
+    </for>
+    <text at="8.6,4.1" text="y = (x - 1)²" size=".28c" fill="accent" layer="txt" in="fade"/>
+  </step>
+
+  <!-- 竖向拉伸 2 倍 -->
+  <step say="再竖向拉伸 2 倍：y = 2(x - 1)²" dur=".9" stagger=".008">
+    <for var="i" in="0..{n - 1}">
+      <let x0="{(i - n / 2) * step}"/>
+      <let x1="{(i + 1 - n / 2) * step}"/>
+      <change id="g{i}"
+              from="{6 + (x0 + 1) * 1.4},{2.8 - x0 * x0 * k * 2}"
+              to="{6 + (x1 + 1) * 1.4},{2.8 - x1 * x1 * k * 2}"
+              ease="soft"/>
+    </for>
+  </step>
+
+  <!-- 翻转 -->
+  <step say="最后翻转：y = -2(x - 1)²" dur="1" stagger=".008">
+    <for var="i" in="0..{n - 1}">
+      <let x0="{(i - n / 2) * step}"/>
+      <let x1="{(i + 1 - n / 2) * step}"/>
+      <change id="g{i}"
+              from="{6 + (x0 + 1) * 1.4},{2.8 + x0 * x0 * k * 2}"
+              to="{6 + (x1 + 1) * 1.4},{2.8 + x1 * x1 * k * 2}"
+              ease="soft"/>
+    </for>
+  </step>
+</scene>

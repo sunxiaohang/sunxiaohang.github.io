@@ -127,21 +127,43 @@ test('打字机：in="type" 用在非文字上会降级并告警', () => {
 });
 
 // ---------------- 渐变 ----------------
-test('渐变：写了 fill2 的图形在 IR 里带 grad 描述', () => {
+// IR 里存的是"算好的方向向量 + 范围"，后端不再自己解释角度：grad = { c0, c1, radial, span, dir }
+test('渐变：写着 fill2 的图形在 IR 里带 grad 描述，角度已折算成单位方向向量', () => {
   const r = compile(wrap('<rect id="a" at="2,2" w="100" h="60" fill="#4cc9f0" fill2="#ff6b9d"/><circle id="b" at="3,3" fill="#fff" fill2="#000" gradient="radial"/>'));
   ok(r);
   const ir = composeFrame(r.scene, evaluate(r.scene, 0), measure);
   const a = ir.items.find((it) => it.shape === 'rect');
-  assert.ok(a.grad && a.grad.radial === false && Math.abs(a.grad.angle - 135) < 1e-6);
+  assert.ok(a.grad, '矩形应有渐变');
+  assert.equal(a.grad.radial, false);
+  // 默认 135°：0=向上、90=向右 → 方向应为右下（dx>0, dy>0），且是单位向量
+  assert.ok(a.grad.dir[0] > 0 && a.grad.dir[1] > 0, `135° 应指向右下，实际 ${JSON.stringify(a.grad.dir)}`);
+  assert.ok(Math.abs(Math.hypot(...a.grad.dir) - 1) < 1e-9, '方向应是单位向量');
+  // 范围取外接尺寸：矩形 w=100、h=60，取长边 100
+  assert.ok(Math.abs(a.grad.span - 100) < 1e-6, `span 应取长边 100，实际 ${a.grad.span}`);
   const b = ir.items.find((it) => it.shape === 'circle');
   assert.ok(b.grad && b.grad.radial === true);
 });
 
-test('渐变：linear 可指定角度', () => {
+test('渐变：角度折算正确（90° 向右、0° 向上、180° 向下）', () => {
+  const dirOf = (grad) => {
+    const r = compile(wrap(`<rect id="a" at="2,2" w="100" h="100" fill="#4cc9f0" fill2="#ff6b9d" gradient="${grad}"/>`));
+    ok(r);
+    return composeFrame(r.scene, evaluate(r.scene, 0), measure).items.find((it) => it.shape === 'rect').grad.dir;
+  };
+  const [rx, ry] = dirOf('linear 90');
+  assert.ok(Math.abs(rx - 1) < 1e-9 && Math.abs(ry) < 1e-9, '90° 应恰好指向右');
+  const [ux, uy] = dirOf('linear 0');
+  assert.ok(Math.abs(ux) < 1e-9 && Math.abs(uy + 1) < 1e-9, '0° 应恰好指向上（画布 y 向下，故 dy = -1）');
+  const [dx, dy] = dirOf('linear 180');
+  assert.ok(Math.abs(dx) < 1e-9 && Math.abs(dy - 1) < 1e-9, '180° 应恰好指向下');
+});
+
+test('渐变：linear 可指定角度（约定 0=上、90=右；45° 应是右上 45°）', () => {
   const r = compile(wrap('<rect id="a" at="2,2" w="100" h="60" fill="#4cc9f0" fill2="#ff6b9d" gradient="linear 45"/>'));
   ok(r);
-  const ir = composeFrame(r.scene, evaluate(r.scene, 0), measure);
-  assert.equal(ir.items.find((it) => it.shape === 'rect').grad.angle, 45);
+  const dir = composeFrame(r.scene, evaluate(r.scene, 0), measure).items.find((it) => it.shape === 'rect').grad.dir;
+  const c = Math.SQRT1_2;
+  assert.ok(Math.abs(dir[0] - c) < 1e-9 && Math.abs(dir[1] + c) < 1e-9, `45° 应是右上 45°（dx=+c, dy=-c），实际 ${JSON.stringify(dir)}`);
 });
 
 test('渐变：fill2 可在步骤里补间（颜色过渡）', () => {

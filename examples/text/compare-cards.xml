@@ -1,0 +1,41 @@
+<scene width="960" height="580" grid="12x5" pad="40 40 110 40" palette="aurora" shadow="false" glow="false" overlap="off" hold=".9" read="2">
+  <!-- 对比卡片：左右两张卡（Before / After），每张卡上三条要点，颜色对比鲜明。
+       手法：卡片用大圆角矩形，标题色对比强；要点行用「图标 + 文字」。 -->
+  <layer name="card" z="0"/>
+  <layer name="txt" z="5"/>
+
+  <let bad="{['代码重复三遍以上没抽函数', '一个函数 300 行什么都做', '上线前才发现读写冲突', '魔法数字散落各处']}"/>
+  <let good="{['相似逻辑用参数或策略统一', '单一职责：一个函数做好一件事', '抽象层明确，先定边界再写', '所有常量在一个 schema 里']}"/>
+
+  <!-- 两张卡片底板 + 标题 -->
+  <step say="重构前后，差别在哪？" dur=".7" stagger=".15">
+    <rect id="L" at="3.3,2.5" w="5c" h="3.6c" radius="24" fill="bg2" stroke="bad" width="2" flat="" layer="card" in="drop"/>
+    <rect id="R" at="8.7,2.5" w="5c" h="3.6c" radius="24" fill="bg2" stroke="good" width="2" flat="" layer="card" in="drop"/>
+    <text at="3.3,0.9" text="重构之前" size=".44c" fill="bad" layer="txt" in="pop"/>
+    <text at="8.7,0.9" text="重构之后" size=".44c" fill="good" layer="txt" in="pop"/>
+    <line from="3.3,1.25" to="3.3,1.4" stroke="bad" width="3" layer="txt" in="none"/>
+    <line from="8.7,1.25" to="8.7,1.4" stroke="good" width="3" layer="txt" in="none"/>
+  </step>
+
+  <!-- 坏习惯：红叉号 + 要点。注意 at 已经偏右，文字宽度配合卡片中心区域，不再叠加 off 以免顶出 -->
+  <step say="以前写代码的四个毛病" dur="1.5" stagger=".3">
+    <for var="b" index="i" in="{bad}">
+      <text at="1.3,{1.65 + i * 0.55}" text="✕" size=".4c" fill="bad" layer="txt" in="pop"/>
+      <text at="3.5,{1.65 + i * 0.55}" text="{b}" size=".2c" w="2.2c" fill="text" layer="txt" in="type"/>
+    </for>
+  </step>
+
+  <!-- 新习惯：绿勾号 + 要点 -->
+  <step say="换一种写法，整齐很多" dur="1.5" stagger=".3">
+    <for var="g" index="i" in="{good}">
+      <text at="6.7,{1.65 + i * 0.55}" text="✓" size=".4c" fill="good" layer="txt" in="pop"/>
+      <text at="8.9,{1.65 + i * 0.55}" text="{g}" size=".2c" w="2.2c" fill="text" layer="txt" in="type"/>
+    </for>
+  </step>
+
+  <!-- 收尾 -->
+  <step say="同样的功能，右边更稳" dur=".9">
+    <L pulse=".04"/>
+    <R stroke="accent" width="3" pulse=".15"/>
+  </step>
+</scene>

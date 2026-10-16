@@ -1,0 +1,51 @@
+<scene width="960" height="720" grid="12x9" pad="16 16 96 16" palette="aurora" shadow="false" glow="false" overlap="off" hold=".9" read="3" poster="-1">
+  <!-- 粤港澳大湾区：region="广东" 把地图放大到省内；
+       地图上方只放 pin 和城市名，底部的「数据面板」用柱状图对比 GDP，不与地图互相遮挡。 -->
+  <let names="{['广州','深圳','东莞','佛山','中山','珠海']}"/>
+  <let gdps="{[3.0, 3.5, 1.1, 1.3, 0.4, 0.4]}"/>
+
+  <layer name="pins" z="4"/>
+  <layer name="labels" z="6"/>
+  <layer name="panel" z="7"/>
+  <layer name="bars" z="8"/>
+  <layer name="txt" z="9"/>
+
+  <!-- 地图占满整个画布（region=广东自动放大）-->
+  <map id="地图" region="广东" highlight="广东" border="sub" borderWidth="1" coast="text" coastWidth="1.6" color="accent"/>
+
+  <!-- 站点 -->
+  <step say="大湾区六个主要城市" dur=".7" stagger=".1">
+    <for var="n" in="{names}">
+      <circle id="p{n}" city="{n}" size="16" fill="accent" stroke="bg" width="3" flat="" layer="pins" in="pop"/>
+    </for>
+  </step>
+
+  <!-- 城市名：往左下偏，远离右侧的 GDP 面板，避免 lint 把标签误判成面板内文字 -->
+  <step say="标出城市" dur=".5" stagger=".06">
+    <for var="n" in="{names}">
+      <text city="{n}" off="-28,20" text="{n}" size="16" fill="text" stroke="bg" width="5" layer="labels" in="fade"/>
+    </for>
+  </step>
+
+  <!-- 底部面板：灰色大矩形。标题放在面板上方（不在容器内，避开 lint 的内文检查） -->
+  <step say="右上角对比一下六城 GDP 规模（万亿）" dur=".6">
+    <rect id="statPanel" at="9.1,2.8" w="6c" h="4c" radius="20" fill="bg2" alpha=".88" stroke="sub" width="1.2" flat="" layer="panel" in="drop"/>
+  </step>
+
+  <!-- 水平条形图：每行一个城市 -->
+  <step say="深广两城占了全区一半以上" dur="1.4" stagger=".15">
+    <for var="n" index="i" in="{names}">
+      <text at="7.4,{2.1 + i * 0.4}" text="{n}" size=".22c" fill="text" layer="txt" in="fade"/>
+      <rect id="bar{i}" at="{8.2 + gdps[i] * 0.22},{2.1 + i * 0.4}" w="{gdps[i] * 0.44}c" h=".26c" radius="4" fill="{gdps[i] > 2 ? 'bad' : gdps[i] > 1 ? 'warn' : 'accent'}" flat="" layer="bars" in="drop"/>
+      <text at="{8.3 + gdps[i] * 0.44 + 0.25},{2.1 + i * 0.4}" text="{gdps[i]}" fmt="0.0" count="{gdps[i]}" size=".2c" fill="text" layer="txt" in="fade"/>
+    </for>
+  </step>
+
+  <!-- 收尾高亮 -->
+  <step say="广深双城占了全区一半以上" dur=".9">
+    <bar0 pulse=".2"/>
+    <bar1 pulse=".2"/>
+    <p广州 pulse=".3"/>
+    <p深圳 pulse=".3"/>
+  </step>
+</scene>

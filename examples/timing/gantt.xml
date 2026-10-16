@@ -1,0 +1,59 @@
+<scene width="960" height="580" grid="12x6" pad="40 40 110 40" palette="aurora" shadow="false" glow="false" overlap="off" hold=".7" read="2">
+  <!-- 甘特图：五个任务按起止时间排布，依赖线从前一个任务末端连到下一个任务起端。
+       数据表：name 名字，start 起始周（0..11），dur 持续周，lane 行号（0..4），dep 依赖的任务 id（-1 为无）。 -->
+  <let names="{['需求评审','接口设计','前端开发','后端开发','联调测试']}"/>
+  <let starts="{[0, 2, 4, 4, 9]}"/>
+  <let durs="{[2, 2, 5, 5, 2]}"/>
+  <let deps="{[-1, 0, 1, 1, 2]}"/>
+
+  <layer name="axis" z="0"/>
+  <layer name="bars" z="5"/>
+  <layer name="dep" z="6"/>
+  <layer name="txt" z="8"/>
+
+  <!-- 轴 + 周标签 + 行标签：一次性铺底 -->
+  <step say="横轴是周数，每一行是一个任务" dur=".5">
+    <for var="w" in="0..11">
+      <line from="{1.8 + w * 0.78},0.8" to="{1.8 + w * 0.78},5" stroke="sub" alpha=".12" width="1" layer="axis" in="none"/>
+      <text at="{1.8 + w * 0.78},0.5" text="W{w + 1}" size=".18c" fill="sub" layer="txt" in="fade"/>
+    </for>
+    <for var="n" index="i" in="{names}">
+      <text at="1.5,{1.2 + i * 0.72}" text="{n}" size=".22c" fill="text" layer="txt" in="fade" off="-80,0"/>
+    </for>
+  </step>
+
+  <!-- 任务条：按 lane 分行，宽度 = dur，颜色按序号。condensed：每条 drop 下来 -->
+  <step say="按时间铺排五条任务条" dur="1" stagger=".2">
+    <for var="n" index="i" in="{names}">
+      <rect id="t{i}" at="{1.8 + starts[i] * 0.78 + durs[i] * 0.39},{1.2 + i * 0.72}"
+            w="{durs[i] * 0.78 - 0.1}c" h=".5c" radius="8"
+            fill="{pal(i)}" flat="" layer="bars" in="drop"/>
+      <text at="{1.8 + starts[i] * 0.78 + durs[i] * 0.39},{1.2 + i * 0.72}" text="{durs[i]}w" size=".2c" fill="bg" layer="txt" in="fade"/>
+    </for>
+  </step>
+
+  <!-- 依赖线：每个有 dep 的任务，画一条 L 形从前任末端到自己起端 -->
+  <step say="依赖线把任务串起来：前面结束，后面才能开始" dur=".9" stagger=".15">
+    <for var="n" index="i" in="{names}">
+      <if test="deps[i] >= 0">
+        <arrow id="dep{i}"
+               from="{1.8 + (starts[deps[i]] + durs[deps[i]]) * 0.78 - 0.1},{1.2 + deps[i] * 0.72}"
+               to="{1.8 + starts[i] * 0.78},{1.2 + i * 0.72}"
+               stroke="warn" width="2.5" head="12" layer="dep"/>
+      </if>
+    </for>
+  </step>
+
+  <!-- 当前进度：一条红色竖线扫过（代表"今天"） -->
+  <step say="今天：进度推进到第 7 周" dur="1.2">
+    <line id="now" from="1.8,0.8" to="1.8,5" stroke="bad" width="3" alpha=".85" layer="dep" in="draw"/>
+    <now from="{1.8 + 6 * 0.78},0.8" to="{1.8 + 6 * 0.78},5" ease="soft"/>
+    <text at="{1.8 + 6 * 0.78},5.3" text="今日 · W7" size=".24c" fill="bad" layer="txt" in="fade" delay=".8"/>
+  </step>
+
+  <!-- 已完成高亮 -->
+  <step say="需求、接口、前半段开发已完成" dur=".8" stagger=".15">
+    <t0 fill="good" pulse=".1"/>
+    <t1 fill="good" pulse=".1"/>
+  </step>
+</scene>

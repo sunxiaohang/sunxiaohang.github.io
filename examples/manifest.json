@@ -7,6 +7,8 @@
     { "id": "math", "name": "数学与图形", "desc": "正弦波、数列：表达式生成成批图形，用相位和公式驱动动画" },
     { "id": "product", "name": "产品与图表", "desc": "数据看板、流程图、路线图、加载动效：产品演示与汇报常用的版式" },
     { "id": "travel", "name": "旅游地图", "desc": "内置中国地图（省界、南海诸岛）：城市名定位、路线、小车沿弧线行驶，线条样式可自定义" },
+    { "id": "timing", "name": "时序讲解", "desc": "甘特图、状态机：时间轴、依赖、分支——演示排期和流程的现成模板" },
+    { "id": "text", "name": "文字排版", "desc": "要点逐条、对比卡片：公众号 / 教程视频里最常用的版式" },
     { "id": "site", "name": "站点演示", "desc": "官网首页与文档用的演示场景，不在作品库展示", "hidden": true }
   ],
   "examples": [
@@ -31,19 +33,33 @@
 
     { "id": "bubble-sort", "category": "algo", "file": "algo/bubble-sort.xml", "name": "冒泡排序", "covers": ["let", "nested-array", "for", "index", "label", "change"] },
     { "id": "binary-search", "category": "algo", "file": "algo/binary-search.xml", "name": "二分查找", "covers": ["for", "index", "ring", "alpha-fade", "wildcard"] },
+    { "id": "projectile", "category": "algo", "file": "algo/projectile.xml", "name": "抛物线运动", "covers": ["for", "let", "expr", "sin", "cos", "path", "pal"] },
+    { "id": "binary-tree", "category": "algo", "file": "algo/binary-tree.xml", "name": "二叉树中序遍历", "covers": ["for", "index", "array", "change", "wildcard"] },
 
     { "id": "sine-wave", "category": "math", "file": "math/sine-wave.xml", "name": "正弦波", "covers": ["sin", "for", "expr", "pal", "ease"] },
     { "id": "fibonacci", "category": "math", "file": "math/fibonacci.xml", "name": "斐波那契数列", "covers": ["array", "for", "if", "ring", "label"] },
+    { "id": "function-transform", "category": "math", "file": "math/function-transform.xml", "name": "函数图像变换", "covers": ["for", "let", "line", "change", "expr"] },
+    { "id": "unit-circle", "category": "math", "file": "math/unit-circle.xml", "name": "三角函数单位圆", "covers": ["sin", "cos", "PI", "ring", "line", "change"] },
 
     { "id": "dashboard", "category": "product", "file": "product/dashboard.xml", "name": "数据看板", "covers": ["data", "csv", "for", "member-access", "drop"] },
     { "id": "request-flow", "category": "product", "file": "product/request-flow.xml", "name": "请求流程图", "covers": ["arrow", "path", "trail", "for", "pal"] },
     { "id": "roadmap", "category": "product", "file": "product/roadmap.xml", "name": "产品路线图", "covers": ["line", "for", "index", "ternary", "text"] },
     { "id": "loaders", "category": "product", "file": "product/loaders.xml", "name": "加载动效", "covers": ["orbit", "jump", "bounce", "trail", "ease"] },
     { "id": "annual-report", "category": "product", "file": "product/annual-report.xml", "name": "年度战报", "covers": ["camera", "count", "gradient", "type", "blur", "blend"] },
+    { "id": "line-chart", "category": "product", "file": "product/line-chart.xml", "name": "折线图：月度趋势", "covers": ["data", "csv", "for", "line", "circle", "ring"] },
+    { "id": "donut-pie", "category": "product", "file": "product/donut-pie.xml", "name": "环形饼图：份额分布", "covers": ["ring", "draw", "rot", "pal", "for"] },
+    { "id": "gauge", "category": "product", "file": "product/gauge.xml", "name": "仪表盘：三表并列", "covers": ["ring", "draw", "count", "fmt", "if", "ternary"] },
+    { "id": "gantt", "category": "timing", "file": "timing/gantt.xml", "name": "甘特图：排期和依赖", "covers": ["for", "rect", "arrow", "line", "data", "change"] },
+    { "id": "state-machine", "category": "timing", "file": "timing/state-machine.xml", "name": "订单状态机", "covers": ["ring", "arrow", "sin", "cos", "PI", "change"] },
+
+    { "id": "bullets", "category": "text", "file": "text/bullets.xml", "name": "要点逐条", "covers": ["text", "type", "pop", "for", "wrap"] },
+    { "id": "compare-cards", "category": "text", "file": "text/compare-cards.xml", "name": "重构前后对比卡片", "covers": ["rect", "text", "type", "for", "semantic-color"] },
 
     { "id": "china-tour", "category": "travel", "file": "travel/china-tour.xml", "name": "国内旅行路线", "covers": ["map", "city", "data", "path", "arc", "heading", "icon", "trail"] },
     { "id": "southwest-drive", "category": "travel", "file": "travel/southwest-drive.xml", "name": "西南自驾", "covers": ["map", "region", "highlight", "dash", "city", "arc", "heading", "icon"] },
     { "id": "high-speed-rail", "category": "travel", "file": "travel/high-speed-rail.xml", "name": "高铁干线", "covers": ["map", "border", "coast", "island", "city", "icon", "trail", "data"] },
+    { "id": "greater-bay", "category": "travel", "file": "travel/greater-bay.xml", "name": "大湾区城市 GDP 对比", "covers": ["map", "region", "highlight", "city", "rect", "count", "fmt"] },
+    { "id": "northwest-corridor", "category": "travel", "file": "travel/northwest-corridor.xml", "name": "西北河西走廊", "covers": ["map", "region-bbox", "lonlat", "let", "icon", "trail"] },
 
     { "id": "site-hero-ripple", "category": "site", "file": "site/hero-ripple.xml", "name": "开篇：涟漪", "covers": ["for", "let", "delay", "pulse", "pal"] },
     { "id": "site-hero-galaxy", "category": "site", "file": "site/hero-galaxy.xml", "name": "开篇：星系", "covers": ["for", "orbit", "trail", "rand", "pal"] },

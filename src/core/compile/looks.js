@@ -59,7 +59,7 @@ export function makeFormatter(fmt) {
   const f = fmt && fmt.includes('#') ? fmt : '#';
   return (val) => f.replace(/#(\.0+)?/g, (_, dot) => {
     const digits = dot ? dot.length - 1 : 0;
-    const [int, dec] = Number(val).toFixed(digits).split('.');
+    const [int, dec] = val.toFixed(digits).split('.');
     const g = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
     return dec ? `${g}.${dec}` : g;
   });

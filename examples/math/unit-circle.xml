@@ -1,0 +1,75 @@
+<scene width="960" height="580" grid="12x5" pad="40 40 110 40" palette="aurora" shadow="false" glow="false" overlap="off" hold=".8" read="2">
+  <!-- 三角函数的几何意义：
+       单位圆上的点随角度 θ 转动；点的横坐标就是 cos θ，纵坐标就是 sin θ。
+       右边同步画出 y = sin x 曲线：横轴 θ 从 0 到 2π，纵轴与单位圆同步。 -->
+  <let steps="24"/>
+
+  <layer name="axis" z="0"/>
+  <layer name="curve" z="4"/>
+  <layer name="guide" z="5"/>
+  <layer name="point" z="8"/>
+  <layer name="txt" z="9"/>
+
+  <!-- 左：单位圆 + 坐标轴；右：sin 曲线坐标系 -->
+  <step say="左边单位圆，右边 sin 曲线" dur=".7">
+    <ring id="circ" at="3,2.5" size="3c" width=".06c" stroke="sub" alpha=".7" layer="axis"/>
+    <line from="1.3,2.5" to="4.7,2.5" stroke="sub" alpha=".5" width="1.5" layer="axis"/>
+    <line from="3,0.8" to="3,4.2" stroke="sub" alpha=".5" width="1.5" layer="axis"/>
+    <line id="xax" from="5.5,2.5" to="11.5,2.5" stroke="sub" alpha=".6" width="2" layer="axis"/>
+    <line id="yax" from="5.5,0.8" to="5.5,4.2" stroke="sub" alpha=".6" width="2" layer="axis"/>
+    <text at="4.9,2.75" text="x" size=".22c" fill="sub" layer="txt"/>
+    <text at="3.25,.9" text="y" size=".22c" fill="sub" layer="txt"/>
+    <text at="11.7,2.5" text="θ" size=".28c" fill="sub" layer="txt"/>
+    <text at="5.3,0.9" text="sin θ" size=".26c" fill="sub" layer="txt"/>
+  </step>
+
+  <!-- 初始：θ=0 的红点在 (1, 0)；半径线从圆心指向该点；垂线和水平线投影；sin 曲线的起点 -->
+  <step say="设角 θ 从 0 开始" dur=".7">
+    <line id="radius" from="3,2.5" to="4.5,2.5" stroke="accent" width="2.5" layer="guide" in="draw"/>
+    <circle id="pt" at="4.5,2.5" size=".3c" fill="accent" flat="" layer="point" in="pop"/>
+    <line id="vert" from="4.5,2.5" to="4.5,2.5" stroke="warn" width="2" dash="" layer="guide" in="none"/>
+    <line id="horiz" from="4.5,2.5" to="3,2.5" stroke="good" width="2" dash="" layer="guide" in="none"/>
+    <circle id="sinPt" at="5.5,2.5" size=".28c" fill="warn" flat="" layer="point" in="pop"/>
+  </step>
+
+  <!-- 转动：每一步让 θ 走一小段，点沿圆周移动，sin 点同步沿曲线前进 -->
+  <step say="θ 转到 π/2：点升到最高，sin θ = 1" dur="1.5">
+    <radius to="{3 + 1.5 * cos(PI / 2)},{2.5 - 1.5 * sin(PI / 2)}" ease="soft"/>
+    <pt at="{3 + 1.5 * cos(PI / 2)},{2.5 - 1.5 * sin(PI / 2)}" ease="soft"/>
+    <vert from="{3 + 1.5 * cos(PI / 2)},{2.5 - 1.5 * sin(PI / 2)}" to="{3 + 1.5 * cos(PI / 2)},2.5" ease="soft"/>
+    <horiz from="{3 + 1.5 * cos(PI / 2)},{2.5 - 1.5 * sin(PI / 2)}" to="3,{2.5 - 1.5 * sin(PI / 2)}" ease="soft"/>
+    <sinPt at="{5.5 + (PI / 2) / (2 * PI) * 6},{2.5 - 1.5 * sin(PI / 2)}" ease="soft"/>
+  </step>
+
+  <step say="θ 转到 π：点到最左，sin 回到 0" dur="1.5">
+    <radius to="{3 + 1.5 * cos(PI)},{2.5 - 1.5 * sin(PI)}" ease="soft"/>
+    <pt at="{3 + 1.5 * cos(PI)},{2.5 - 1.5 * sin(PI)}" ease="soft"/>
+    <vert from="{3 + 1.5 * cos(PI)},{2.5 - 1.5 * sin(PI)}" to="{3 + 1.5 * cos(PI)},2.5" ease="soft"/>
+    <horiz from="{3 + 1.5 * cos(PI)},{2.5 - 1.5 * sin(PI)}" to="3,{2.5 - 1.5 * sin(PI)}" ease="soft"/>
+    <sinPt at="{5.5 + PI / (2 * PI) * 6},{2.5 - 1.5 * sin(PI)}" ease="soft"/>
+  </step>
+
+  <step say="θ 到 3π/2：点到最低，sin = -1" dur="1.5">
+    <radius to="{3 + 1.5 * cos(3 * PI / 2)},{2.5 - 1.5 * sin(3 * PI / 2)}" ease="soft"/>
+    <pt at="{3 + 1.5 * cos(3 * PI / 2)},{2.5 - 1.5 * sin(3 * PI / 2)}" ease="soft"/>
+    <vert from="{3 + 1.5 * cos(3 * PI / 2)},{2.5 - 1.5 * sin(3 * PI / 2)}" to="{3 + 1.5 * cos(3 * PI / 2)},2.5" ease="soft"/>
+    <horiz from="{3 + 1.5 * cos(3 * PI / 2)},{2.5 - 1.5 * sin(3 * PI / 2)}" to="3,{2.5 - 1.5 * sin(3 * PI / 2)}" ease="soft"/>
+    <sinPt at="{5.5 + 3 * PI / 2 / (2 * PI) * 6},{2.5 - 1.5 * sin(3 * PI / 2)}" ease="soft"/>
+  </step>
+
+  <step say="θ = 2π：回到起点，描出一整条正弦波" dur="1.5">
+    <radius to="{3 + 1.5 * cos(2 * PI)},{2.5 - 1.5 * sin(2 * PI)}" ease="soft"/>
+    <pt at="{3 + 1.5 * cos(2 * PI)},{2.5 - 1.5 * sin(2 * PI)}" ease="soft"/>
+    <vert from="{3 + 1.5 * cos(2 * PI)},{2.5 - 1.5 * sin(2 * PI)}" to="{3 + 1.5 * cos(2 * PI)},2.5" ease="soft"/>
+    <horiz from="{3 + 1.5 * cos(2 * PI)},{2.5 - 1.5 * sin(2 * PI)}" to="3,{2.5 - 1.5 * sin(2 * PI)}" ease="soft"/>
+    <sinPt at="{5.5 + 2 * PI / (2 * PI) * 6},{2.5 - 1.5 * sin(2 * PI)}" ease="soft"/>
+    <!-- 补一条曲线轮廓，让观众看到走过的轨迹 -->
+    <for var="i" in="0..{steps - 1}">
+      <let a0="{i / steps * 2 * PI}"/>
+      <let a1="{(i + 1) / steps * 2 * PI}"/>
+      <line from="{5.5 + a0 / (2 * PI) * 6},{2.5 - 1.5 * sin(a0)}"
+            to="{5.5 + a1 / (2 * PI) * 6},{2.5 - 1.5 * sin(a1)}"
+            stroke="warn" width="2.5" layer="curve" in="draw" delay="{i * 0.03}"/>
+    </for>
+  </step>
+</scene>

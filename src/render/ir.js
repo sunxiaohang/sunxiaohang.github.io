@@ -23,27 +23,53 @@ function buildShadow(scene, e, L) {
   return { x: L.x, y: L.y + half, rx, k };
 }
 
+/**
+ * 逐字显现：按全部行的字符数从左到右切出可见部分（reveal 0~1）。
+ * 返回与 lines 等长的新数组；这是"内容决定画什么"的逻辑，所以放在 IR 里，后端拿到的就是已经切好的行。
+ */
+function revealLines(lines, reveal) {
+  if (!(reveal < 1)) return lines;
+  const total = lines.reduce((n, l) => n + [...l].length, 0);
+  let left = Math.round(total * Math.max(0, reveal));
+  return lines.map((l) => {
+    const cs = [...l];
+    const take = Math.max(0, Math.min(cs.length, left));
+    left -= cs.length;
+    return cs.slice(0, take).join('');
+  });
+}
+
 function buildText(scene, e, L, alpha, measure) {
   const size = L.size;
   const font = `700 ${size}px ${FONT}`;
   const m = (t) => measure(t, font);
-  const lines = L.w > 0 ? wrapText(m, String(L.text ?? ''), L.w) : [String(L.text ?? '')];
+  const full = L.w > 0 ? wrapText(m, String(L.text ?? ''), L.w) : [String(L.text ?? '')];
   const lh = size * 1.25;
+  // 渐变要铺满"完整文字"的外接范围，不能随逐字显现忽大忽小，否则颜色会在打字过程中漂移
+  const span = Math.max(1, ...full.map(m), full.length * lh);
   return {
     kind: 'text',
     x: L.x, y: L.y, ox: L.ox, oy: L.oy, rot: L.rot, orot: L.orot, sx: L.sx, sy: L.sy,
     alpha, size, fill: L.fill, stroke: L.stroke, strokeWidth: L.width,
-    glow: scene.glow, reveal: L.reveal ?? 1,
-    grad: gradOf(e, L),
-    lines, lineHeight: lh, top: -(lines.length - 1) * lh / 2,
+    glow: scene.glow,
+    grad: gradOf(e, L, span),
+    lines: revealLines(full, L.reveal ?? 1), lineHeight: lh, top: -(full.length - 1) * lh / 2,
   };
 }
 
-/** 渐变描述：写了 fill2 的对象返回 { c0, c1, radial, angle }，否则 null */
-function gradOf(e, L) {
+/**
+ * 渐变描述：写了 fill2 的对象返回 { c0, c1, radial, span, dir }，否则 null。
+ *   span：渐变覆盖的外接尺寸；dir：线性渐变的单位方向向量 [dx, dy]（画布坐标，y 向下）。
+ * 角度约定：0 = 向上、90 = 向右。把"角度 → 方向向量"放在这里，后端不用再懂角度的含义。
+ */
+function gradOf(e, L, span) {
   if (!e.grad || !L.fill2 || L.fill2[3] <= 0) return null;
-  return { c0: L.fill, c1: L.fill2, radial: e.grad.radial, angle: e.grad.angle };
+  const a = ((e.grad.angle - 90) * Math.PI) / 180;
+  return { c0: L.fill, c1: L.fill2, radial: e.grad.radial, span, dir: [Math.cos(a), Math.sin(a)] };
 }
+
+/** 实心图形的渐变范围：取外接尺寸（矩形/椭圆取长边，其余取 size） */
+const solidSpan = (e, L) => (e.type === 'rect' || e.type === 'ellipse' ? Math.max(L.w, L.h, 1) : Math.max(L.size, 1));
 
 function buildNote(scene, e, L, alpha, measure) {
   const fs = Math.max(8, L.size);
@@ -103,7 +129,7 @@ function buildItem(scene, e, L, alpha, measure, t = 0) {
         alpha, size: L.size, w: L.w, h: L.h,
         radius: e.radius, points: e.points, flat: e.flat,
         fill: L.fill, stroke: L.stroke, strokeWidth: L.width,
-        color: L.color, label: L.label, glow: scene.glow, grad: gradOf(e, L),
+        color: L.color, label: L.label, glow: scene.glow, grad: gradOf(e, L, solidSpan(e, L)),
         labelFs: L.label ? labelFontSize(e.type, L.w, L.h, L.label, (txt, px) => measure(txt, `700 ${px}px ${FONT}`)) : 0,
         shadow: buildShadow(scene, e, L),
       };
@@ -122,7 +148,7 @@ function buildItem(scene, e, L, alpha, measure, t = 0) {
       return {
         kind: 'ring',
         x: L.x, y: L.y, ox: L.ox, oy: L.oy, rot: L.rot, orot: L.orot, sx: L.sx, sy: L.sy,
-        alpha, size: L.size, width: L.width, stroke: L.stroke,
+        alpha, size: L.size, width: L.width, stroke: L.stroke, draw: L.draw,
       };
     case 'line': case 'arrow':
       return {
