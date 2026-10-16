@@ -10,6 +10,7 @@ import { mountChrome } from '../site/chrome.js';
 import { StageView } from './stage-view.js';
 import { TimelineView } from './timeline-view.js';
 import { setScenePalette, getScenePalette, setSceneAttr, getSceneAttr } from './scene-src.js';
+import { mountTutorial } from './tutorial-panel.js';
 
 mountChrome('editor');
 
@@ -148,6 +149,8 @@ const loader = async (p) => {
   return r.text();
 };
 let recompileToken = 0;
+let lastCompiled = null;
+let tutorial = null; // 教程栏在页面装配完成后创建；recompile 先于它被调用时用 null 兜住
 async function recompile(keepTime) {
   const src = editor.value;
   persistCurrent();
@@ -157,6 +160,8 @@ async function recompile(keepTime) {
   if (typeof syncPaletteMenu === 'function') syncPaletteMenu();
   if (typeof syncCaptionMenus === 'function') syncCaptionMenus();
   const diagnostics = [...res.diagnostics, ...(res.scene ? lint(res.scene) : [])];
+  lastCompiled = { scene: res.scene, diagnostics };
+  tutorial?.refresh();
   const known = res.scene ? { ids: new Set(res.scene.entities.map((e) => e.id)), defs: new Set(res.scene.defNames) } : undefined;
   editor.setDiagnostics(diagnostics, known);
   con.render({ scene: res.scene, diagnostics });
@@ -318,6 +323,15 @@ capStyleSel.addEventListener('change', () => {
   applyCaptionAttr('caption', v === 'off' ? 'false' : v);
 });
 capSizeSel.addEventListener('change', () => applyCaptionAttr('caption-size', capSizeSel.value));
+// ---------- 教程栏 ----------
+tutorial = mountTutorial({
+  root: $('tutorial'),
+  getSource: () => editor.value,
+  setSource: (src) => { editor.value = src; recompile(false); player.seek(0); player.play(); },
+  getCompiled: () => lastCompiled,
+});
+$('btnTutorial').addEventListener('click', () => tutorial.toggle());
+
 // ---------- 导出 ----------
 $('btnPng').addEventListener('click', () => {
   stage.render();

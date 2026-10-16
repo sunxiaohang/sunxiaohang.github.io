@@ -23,13 +23,74 @@ a.tb { display: inline-flex; align-items: center; }
 .tb.primary.busy { background: var(--danger); }
 .select.tb { padding-right: 30px; }
 
-/* 主区域 */
+/* 主区域：教程栏（可收起）| 脚本 | 预览 */
 main { display: grid; grid-template-columns: minmax(380px, 40%) minmax(0, 1fr); gap: 14px; padding: 14px; min-height: 0; background: var(--bg-alt); }
+body.tut-open main { grid-template-columns: 300px minmax(380px, 1fr) minmax(0, 1fr); }
+.tutorial { display: none; }
+body.tut-open .tutorial { display: flex; }
+.tut-toggle[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
 .pane { background: var(--surface); border-radius: var(--r-lg); box-shadow: 0 0 0 1px var(--line-2), var(--shadow-1); display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
 .pane-title { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; color: var(--text-3); font-size: 12px; font-weight: 600; letter-spacing: .06em; border-bottom: 1px solid var(--line-2); }
 .status { font: 11.5px var(--mono); letter-spacing: 0; }
 .status.ok { color: var(--ok); }
 .status.err { color: var(--danger); }
+
+/* 教程栏 */
+.tutorial { background: var(--surface); }
+.tut-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 12px 18px; border-bottom: 1px solid var(--line-2); }
+.tut-head b { font-size: 13px; font-weight: 650; letter-spacing: -.01em; }
+.tut-x { width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: 50%; background: var(--surface-2); color: var(--text-2); cursor: pointer; transition: background .2s; }
+.tut-x:hover { background: var(--surface-3); }
+.tut-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 16px 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+.tut-intro { margin: 0; color: var(--text-2); font-size: 13px; line-height: 1.6; }
+.tut-lessons { display: grid; gap: 10px; }
+.tut-lesson { text-align: left; border: 0; cursor: pointer; padding: 14px 16px; border-radius: var(--r-md); background: var(--surface-2); color: var(--text); display: grid; gap: 6px; font: inherit; transition: background .2s, transform .25s var(--ease-spring), box-shadow .2s; }
+.tut-lesson:hover { background: var(--surface-3); transform: translateY(-1px); }
+.tut-lesson b { font-size: 15px; font-weight: 650; letter-spacing: -.01em; }
+.tut-goal { font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
+.tut-tag { width: fit-content; font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--accent); background: var(--accent-soft); padding: 2px 8px; border-radius: 980px; }
+.tut-prog { display: block; height: 3px; border-radius: 2px; background: var(--line-2); overflow: hidden; margin-top: 2px; }
+.tut-prog i { display: block; height: 100%; background: var(--accent); border-radius: inherit; transition: width .4s var(--ease); }
+.tut-lesson.done .tut-prog i { background: var(--ok); }
+.tut-count { font-size: 11.5px; color: var(--text-3); }
+.tut-lesson.done .tut-count { color: var(--ok); font-weight: 600; }
+.tut-foot { display: flex; flex-direction: column; gap: 6px; margin-top: auto; padding-top: 10px; border-top: 1px solid var(--line-2); font-size: 12.5px; }
+.tut-foot a { color: var(--text-2); }
+.tut-foot a:hover { color: var(--accent); text-decoration: none; }
+.tut-back { align-self: flex-start; border: 0; background: none; color: var(--text-2); font: inherit; font-size: 12.5px; cursor: pointer; padding: 0; }
+.tut-back:hover { color: var(--accent); }
+.tut-title { display: flex; align-items: center; gap: 10px; }
+.tut-title h3 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+.tut-dots { display: flex; gap: 6px; flex-wrap: wrap; }
+.tut-dots button { width: 28px; height: 28px; border-radius: 50%; border: 0; cursor: pointer; font: 600 12px var(--mono); background: var(--surface-2); color: var(--text-2); transition: background .2s, color .2s, transform .2s var(--ease-spring); }
+.tut-dots button:hover { background: var(--surface-3); transform: scale(1.08); }
+.tut-dots button.ok { background: color-mix(in srgb, var(--ok) 18%, transparent); color: var(--ok); }
+.tut-dots button.cur { background: var(--accent); color: var(--on-accent); }
+.tut-step { display: grid; gap: 10px; }
+.tut-stepno { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; color: var(--text-3); }
+.tut-step h4 { margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -.015em; }
+.tut-why { margin: 0; font-size: 13px; line-height: 1.7; color: var(--text-2); }
+.tut-edit { font-size: 13px; line-height: 1.6; padding: 10px 12px; border-radius: 12px; background: var(--surface-2); color: var(--text-2); }
+.tut-edit code, .tut-why code { font: 12px var(--mono); background: var(--surface-2); padding: 1px 5px; border-radius: 5px; }
+.tut-code { border-radius: 12px; background: var(--code-bg); box-shadow: 0 0 0 1px var(--line-2); overflow: hidden; }
+.tut-code-bar { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px 6px 12px; border-bottom: 1px solid var(--line-2); font-size: 11.5px; color: var(--text-3); }
+.tut-code-bar button { border: 0; background: var(--surface-2); color: var(--text-2); font: inherit; font-size: 11.5px; padding: 3px 10px; border-radius: 980px; cursor: pointer; }
+.tut-code-bar button:hover { background: var(--surface-3); }
+.tut-code pre { margin: 0; padding: 10px 12px; font: 12px/1.65 var(--mono); tab-size: 2; color: var(--text); }
+.tut-code pre .ln { white-space: pre-wrap; overflow-wrap: anywhere; padding-left: 2ch; text-indent: -2ch; }
+.tut-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.tut-btn { border: 0; cursor: pointer; font: inherit; font-size: 13px; font-weight: 500; padding: 8px 14px; border-radius: 980px; background: var(--surface-2); color: var(--text); transition: background .2s, transform .2s var(--ease-spring); }
+.tut-btn:hover { background: var(--surface-3); }
+.tut-btn:active { transform: scale(.96); }
+.tut-btn.primary { background: var(--accent); color: var(--on-accent); }
+.tut-btn.primary:hover { background: var(--accent-hover); }
+.tut-check { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 12.5px; }
+.tut-check li { display: flex; gap: 8px; align-items: flex-start; color: var(--text-3); line-height: 1.5; }
+.tut-check li::before { content: ""; flex: none; width: 14px; height: 14px; margin-top: 2px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--line); }
+.tut-check li.ok { color: var(--text); }
+.tut-check li.ok::before { box-shadow: none; background: var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M3.5 7.4l2.2 2.2 4.8-4.8' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 100% no-repeat; }
+.tut-warn { font-size: 12.5px; line-height: 1.55; padding: 9px 12px; border-radius: 12px; color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+.tut-pass { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--ok) 13%, transparent); color: var(--ok); font-size: 13px; font-weight: 600; }
 
 /* 脚本编辑器 */
 :root { --lh: 21px; }
@@ -137,9 +198,18 @@ main { display: grid; grid-template-columns: minmax(380px, 40%) minmax(0, 1fr); 
 ::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
 ::-webkit-scrollbar-corner { background: transparent; }
 
+@media (max-width: 1180px) {
+  /* 屏幕不够宽：教程栏不再挤占三栏，改为叠在脚本栏上方的抽屉 */
+  body.tut-open main { grid-template-columns: minmax(300px, 340px) minmax(0, 1fr); }
+  body.tut-open .tutorial { grid-row: 1 / span 2; }
+  body.tut-open .editor { grid-column: 2; }
+  body.tut-open .right { grid-column: 2; }
+}
 @media (max-width: 900px) {
   body.app { overflow: auto; height: auto; min-height: 100dvh; grid-template-rows: var(--nav-h) auto auto; }
-  main { grid-template-columns: 1fr; }
+  main, body.tut-open main { grid-template-columns: 1fr; }
+  body.tut-open .tutorial { grid-row: auto; max-height: 520px; }
+  body.tut-open .editor, body.tut-open .right { grid-column: auto; }
   .editor { height: 420px; }
   .right { height: 640px; }
   .toolbar-app { overflow-x: auto; flex-wrap: nowrap; }

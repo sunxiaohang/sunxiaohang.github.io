@@ -16,6 +16,7 @@
 
   <div class="toolbar-app" role="toolbar" aria-label="编辑器工具栏">
     <div class="tb-group">
+      <button id="btnTutorial" class="tb tut-toggle" type="button" aria-pressed="true" title="展开 / 收起教程栏">教程</button>
       <select id="projects" class="tb select" title="我的场景" aria-label="我的场景"></select>
       <button id="btnImport" class="tb" type="button" title="导入 .xml 文件">导入</button>
       <button id="btnExport" class="tb" type="button" title="导出当前场景为 .xml 文件">导出 XML</button>
@@ -38,6 +39,7 @@
   </div>
 
   <main>
+    <aside class="pane tutorial" id="tutorial" aria-label="上手教程"></aside>
     <section class="pane editor">
       <div class="pane-title"><span>场景脚本</span><span id="status" class="status"></span></div>
       <div class="code">
