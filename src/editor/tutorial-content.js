@@ -216,6 +216,170 @@ export const LESSONS = [
       },
     ],
   },
+  {
+    id: 'data',
+    name: '数据驱动的图表',
+    goal: '把一行行 CSV 变成柱状图，像填表一样画图。',
+    level: '进阶',
+    steps: [
+      {
+        title: '准备一个空场景',
+        why: '柱状图需要横向空间，画布宽一点；grid 用 12x6，更细的格子方便放等距的柱子。',
+        snippet: `<scene width="880" height="480" grid="12x6" palette="porcelain" caption="soft">
+</scene>`,
+        mode: 'replace',
+        check: ({ src }) => [{ label: '创建了一个 12 列的场景', ok: /<scene\b[^>]*grid\s*=\s*"12x\d+"/.test(src) }],
+      },
+      {
+        title: '把数据写进 <data>',
+        why: 'data 的 CSV 内容会被解析成一个对象数组：第一行是列名，之后每行一个条目。可以在表达式里用 名字.length、名字[i].列名 读到。',
+        snippet: `  <data name="rows">月份,销量
+一月,2
+二月,4
+三月,3
+四月,5
+五月,6
+六月,4</data>`,
+        mode: 'append',
+        check: ({ src }) => [{ label: '定义了一个 rows 数据表', ok: /<data\s[^>]*\bname\s*=\s*"rows"/.test(src) }],
+      },
+      {
+        title: '一次画出全部柱子',
+        why: 'for 遍历 rows，每一行生成一根柱子。{row.销量} 是 CSV 列值，{i+1} 把序号变成格子坐标，{pal(i)} 顺序取配色里的系列色。',
+        snippet: `  <for var="row" index="i" in="{rows}">
+    <rect id="b{i}" at="{i + 1},{5 - row.销量 * 0.3}" w=".7c" h="{row.销量 * 0.6}c" radius="8" fill="{pal(i)}" label="{row.月份}"/>
+  </for>`,
+        mode: 'append',
+        check: ({ scene }) => [{ label: '按数据生成了 6 根柱子', ok: (scene?.entities?.filter((e) => /^b\d+$/.test(e.id))?.length || 0) === 6 }],
+      },
+      {
+        title: '让柱子依次长出来',
+        why: '柱子的最终形态已经在上一步算好了；现在只需要给整批加上「依次登场」的节奏——stagger 把这一步的开始时间错开。',
+        snippet: `  <step say="六个月的销量，从一月开始亮起" dur=".8" stagger=".12">
+    <for var="row" index="i" in="{rows}">
+      <change id="b{i}" pulse=".2"/>
+    </for>
+  </step>`,
+        mode: 'append',
+        check: ({ src, scene }) => [
+          { label: '写上了 stagger', ok: /\bstagger\s*=/.test(src) },
+          { label: '有一个带字幕的步骤', ok: !!scene?.steps?.some((s) => (s.say || '').length > 0) },
+        ],
+      },
+      {
+        title: '高亮最大值',
+        why: '通配 id「b*」批量把所有柱子的 alpha 降下来——先全部降噪；然后在下一个 step 里把销量最高的那根（b5）单独点亮。「先降噪、再突出」是信息图最常用的套路。',
+        snippet: `  <step say="六个月里，哪个月最高？" dur=".4">
+    <change id="b*" alpha=".35"/>
+  </step>
+  <step say="六月销量最高" dur=".6">
+    <change id="b5" alpha="1" fill="warn" pulse=".3"/>
+  </step>`,
+        mode: 'append',
+        check: ({ scene }) => [{ label: '完成了「全部降噪 + 单独高亮」', ok: (scene?.steps?.length || 0) >= 3 }],
+      },
+    ],
+  },
+  {
+    id: 'map',
+    name: '地图上的一条路线',
+    goal: '让一辆小车在中国地图上跑一遍京沪沿线。',
+    level: '进阶',
+    steps: [
+      {
+        title: '放一张中国地图',
+        why: 'map 自带省界和南海诸岛。暂时先不加省名字，视觉更干净。<scene> 上写 overlap="off" 是因为「车到达终点」和「终点站」本来就会在同一个位置，这是地图动画常用的例外。',
+        snippet: `<scene width="900" height="560" grid="9x6" palette="porcelain" caption="soft" overlap="off">
+  <map/>
+</scene>`,
+        mode: 'replace',
+        check: ({ scene }) => [{ label: '场景里有一张 map', ok: !!scene?.entities?.some((e) => e.type === 'map') }],
+      },
+      {
+        title: '标出几个城市',
+        why: 'city="北京" 直接按城市名定位——内置了 380 多个城市坐标，不用自己查经纬度。off 让文字落在圆点旁边。',
+        snippet: `  <circle id="p1" city="北京" size="14" fill="accent" stroke="bg" width="3"/>
+  <text city="北京" off="0,-22" text="北京" size="14" fill="text"/>
+  <circle id="p2" city="南京" size="14" fill="accent" stroke="bg" width="3"/>
+  <text city="南京" off="-32,0" text="南京" size="14" fill="text"/>
+  <circle id="p3" city="上海" size="14" fill="accent" stroke="bg" width="3"/>
+  <text city="上海" off="30,0" text="上海" size="14" fill="text"/>`,
+        mode: 'append',
+        check: ({ scene }) => [{ label: '三个城市站点都放上了', ok: (['p1', 'p2', 'p3']).every((id) => scene?.byId?.get(id)) }],
+      },
+      {
+        title: '让一辆车从北京到上海',
+        why: 'icon name="car" 用内置的车辆图标；path 直接写城市名，一路会自动经过。trail 留下轨迹，arc 让路线稍微弯一点、不那么僵硬。out="fade" 让车到达后淡出，把舞台交还给上海站。',
+        snippet: `  <icon id="car" name="car" city="北京" size="22" fill="warn"/>
+  <step say="京沪线：北京 → 南京 → 上海" dur="2.4">
+    <car path="北京 南京 上海" trail arc=".2" ease="soft" out="fade"/>
+  </step>`,
+        mode: 'append',
+        check: ({ scene }) => [{
+          label: '车沿路线跑完了',
+          ok: !!scene?.byId?.get('car') && (scene?.steps?.length || 0) >= 1,
+        }],
+      },
+      {
+        title: '收尾一下：到达 + 字幕',
+        why: '上海站脉动高亮，字幕给出结论。这一步没有车，画面只剩路径和终点——信息更干净。',
+        snippet: `  <step say="全程约 1200 公里，走完啦" dur=".8">
+    <p3 fill="good" pulse=".3"/>
+  </step>`,
+        mode: 'append',
+        check: ({ scene }) => [{ label: '有一个收尾步骤', ok: (scene?.steps?.length || 0) >= 2 }],
+      },
+    ],
+  },
+  {
+    id: 'def',
+    name: '把常用的样子打包成组件',
+    goal: '用 <def> 定义一个「圆角卡片 + 标签」，一行就能复用。',
+    level: '进阶',
+    steps: [
+      {
+        title: '空场景起步',
+        why: '组件最适合用来做「同一类东西要出现很多次」的场景——比如仪表盘、功能卡片、角色群像。',
+        snippet: `<scene width="880" height="480" grid="8x4" palette="porcelain" caption="soft">
+</scene>`,
+        mode: 'replace',
+        check: ({ scene }) => [{ label: '场景已经就绪', ok: !!scene }],
+      },
+      {
+        title: '定义一个卡片组件',
+        why: '<def name="…"> 把一段模板打包。写在 def 标签上的属性（ax / ay / title）就是参数，带默认值；模板里用 {ax} {ay} {title} 读到。rect 的 label 直接把标题写在卡片中心，就不用再放单独的 text 了。',
+        snippet: `  <def name="card" ax="0" ay="0" title="">
+    <rect at="{ax},{ay}" w="2c" h="1.2c" radius="12" fill="bg2" stroke="sub" width="1.5" flat="" label="{title}" color="text"/>
+  </def>`,
+        mode: 'append',
+        check: ({ scene }) => [{ label: '定义了 card 组件', ok: Array.isArray(scene?.defNames) && scene.defNames.includes('card') }],
+      },
+      {
+        title: '用它摆一排',
+        why: '组件就像内置标签：直接写 <card title="…" ax="…" ay="…"/> 就能复用。换成 for 循环以后还能用数据驱动。',
+        snippet: `  <card ax="1.5" ay="1.5" title="快"/>
+  <card ax="4" ay="1.5" title="准"/>
+  <card ax="6.5" ay="1.5" title="稳"/>`,
+        mode: 'append',
+        check: ({ scene }) => [{ label: '摆出了三张卡片', ok: (scene?.entities?.filter((e) => e.type === 'rect')?.length || 0) >= 3 }],
+      },
+      {
+        title: '依次登场',
+        why: '组件生成的内容也可以用 id 来控制——这里更简单：三个 step 依次登场，每一步浮现一张。',
+        snippet: `  <step say="第一步：读" dur=".4">
+    <card ax="1.5" ay="3" title="读"/>
+  </step>
+  <step say="第二步：写" dur=".4">
+    <card ax="4" ay="3" title="写"/>
+  </step>
+  <step say="第三步：算" dur=".4">
+    <card ax="6.5" ay="3" title="算"/>
+  </step>`,
+        mode: 'append',
+        check: ({ scene }) => [{ label: '完成了依次登场', ok: (scene?.steps?.length || 0) >= 3 }],
+      },
+    ],
+  },
 ];
 
 export const findLesson = (id) => LESSONS.find((l) => l.id === id) || LESSONS[0];

@@ -26,7 +26,7 @@
       <select id="examples" class="tb select" title="示例" aria-label="示例"></select>
       <select id="palette" class="tb select" title="一键套用配色模板（写入 &lt;scene palette&gt;）" aria-label="配色"></select>
       <button id="btnAssets" class="tb" type="button">素材</button>
-      <a class="tb" href="docs.html" target="_blank" rel="noopener">语法速查</a>
+      <button id="btnSyntax" class="tb" type="button" title="语法速查（弹窗）">语法速查</button>
       <a class="tb" href="works.html" target="_blank" rel="noopener">作品库</a>
     </div>
     <div class="spacer"></div>
@@ -101,6 +101,18 @@
   <dialog id="assets" class="sheet" aria-label="素材">
     <form method="dialog" class="sheet-head"><b>素材</b><button class="tb">关闭</button></form>
     <div class="assets-body" id="assetsBody"></div>
+  </dialog>
+
+  <!-- 语法速查弹窗：iframe 懒加载 docs.html?embed=1，避免跳走当前编辑进度 -->
+  <dialog id="syntax" class="sheet sheet-xl" aria-label="语法速查">
+    <form method="dialog" class="sheet-head">
+      <b>语法速查</b>
+      <span class="sheet-head-tools">
+        <a class="tb" href="docs.html" target="_blank" rel="noopener" title="在新标签打开完整文档">↗ 新标签</a>
+        <button class="tb" type="submit">关闭</button>
+      </span>
+    </form>
+    <iframe id="syntaxFrame" class="sheet-frame" title="语法速查" src="about:blank" loading="lazy"></iframe>
   </dialog>
 
   <script type="module" src="src/app/main.js"></script>

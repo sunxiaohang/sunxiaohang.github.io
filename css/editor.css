@@ -21,14 +21,23 @@ a.tb { display: inline-flex; align-items: center; }
 .tb.primary { background: var(--accent); color: var(--on-accent); }
 .tb.primary:hover { background: var(--accent-hover); }
 .tb.primary.busy { background: var(--danger); }
-.select.tb { padding-right: 30px; }
+/* 下拉框：
+   1) 原生 <select> 点击打开时会进入 :active，继承 .tb 的 scale(.96) 会和下拉弹出动画叠加成抖动——
+      所以单独覆盖 transition / :active，只保留颜色过渡；
+   2) 选项文字变化（如切换场景名、重命名）会让 width:auto 的 select 整体宽度跳变，带动相邻按钮回流。
+      给常变文本的 select 一个合理的 min-width，避免抖；文字过长用省略号。 */
+.select.tb { padding-right: 30px; transition: background .2s, color .2s; max-width: 220px; text-overflow: ellipsis; overflow: hidden; }
+.select.tb:active { transform: none; }
+#projects { min-width: 148px; }
+#examples, #palette { min-width: 128px; }
 
 /* 主区域：教程栏（可收起）| 脚本 | 预览 */
 main { display: grid; grid-template-columns: minmax(380px, 40%) minmax(0, 1fr); gap: 14px; padding: 14px; min-height: 0; background: var(--bg-alt); }
 body.tut-open main { grid-template-columns: 300px minmax(380px, 1fr) minmax(0, 1fr); }
 .tutorial { display: none; }
-body.tut-open .tutorial { display: flex; }
+body.tut-open .tutorial { display: flex; animation: tut-slide-in .24s var(--ease); }
 .tut-toggle[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+@keyframes tut-slide-in { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 .pane { background: var(--surface); border-radius: var(--r-lg); box-shadow: 0 0 0 1px var(--line-2), var(--shadow-1); display: flex; flex-direction: column; min-height: 0; min-width: 0; overflow: hidden; }
 .pane-title { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; color: var(--text-3); font-size: 12px; font-weight: 600; letter-spacing: .06em; border-bottom: 1px solid var(--line-2); }
 .status { font: 11.5px var(--mono); letter-spacing: 0; }
@@ -43,6 +52,12 @@ body.tut-open .tutorial { display: flex; }
 .tut-x:hover { background: var(--surface-3); }
 .tut-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 16px 18px 20px; display: flex; flex-direction: column; gap: 14px; }
 .tut-intro { margin: 0; color: var(--text-2); font-size: 13px; line-height: 1.6; }
+/* 分级小标题：把入门 / 进阶等隔开，强化「按序学」的视觉 */
+.tut-group-head { margin-top: 4px; font-size: 11px; font-weight: 600; letter-spacing: .08em; color: var(--text-3); text-transform: uppercase; }
+.tut-group-head:first-of-type { margin-top: 0; }
+/* 快速继续入口：显眼地指向下一个未完成的关卡 */
+.tut-resume { align-self: stretch; text-align: left; padding: 12px 14px; border: 0; border-radius: var(--r-md); background: var(--accent); color: var(--on-accent); font: 600 13.5px/1.3 inherit; letter-spacing: -.01em; cursor: pointer; box-shadow: var(--shadow-1); transition: transform .2s var(--ease-spring), filter .2s; }
+.tut-resume:hover { transform: translateY(-1px); filter: brightness(1.05); }
 .tut-lessons { display: grid; gap: 10px; }
 .tut-lesson { text-align: left; border: 0; cursor: pointer; padding: 14px 16px; border-radius: var(--r-md); background: var(--surface-2); color: var(--text); display: grid; gap: 6px; font: inherit; transition: background .2s, transform .25s var(--ease-spring), box-shadow .2s; }
 .tut-lesson:hover { background: var(--surface-3); transform: translateY(-1px); }
@@ -144,6 +159,10 @@ body.tut-open .tutorial { display: flex; }
 .chk { display: flex; align-items: center; gap: 6px; color: var(--text-2); font-size: 12.5px; cursor: pointer; user-select: none; white-space: nowrap; }
 .transport .select.tb { padding-top: 5px; padding-bottom: 5px; font-size: 12.5px; }
 .transport .select.tb { padding-left: 11px; padding-right: 26px; }
+/* 底部字幕 / 字号 / 速度：也给个 min-width，切换选项不抖 */
+#capStyle { min-width: 108px; }
+#capSize { min-width: 92px; }
+#speed { min-width: 72px; }
 .transport .time { min-width: 96px; }
 .chk input { accent-color: var(--accent); }
 
@@ -187,6 +206,12 @@ body.tut-open .tutorial { display: flex; }
 .sheet[open] { animation: pop .38s var(--ease-spring); }
 @keyframes pop { from { opacity: 0; transform: scale(.95) translateY(10px); } to { opacity: 1; transform: none; } }
 .sheet-head { display: flex; justify-content: space-between; align-items: center; margin: 0; padding: 14px 20px; border-bottom: 1px solid var(--line-2); font-size: 16px; }
+.sheet-head-tools { display: inline-flex; gap: 8px; align-items: center; }
+/* 语法速查用更大的弹窗：几乎铺满可视区，iframe 自撑高度，这样目录和内容都能横向展开 */
+.sheet-xl { width: min(1240px, 94vw); max-height: 92vh; }
+/* 关键：只在 [open] 时设成 flex，否则会覆盖浏览器默认的 dialog:not([open]){display:none}，让弹窗常驻 */
+.sheet-xl[open] { display: flex; flex-direction: column; }
+.sheet-frame { flex: 1; width: 100%; min-height: 420px; height: calc(92vh - 56px); border: 0; background: var(--surface); }
 .assets-body { padding: 8px 20px 20px; max-height: calc(86vh - 60px); overflow: auto; }
 .assets-group { margin: 14px 0 0; }
 .assets-group h4 { margin: 0 0 8px; color: var(--text-3); font-size: 12px; font-weight: 600; letter-spacing: .06em; }

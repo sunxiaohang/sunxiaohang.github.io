@@ -103,6 +103,10 @@ function renderProjects() {
   const add = document.createElement('option');
   add.value = '__new__'; add.textContent = '＋ 新建场景';
   sel.appendChild(add);
+  // 重命名：选中后会用 prompt 弹出改名；取消 / 空名字时保持原名
+  const rn = document.createElement('option');
+  rn.value = '__rename__'; rn.textContent = '✎ 重命名当前';
+  sel.appendChild(rn);
   const del = document.createElement('option');
   del.value = '__del__'; del.textContent = '－ 删除当前';
   sel.appendChild(del);
@@ -138,6 +142,18 @@ function deleteProject() {
   saveProjects();
   editor.value = currentProject().src;
   recompile(false);
+  renderProjects();
+}
+// 重命名当前场景：改的是显示名（下拉里 + 导出文件名），脚本内容不动
+function renameProject() {
+  const p = currentProject();
+  if (!p) { renderProjects(); return; }
+  const name = (prompt('给当前场景起个新名字：', p.name) || '').trim();
+  if (name && name !== p.name) {
+    p.name = name;
+    p.updatedAt = Date.now();
+    saveProjects();
+  }
   renderProjects();
 }
 
@@ -435,6 +451,7 @@ $('projects').addEventListener('change', () => {
   const v = $('projects').value;
   if (v === '__new__') newProject();
   else if (v === '__del__') deleteProject();
+  else if (v === '__rename__') renameProject();
   else switchProject(v);
 });
 $('btnExport').addEventListener('click', () => {
@@ -578,6 +595,19 @@ $('assetsBody').addEventListener('click', (e) => {
   $('assets').close();
 });
 $('btnAssets').addEventListener('click', () => $('assets').showModal());
+
+// 语法速查：首次点开才给 iframe 设 src（省掉编辑器启动时的额外请求）；再次打开直接复用已加载内容。
+// 主题通过同域 localStorage（gm.theme）天然共享，不用额外传参
+$('btnSyntax').addEventListener('click', () => {
+  const dlg = $('syntax');
+  const fr = $('syntaxFrame');
+  if (!fr.src || fr.src === 'about:blank' || fr.getAttribute('src') === 'about:blank') {
+    fr.src = 'docs.html?embed=1';
+  }
+  dlg.showModal();
+});
+// 点击 dialog 本体背景区域关闭（点内容区不触发，因为 .target !== dialog 元素）
+$('syntax').addEventListener('click', (e) => { if (e.target === e.currentTarget) $('syntax').close(); });
 
 // ---------- 启动 ----------
 (async () => {

@@ -60,18 +60,30 @@ export function mountTutorial({ root, getSource, setSource, getCompiled }) {
   }
 
   function renderList() {
+    // 按 level 分组展示（入门 / 进阶 / …），内部保持 LESSONS 数组顺序，形成一条推荐学习路径
+    const groups = [];
+    for (const l of LESSONS) {
+      let g = groups.find((x) => x.level === l.level);
+      if (!g) { g = { level: l.level, items: [] }; groups.push(g); }
+      g.items.push(l);
+    }
+    const doneAll = LESSONS.every(lessonDone);
+    const nextTodo = LESSONS.find((l) => !lessonDone(l));
     body.innerHTML = `
-      <p class="tut-intro">跟着做三个小项目，每一步都能直接插入代码，也可以自己照着敲。写对了会自动打勾。</p>
-      <div class="tut-lessons">${LESSONS.map((l) => {
-        const n = l.steps.filter((_, i) => isDone(l.id, i)).length;
-        return `<button class="tut-lesson${lessonDone(l) ? ' done' : ''}" type="button" data-lesson="${l.id}">
-          <span class="tut-tag">${esc(l.level)}</span>
-          <b>${esc(l.name)}</b>
-          <span class="tut-goal">${esc(l.goal)}</span>
-          <span class="tut-prog"><i style="width:${(n / l.steps.length) * 100}%"></i></span>
-          <span class="tut-count">${lessonDone(l) ? '已完成' : `${n} / ${l.steps.length} 步`}</span>
-        </button>`;
-      }).join('')}</div>
+      <p class="tut-intro">跟着做六个小项目，${doneAll ? '全部通关啦，可以回头复习' : '从「入门」开始，顺序往下学。'}每一步都能直接插入代码，写对了会自动打勾。</p>
+      ${nextTodo ? `<button class="tut-resume" type="button" data-lesson="${nextTodo.id}">继续：${esc(nextTodo.name)} →</button>` : ''}
+      ${groups.map((g) => `
+        <div class="tut-group-head">${esc(g.level)}</div>
+        <div class="tut-lessons">${g.items.map((l) => {
+          const n = l.steps.filter((_, i) => isDone(l.id, i)).length;
+          return `<button class="tut-lesson${lessonDone(l) ? ' done' : ''}" type="button" data-lesson="${l.id}">
+            <span class="tut-tag">${esc(l.level)}</span>
+            <b>${esc(l.name)}</b>
+            <span class="tut-goal">${esc(l.goal)}</span>
+            <span class="tut-prog"><i style="width:${(n / l.steps.length) * 100}%"></i></span>
+            <span class="tut-count">${lessonDone(l) ? '已完成' : `${n} / ${l.steps.length} 步`}</span>
+          </button>`;
+        }).join('')}</div>`).join('')}
       <div class="tut-foot"><a href="docs.html#sec-recipes" target="_blank" rel="noopener">更多配方 →</a><a href="works.html" target="_blank" rel="noopener">看看别人做的 →</a></div>`;
   }
 
@@ -81,6 +93,10 @@ export function mountTutorial({ root, getSource, setSource, getCompiled }) {
     const res = checkStep(s, { src: getSource(), scene: c?.scene || null, diagnostics: c?.diagnostics || [] });
     const hasErr = !!c?.diagnostics?.some((d) => d.severity === 'error');
     const manual = s.mode === 'edit';
+    const lastStep = i >= l.steps.length - 1;
+    const nextLesson = LESSONS[LESSONS.indexOf(l) + 1];
+    // 下一步按钮：中间步「下一步 →」；最后一步若有下一关「进入下一关 →」；否则「回总览」
+    const passLabel = !lastStep ? '下一步 →' : nextLesson ? `进入下一关：${nextLesson.name} →` : '完成，回总览';
     body.innerHTML = `
       <button class="tut-back" type="button" data-act="list">← 全部教程</button>
       <div class="tut-title"><span class="tut-tag">${esc(l.level)}</span><h3>${esc(l.name)}</h3></div>
@@ -98,7 +114,7 @@ export function mountTutorial({ root, getSource, setSource, getCompiled }) {
         </div>
         <ul class="tut-check">${[...res.done.map((t) => `<li class="ok">${esc(t)}</li>`), ...res.todo.map((t) => `<li>${esc(t)}</li>`)].join('')}</ul>
         ${hasErr ? '<div class="tut-warn">脚本里有错误，先看看下面的控制台提示；改好后教程会继续判断。</div>' : ''}
-        ${res.ok ? `<div class="tut-pass">做到了！<button type="button" class="tut-btn primary" data-act="next">${i < l.steps.length - 1 ? '下一步 →' : '完成这一关'}</button></div>` : ''}
+        ${res.ok ? `<div class="tut-pass">做到了！<button type="button" class="tut-btn primary" data-act="next">${esc(passLabel)}</button></div>` : ''}
       </div>`;
   }
 
@@ -160,7 +176,17 @@ export function mountTutorial({ root, getSource, setSource, getCompiled }) {
       if (!res.ok) flash(e.target.closest('[data-act]'), '还差一点，看下面的清单');
     } else if (act === 'next') {
       if (i < l.steps.length - 1) { st.step[st.lesson] = i + 1; save(st); renderLesson(); }
-      else { st.view = 'list'; save(st); render(); }
+      else {
+        // 完成本关：若有下一关，直接接上去（连贯感），滚到顶部让用户立刻看到新关标题
+        const next = LESSONS[LESSONS.indexOf(l) + 1];
+        if (next) {
+          st.lesson = next.id;
+          if (lessonDone(next)) st.step[next.id] = 0;
+          save(st);
+          renderLesson();
+          body.scrollTop = 0;
+        } else { st.view = 'list'; save(st); render(); }
+      }
     }
   });
 

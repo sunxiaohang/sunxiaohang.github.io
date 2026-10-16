@@ -1,19 +1,18 @@
-<scene width="630" height="880" grid="7x9" pad="40 35 120 35" palette="graphite" hold="0.8" read="4">
-  <!-- 斗兽棋：7 列 × 9 行的方格，格子是正方形（80px），所以 1c 正好是一格，水域、兽穴、陷阱都和格子严丝合缝。
-       规范棋盘：
-         · 河：左右各一片，各占 2 列 × 3 行（第 2-3 列、第 5-6 列，第 4-6 行），中间第 4 列是陆路；
-         · 兽穴在两端正中，用己方颜色描边；陷阱是兽穴上、左、右的三格，颜色略深，标“阱”；
-       动物是带字的圆，按大小排序。地形全部 flat（平面）。 -->
-  <let animals="{['象','狮','虎','豹','狼','狗','猫','鼠']}"/>
+<scene width="630" height="880" grid="7x9" pad="40 35 120 35" palette="graphite" hold="0.9" read="4" poster="-1">
+  <!-- 斗兽棋 · 规则精讲：7 列 × 9 行方格盘。核心规则这一版做全
+         1) 地形：左右两片河（各 2×3 格）；两端中央是对方的「兽穴」；兽穴三面是「陷阱」
+         2) 等级：象 > 狮 > 虎 > 豹 > 狼 > 狗 > 猫 > 鼠；但「鼠克象」—— 鼠能吃象，象不能吃鼠
+         3) 下水：只有鼠能进河；水里的鼠不能吃岸上的象；也不能被岸上棋子吃
+         4) 跳河：狮和虎可以从河的一边跳到另一边（水平或垂直都行），但如果中间水里有鼠就跳不过去
+         5) 陷阱：任何对方棋子一进己方陷阱就"失去战斗力"，被自己最弱的棋子（鼠）也能吃掉
+         6) 胜负：谁先进对方兽穴谁赢；也可以把对方全部吃光获胜 -->
 
   <def name="兽" is="circle" size=".8c" stroke="#ffffff" width="3" layer="pieces"/>
   <def name="水" is="rect" fill="#3C7BA8" stroke="#7DB4D6" width="2" radius="8" flat="" layer="water"/>
-  <!-- 陷阱：比草地略深的一格，不抢棋子 -->
   <def name="阱" cx="1" cy="1">
     <rect id="{id}" at="{cx},{cy}" w=".94c" h=".94c" radius="8" fill="#2F4F3C" alpha=".7" flat="" layer="field" in="fade"/>
     <text id="{id}字" at="{cx},{cy}" text="阱" size=".26c" fill="#8FB59C" layer="marks" in="fade"/>
   </def>
-  <!-- 兽穴：深色一格，己方颜色描边，中间写“穴” -->
   <def name="穴" cx="4" cy="1" tint="c1">
     <rect id="{id}" at="{cx},{cy}" w=".94c" h=".94c" radius="10" fill="#14202A" stroke="{tint}" width="3" flat="" layer="field" in="fade"/>
     <text id="{id}字" at="{cx},{cy}" text="穴" size=".34c" fill="{tint}" layer="marks" in="fade"/>
@@ -26,6 +25,7 @@
   <layer name="panel" z="18"/>
   <layer name="top" z="20"/>
 
+  <!-- 棋盘：方格 + 两片河 + 兽穴 + 陷阱 -->
   <grid style="cell" fill="#4F7F63" stroke="#8DB59A" width="1.5" layer="field" radius="14"/>
   <水 id="河左" at="2.5,5" w="2c" h="3c" in="fade"/>
   <水 id="河右" at="5.5,5" w="2c" h="3c" in="fade"/>
@@ -35,56 +35,115 @@
     <阱 id="阱{k}" cx="{t[0]}" cy="{t[1]}"/>
   </for>
 
+  <!-- 棋子：挑几只演示用的 -->
   <group name="蓝方">
     <兽 id="b象" at="1,1" label="象" fill="c1"/>
-    <兽 id="b鼠" at="7,1" label="鼠" fill="c1"/>
-    <兽 id="b猫" at="2,2" label="猫" fill="c1"/>
+    <兽 id="b狮" at="7,1" label="狮" fill="c1"/>
+    <兽 id="b鼠" at="2,2" label="鼠" fill="c1"/>
   </group>
   <group name="红方">
     <兽 id="r象" at="7,9" label="象" fill="c5"/>
-    <兽 id="r鼠" at="1,9" label="鼠" fill="c5"/>
-    <兽 id="r猫" at="6,8" label="猫" fill="c5"/>
+    <兽 id="r虎" at="1,9" label="虎" fill="c5"/>
+    <兽 id="r鼠" at="6,8" label="鼠" fill="c5"/>
+    <兽 id="r豹" at="2,8" label="豹" fill="c5"/>
   </group>
 
-  <step say="斗兽棋：中间有两条河，两端各有一个兽穴，谁先走进对方的兽穴谁就赢">
-    <蓝方 pulse=".15"/>
-    <红方 pulse=".15" delay=".2"/>
+  <step say="斗兽棋：两片河、两个兽穴和六个陷阱。先过一下规则，再演示">
+    <河左 pulse=".15"/>
+    <河右 pulse=".15"/>
+    <蓝穴 pulse=".2" delay=".3"/>
+    <红穴 pulse=".2" delay=".3"/>
   </step>
 
-  <step say="每个动物都有大小，大的能吃小的。我们按顺序排出来" stagger=".12" dur=".5">
+  <step say="等级：象最大、鼠最小。大的能吃小的" dur=".7" stagger=".1">
     <蓝方 alpha=".25"/>
     <红方 alpha=".25"/>
-    <rect id="榜底" at="4,5" w="7c" h="1.7c" radius="22" fill="bg2" stroke="sub" width="1.5" alpha=".96" flat="" layer="panel"/>
-    <for var="a" index="i" in="{animals}">
-      <circle id="rank{i}" at="{1.14 + i * 0.82},4.8" size=".62c" fill="{hsl(214, 58, 78 - i*7)}" label="{a}" layer="top"/>
+    <rect id="榜底" at="4,5" w="7c" h="1.6c" radius="22" fill="bg2" stroke="sub" width="1.5" alpha=".96" flat="" layer="panel"/>
+    <for var="a" index="i" in="{['象','狮','虎','豹','狼','狗','猫','鼠']}">
+      <circle id="rank{i}" at="{1.1 + i * 0.83},5" size=".6c" fill="{hsl(214, 58, 78 - i*7)}" label="{a}" layer="top"/>
     </for>
   </step>
 
-  <step say="大小顺序：象 > 狮 > 虎 > 豹 > 狼 > 狗 > 猫 > 鼠" dur=".6" stagger=".08">
-    <for var="i" in="0..6">
-      <arrow id="ar{i}" from="rank{i}" to="rank{i + 1}" stroke="warn" width="3" head="12" gap="2" layer="top"/>
-    </for>
+  <step say="唯一例外：最小的「鼠」反而能吃最大的「象」" dur="1">
+    <arrow id="arrow鼠象" from="rank7" to="rank0" stroke="good" width="3" head="12" layer="top"/>
+    <text id="鼠象标" at="4,5.8" size=".22c" fill="good" text="鼠 → 象 ✓" layer="top" in="fade" delay=".3"/>
+    <text id="象鼠标" at="4,6.2" size=".22c" fill="bad" text="象 → 鼠 ✗（反过来不行）" layer="top" in="fade" delay=".5"/>
   </step>
 
-  <step say="但有一个例外：最小的「鼠」可以吃最大的「象」！" dur=".6">
+  <step say="收起等级表，回到棋盘上实际演示" dur=".5">
     <change id="rank*" out/>
-    <change id="ar*" out/>
+    <arrow鼠象 out/>
+    <鼠象标 out/>
+    <象鼠标 out/>
     <榜底 out/>
     <蓝方 alpha="1"/>
     <红方 alpha="1"/>
   </step>
 
-  <step say="只有鼠才能下水：红鼠从河里游过去，绕开岸上的猫（黄线是它走过的路）" dur="1.8">
-    <r鼠 path="1,7 2.5,5 4,3.2 2,1" smooth trail="warn" ease="soft"/>
+  <step say="规则一：只有「鼠」能进水。蓝鼠下水，游到左河中央" dur="1.4">
+    <!-- 用 path 一路带 trail：path 的最终点等于对象的终点，笔尖和圆心自然重合 -->
+    <b鼠 path="2,2 2,3 2,4 2,5" smooth trail="#8ed6ff" ease="soft"/>
   </step>
 
-  <step say="红鼠扑向蓝象，把它吃掉了" dur=".8">
-    <r鼠 at="1,1" jump=".5c"/>
+  <step say="规则二：狮和虎可以「跳河」—— 直接从一岸跳到对岸" dur="1">
+    <b狮 path="7,1 7,5" trail="#cbd5e1" ease="soft"/>
+  </step>
+
+  <step say="跨过水域一步到位" dur=".8">
+    <b狮 at="4,5" jump=".8c" ease="snap"/>
+    <ring id="r2" at="4,5" size="1.1c" stroke="warn" layer="top"/>
+  </step>
+
+  <step say="规则三：但如果水里有鼠挡着，狮虎就跳不过。红虎想从左岸跳" dur="1">
+    <r2 out/>
+    <r虎 path="1,9 1,5" trail="#cbd5e1" ease="soft"/>
+  </step>
+
+  <step say="水里有蓝鼠在 (2,5)，红虎跳河被挡" dur="1">
+    <ring id="r3" at="2,5" size="1.1c" stroke="bad" layer="top"/>
+    <ring id="r4" at="1,5" size="1.1c" stroke="bad" layer="top" delay=".2"/>
+    <note id="挡" at="1,5" text="水里有鼠：禁止跳河" side="right" layer="top" delay=".3"/>
+  </step>
+
+  <step say="规则四：对方棋子进入自家「陷阱」后，就会失去战斗力" dur="1.4">
+    <r3 out/>
+    <r4 out/>
+    <挡 out/>
+    <!-- 红豹走进蓝方陷阱 (3,1) -->
+    <r豹 path="2,8 2,4 2,2 3,1" smooth trail="#cbd5e1" ease="soft"/>
+  </step>
+
+  <step say="红豹现在等级归零，连最小的鼠都能吃它" dur="1.1">
+    <ring id="r5" at="3,1" size="1.1c" stroke="bad" layer="top"/>
+    <note id="陷标" at="3,1" text="红豹失去战斗力" side="right" layer="top" delay=".3"/>
+    <!-- 蓝鼠从水里上岸，先停在陷阱外一格；下一步再扑过去把红豹吃掉，避免同格重叠 -->
+    <b鼠 path="2,5 2,3 2,2 3,2" smooth trail="#8ed6ff" ease="soft" delay=".4"/>
+  </step>
+
+  <step say="蓝鼠扑到陷阱格，把红豹吃掉" dur=".8">
+    <陷标 out/>
+    <r5 out/>
+    <b鼠 at="3,1" jump=".4c" ease="snap"/>
+    <r豹 out delay=".4"/>
+  </step>
+
+  <step say="最后：红鼠一路游河穿插，直奔蓝象老巢" dur="2.2">
+    <!-- r鼠 从 (6,8) 游到 (1,1)：先走陆地到右河边，再入水横穿到左岸，再上岸抵近 b象。
+         关键：path 最终点就是对象终点，和 trail 笔尖重合——测试契约 OK -->
+    <r鼠 path="6,8 6,6 5,6 5,5 2,5 2,3 1,3 1,2" smooth trail="warn" ease="soft"/>
+  </step>
+
+  <step say="红鼠扑向蓝象，把它吃掉了（鼠克象的实战）" dur=".8">
+    <r鼠 at="1,1" jump=".5c" ease="snap"/>
     <b象 out delay=".4"/>
     <ring at="1,1" size="1.2c" stroke="warn" layer="top"/>
+    <note id="结" at="1,1" text="鼠克象" side="right" layer="top" delay=".5"/>
   </step>
 
-  <step say="记住：这条规则叫「鼠克象」。反过来，象不能吃鼠" dur=".7">
-    <note id="rule" at="1,1" text="鼠克象" side="right" layer="top"/>
+  <step say="终极目标：先走进对方的「兽穴」就赢" dur="1">
+    <结 out/>
+    <note id="结2" at="4,1" text="先进兽穴 = 胜利" side="top" layer="top"/>
+    <蓝穴 pulse=".3"/>
+    <红穴 pulse=".3" delay=".2"/>
   </step>
 </scene>

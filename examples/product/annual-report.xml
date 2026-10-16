@@ -1,47 +1,71 @@
-<scene width="960" height="640" grid="12x7" pad="0 0 84 0" shadow="false" glow="false" overlap="off" hold="1" read="4">
-  <!-- 年度战报：集中展示第一梯队的新能力——
-       渐变卡片（fill→fill2）、数字滚动（count+fmt）、打字机标题（in="type"）、
-       镜头推近（camera zoom/at）、背景模糊光斑（blur）。驱动全是声明式，数字和镜头都在步骤里补间。 -->
-  <theme accent="#7c6cff" accent2="#36e0c6" c1="#7c6cff" c2="#f72585" c3="#ffb703" c4="#4cc9f0" c5="#36e0c6" text="#eef0ff" sub="#9aa0c8" bg="#0e0f1e"/>
+<scene width="960" height="640" grid="12x7" pad="0 0 84 0" shadow="false" glow="false" overlap="off" hold=".9" read="4" poster="-1">
+  <!-- 年度战报：故事线清晰的「指标卡 → 对比 → 聚焦 → 收官」。
+       做法：
+         1) 两团模糊光斑垫底，营造氛围
+         2) 打字机标题，副标点一下主题
+         3) 三张渐变卡片依次落位，数字从 0 滚动到终值；每张卡片下带「同比」小字
+         4) 推近到涨幅最大的卡片，其余 dim 下去；注释用 note 侧标
+         5) 拉回全景；底部出"同比去年"小结 -->
+  <theme accent="#7c6cff" accent2="#36e0c6" c1="#7c6cff" c2="#f72585" c3="#ffb703" c4="#4cc9f0" c5="#36e0c6" text="#f1f0ff" sub="#a7adda" bg="#0e0f1e"/>
   <let labels="{['访问量', '转化率', '营收 / 万元']}"/>
+  <let yoy="{['+104%', '+58%', '+37%']}"/>
 
   <layer name="glow" z="0"/>
   <layer name="card" z="1"/>
   <layer name="txt" z="4"/>
+  <layer name="tips" z="6"/>
 
-  <!-- 背景柔光：两团模糊色斑，营造氛围，不抢主体 -->
-  <circle id="halo1" at="3,5.4" size="4c" fill="accent" alpha=".22" blur="40" blend="screen" flat="" layer="glow" in="fade"/>
-  <circle id="halo2" at="9.6,2.9" size="3c" fill="c2" alpha=".2" blur="40" blend="screen" flat="" layer="glow" in="fade"/>
+  <!-- 两团模糊色斑：垫底的大色块，blur + screen 产生柔光；不抢主体 -->
+  <circle id="halo1" at="3,5.4" size="4.6c" fill="accent" alpha=".22" blur="40" blend="screen" flat="" layer="glow" in="fade"/>
+  <circle id="halo2" at="9.6,2.6" size="3.6c" fill="c2" alpha=".2" blur="40" blend="screen" flat="" layer="glow" in="fade"/>
 
-  <step say="先打出标题" dur="1">
-    <text id="title" at="6.5,1.5" size=".66c" fill="accent" text="2025 年度战报" in="type" dur="1.1"/>
-    <text id="sub" at="6.5,2.35" size=".28c" fill="sub" text="三个数字，看完一整年" in="type" dur=".9" delay=".5"/>
+  <step say="先打出标题" dur="1.1">
+    <text id="title" at="6,1.4" size=".66c" fill="accent" text="2025 年度战报" in="type" dur="1.1" layer="txt"/>
+    <text id="sub" at="6,2.3" size=".28c" fill="sub" text="三个数字，看完一整年" in="type" dur=".9" delay=".55" layer="txt"/>
   </step>
 
-  <step say="三张卡片落位，数字从 0 开始滚动" dur=".9" stagger=".12">
+  <step say="三张卡片依次落位" dur=".9" stagger=".12">
     <for var="i" in="0..2">
-      <rect id="c{i}" at="{2.5 + i * 4},4.2" w="3.4c" h="2.3c" radius="26" fill="{pal(i + 1)}" fill2="{pal(i + 2)}" gradient="linear 135" flat="" layer="card" in="drop"/>
-      <text id="cl{i}" at="{2.5 + i * 4},3.5" size=".26c" fill="#0e0f1e" text="{labels[i]}" layer="txt" in="fade" delay=".2"/>
+      <rect id="c{i}" at="{2.5 + i * 4},4.3" w="3.4c" h="2.6c" radius="26" fill="{pal(i + 1)}" fill2="{pal(i + 2)}" gradient="linear 135" flat="" layer="card" in="drop"/>
+      <text id="cl{i}" at="{2.5 + i * 4},3.5" size=".26c" fill="#0e0f1e" text="{labels[i]}" layer="txt" in="fade" delay=".18"/>
     </for>
-    <text id="v0" at="2.5,4.35" size=".84c" fill="#0e0f1e" count="0" fmt="#" layer="txt" in="fade" delay=".2"/>
-    <text id="v1" at="6.5,4.35" size=".84c" fill="#0e0f1e" count="0" fmt="#.0%" layer="txt" in="fade" delay=".2"/>
-    <text id="v2" at="10.5,4.35" size=".84c" fill="#0e0f1e" count="0" fmt="¥#" layer="txt" in="fade" delay=".2"/>
   </step>
 
-  <step say="数字一齐滚到终值" dur="1.6">
-    <v0 count="128460" ease="out"/>
-    <v1 count="3.8" ease="out"/>
-    <v2 count="2560" ease="out"/>
+  <step say="数字一齐从 0 滚到终值" dur="1.8">
+    <!-- count 让文字从 0 滚动到目标值；字号比卡片矮一半左右，确保边距足够 -->
+    <text id="v0" at="2.5,4.4" size=".72c" fill="#0e0f1e" count="128460" fmt="#" layer="txt" in="fade"/>
+    <text id="v1" at="6.5,4.4" size=".72c" fill="#0e0f1e" count="3.8" fmt="#.0%" layer="txt" in="fade" delay=".08"/>
+    <text id="v2" at="10.5,4.4" size=".72c" fill="#0e0f1e" count="2560" fmt="¥#" layer="txt" in="fade" delay=".16"/>
+    <!-- 同比小字：出现得稍晚一点，看完数字再看增幅 -->
+    <text id="d0" at="2.5,5.25" size=".22c" fill="#0e0f1e" text="同比 {yoy[0]}" alpha=".7" layer="txt" in="fade" delay=".7"/>
+    <text id="d1" at="6.5,5.25" size=".22c" fill="#0e0f1e" text="同比 {yoy[1]}" alpha=".7" layer="txt" in="fade" delay=".8"/>
+    <text id="d2" at="10.5,5.25" size=".22c" fill="#0e0f1e" text="同比 {yoy[2]}" alpha=".7" layer="txt" in="fade" delay=".9"/>
   </step>
 
-  <step say="推近到最亮眼的一项：访问量翻了一倍" dur="1.3">
-    <camera zoom="1.9" at="2.5,4.2"/>
-    <c0 pulse=".06"/>
-    <v0 pulse=".12"/>
+  <step say="最亮眼的是「访问量」，一年翻了一倍" dur="1.4">
+    <camera zoom="1.6" at="2.5,4.3"/>
+    <!-- 其它两张卡片暗下去，把注意力留给访问量 -->
+    <c1 alpha=".35"/>
+    <c2 alpha=".35"/>
+    <cl1 alpha=".4"/><v1 alpha=".4"/><d1 alpha=".4"/>
+    <cl2 alpha=".4"/><v2 alpha=".4"/><d2 alpha=".4"/>
+    <!-- 高亮：主卡呼吸 + 同比值放大并染成辅色 -->
+    <c0 pulse=".05"/>
+    <d0 size=".27c" fill="accent2" alpha="1"/>
+    <note id="n0" at="2.5,4.3" text="去年 6.3 万 → 今年 12.8 万" side="top" layer="tips"/>
   </step>
 
-  <step say="拉回全景，收官" dur="1.2">
-    <camera zoom="1" at="6.5,4"/>
-    <text id="foot" at="6.5,6.2" size=".3c" fill="sub" text="数据驱动 · 一镜到底" in="type" dur="1"/>
+  <step say="拉回全景，另两项也在稳步上涨" dur="1.3">
+    <camera zoom="1" at="6,4"/>
+    <c1 alpha="1"/><c2 alpha="1"/>
+    <cl1 alpha="1"/><v1 alpha="1"/><d1 alpha="1"/>
+    <cl2 alpha="1"/><v2 alpha="1"/><d2 alpha="1"/>
+    <n0 out/>
+    <d1 fill="accent2"/>
+    <d2 fill="accent2"/>
+  </step>
+
+  <step say="收官：三条线一起向上" dur="1.3">
+    <text id="foot" at="6,6.4" size=".3c" fill="sub" text="数据驱动 · 一镜到底 · 2026 继续向前" in="type" dur="1" layer="txt"/>
   </step>
 </scene>

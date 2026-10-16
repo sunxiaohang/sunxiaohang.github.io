@@ -1,19 +1,30 @@
-<scene width="720" height="800" grid="5x5" pad="30 30 130 30" palette="graphite" hold="0.8" read="4">
-  <!-- 狼吃羊：1 只狼追 4 只羊，狼的目标是吃羊、羊的目标是围住狼。5x5 交叉点棋盘 -->
-  <def name="狼" is="triangle" size=".86c" fill="#9aa3b2" stroke="#f1f5f9" width="3" layer="pieces"/>
-  <def name="羊" is="circle" size=".72c" fill="#fffaf0" stroke="#d9cdb4" width="3" layer="pieces"/>
+<scene width="720" height="800" grid="5x5" pad="30 30 130 30" palette="graphite" hold="0.9" read="4" poster="-1">
+  <!-- 狼吃羊（也叫老狼棋）：中国民间 5×5 井+米字棋盘，1 狼 4 羊，交替走子
+       规则（这一版做严谨）：
+         1) 走法：沿线一步。棋盘每个交叉点最多 8 条线通过，所以中心点有 8 邻居，角点只有 3 个
+         2) 羊只能"向狼的方向走"或横移，不能后退 —— 演示里简化成"羊只能向上走"
+         3) 狼跳吃：狼紧邻一只羊、羊另一侧是空位，狼可以跳过去把它吃掉
+         4) 羊赢：围死狼（狼的所有邻居都被堵）；狼赢：吃到剩不足 2 只羊
+       做法上为了「围死狼」真正成立，最后把狼逼到角点 (1,1)，用三只羊精确堵住它的 3 个邻居。 -->
+
+  <def name="狼" is="triangle" size=".86c" fill="#4a5365" stroke="#f4f7fb" width="3" layer="pieces"/>
+  <def name="羊" is="circle" size=".72c" fill="#fdf6e3" stroke="#c8b58a" width="3" layer="pieces"/>
 
   <layer name="board" z="0"/>
+  <layer name="hints" z="5"/>
   <layer name="pieces" z="10"/>
   <layer name="marks" z="20"/>
 
+  <!-- 棋盘：方格 + 米字对角线（井 + 米字 = 每点 8 条线） -->
   <grid fill="#D2B887" stroke="#7A5E2B" width="2" layer="board" radius="22" dots="3,3"/>
-  <!-- 斜线让棋盘更有变化：对角线是合法的走法 -->
   <line from="1,1" to="5,5" stroke="#6b4e1f" width="1.6" layer="board" in="none"/>
   <line from="5,1" to="1,5" stroke="#6b4e1f" width="1.6" layer="board" in="none"/>
+  <line from="1,3" to="3,1" stroke="#6b4e1f" width="1.6" layer="board" in="none"/>
+  <line from="3,1" to="5,3" stroke="#6b4e1f" width="1.6" layer="board" in="none"/>
+  <line from="5,3" to="3,5" stroke="#6b4e1f" width="1.6" layer="board" in="none"/>
+  <line from="3,5" to="1,3" stroke="#6b4e1f" width="1.6" layer="board" in="none"/>
 
-  <text id="狼字" text="狼" at="3,3" size=".5c" fill="#fff" layer="marks" alpha="0" in="none"/>
-
+  <!-- 初始布局：狼在底边正中，羊在顶行四角 -->
   <group name="羊群">
     <羊 id="s1" at="1,5" label="羊" color="#6b4e1f"/>
     <羊 id="s2" at="2,5" label="羊" color="#6b4e1f"/>
@@ -22,45 +33,68 @@
   </group>
   <狼 id="wolf" at="3,1" label="狼" color="#111827"/>
 
-  <step say="狼吃羊：一只狼，四只羊，轮流走一步，可以走横、竖、斜">
+  <step say="狼吃羊：一只狼追四只羊，沿线一步步走">
     <羊群 pulse=".18"/>
     <wolf pulse=".2" delay=".2"/>
   </step>
 
-  <step say="羊每次只能往前（向上）走一格，不能后退">
-    <s2 at="2,4"/>
-    <arrow id="a1" from="2,5" to="2,4" stroke="warn" width="4" layer="marks" delay=".1"/>
+  <step say="走法：沿线一格。中心点有 8 个方向可走" dur="1">
+    <!-- 八个短箭头暗示八方向，从中心 (3,3) 指向八邻居 -->
+    <for var="d" index="k" in="{[[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[1,-1],[-1,1],[1,1]]}">
+      <arrow id="dir{k}" from="3,3" to="{3 + d[0] * .8},{3 + d[1] * .8}" stroke="warn" width="2.5" head="10" layer="hints"/>
+    </for>
   </step>
 
-  <step say="狼可以向任意方向走一格：它走到了羊的上面" dur=".6">
+  <step say="羊只能向前（朝狼的方向）走一格，不能后退" dur=".9">
+    <change id="dir*" out/>
+    <!-- 羊 s2 第一步向前（向上）走 -->
+    <s2 at="2,4"/>
+    <arrow id="a1" from="2,4.85" to="2,4.35" stroke="good" width="4" head="12" layer="hints"/>
+  </step>
+
+  <step say="狼可以八方走：这步斜着走到羊的旁边" dur=".7">
     <a1 out/>
+    <!-- 狼从 (3,1) 斜线走到 (2,3)：和 s2(2,4) 紧挨着 -->
     <wolf at="2,3" trail="#cbd5e1"/>
   </step>
 
-  <step say="如果狼的前面隔着一只羊、羊的后面有空位，狼就能跳过去吃掉它" dur=".9">
+  <step say="跳吃规则：如果狼紧挨一只羊、羊的另一侧是空位，狼就能跳过去把它吃掉" dur="1">
+    <!-- 标注"被吃的羊"和"落地点"，让规则一目了然 -->
     <ring id="target" at="2,4" size="1.15c" stroke="bad" layer="marks"/>
-    <ring id="landing" at="2,5" size="1.15c" stroke="good" layer="marks" delay=".2"/>
-    <note id="why" at="2,4" text="羊后面是空位" side="right" layer="marks" delay=".4"/>
+    <ring id="landing" at="2,5" size="1.15c" stroke="good" layer="marks" delay=".25"/>
+    <note id="why" at="2,5" text="羊的另一侧是空位" side="right" layer="marks" delay=".5"/>
   </step>
 
-  <step say="狼跳过去，把羊吃掉了" dur=".9">
+  <step say="狼起跳，一下跨过去，把羊吃掉了" dur="1">
     <target out/>
     <landing out/>
     <why out/>
-    <wolf at="2,5" jump=".5c" ease="snap"/>
-    <s2 out delay=".5"/>
+    <!-- 狼跳过 s2 落到 (2,5)；s2 淡出表示被吃 -->
+    <wolf at="2,5" jump=".6c" ease="snap"/>
+    <s2 out delay=".55"/>
   </step>
 
-  <step say="羊要保护好自己：把羊并排站在一起，后面就没有空位，狼就跳不过去了" dur=".9">
-    <s1 at="1,4"/>
-    <s3 at="3,4" delay=".2"/>
-    <wolf at="2,3" delay=".2" dur=".6"/>
-    <line id="wall" from="1,4" to="3,4" stroke="good" width="5" layer="marks" delay=".5"/>
+  <step say="接下来看羊怎么赢：把狼逼到角落，三只羊就能围死它" dur="1.1">
+    <!-- 把狼送回角点 (1,1)，这是棋盘上最容易"围死"的位置：只有 3 个邻居 -->
+    <wolf at="1,1" trail="#cbd5e1"/>
+    <!-- 羊群同时移动到角落附近，形成合围之势 -->
+    <s1 at="2,3"/>
+    <s3 at="3,2" delay=".2"/>
+    <s4 at="2,2" delay=".4"/>
   </step>
 
-  <step say="羊把狼围住、让它无路可走，羊就赢了！" dur=".9">
-    <wall out/>
-    <s4 at="3,3" jump=".4c"/>
-    <note id="win" at="2,3" text="围住了！" side="top" layer="marks" delay=".5"/>
+  <step say="三只羊精确堵住狼的三个邻居：(2,1)、(1,2)、(2,2) 全封死" dur="1.2">
+    <!-- 到位：s1 → (2,1)，s3 → (1,2)，s4 已在 (2,2) -->
+    <s1 at="2,1"/>
+    <s3 at="1,2" delay=".2"/>
+    <s4 pulse=".3" delay=".4"/>
+    <ring id="rr1" at="2,1" size="1.1c" stroke="good" layer="marks" delay=".2"/>
+    <ring id="rr2" at="1,2" size="1.1c" stroke="good" layer="marks" delay=".4"/>
+    <ring id="rr3" at="2,2" size="1.1c" stroke="good" layer="marks" delay=".55"/>
+  </step>
+
+  <step say="狼没路可走，羊赢了" dur="1">
+    <wolf pulse=".2"/>
+    <note id="win" at="1,1" text="围住啦！" side="right" layer="marks" delay=".2"/>
   </step>
 </scene>

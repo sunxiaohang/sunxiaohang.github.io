@@ -8,6 +8,8 @@
   <meta name="theme-color" content="#fbfbfd">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <script>(function(){try{var t=localStorage.getItem('gm.theme');if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';document.documentElement.dataset.theme=t;}catch(e){document.documentElement.dataset.theme='light';}})();</script>
+  <!-- 内嵌模式：编辑器以 iframe + ?embed=1 打开本页，隐藏站内导航、页脚和「文档」大标题，让弹窗更紧凑 -->
+  <script>(function(){try{if(/[?&]embed=1\b/.test(location.search))document.documentElement.classList.add('embed');}catch(e){}})();</script>
   <link rel="stylesheet" href="css/site.css">
 </head>
 <body>

@@ -398,7 +398,14 @@ dialog::backdrop { background: rgba(0, 0, 0, .4); backdrop-filter: blur(10px) sa
 .viewer-actions .btn-primary { flex: 1; }
 
 /* ---------- 文档 ---------- */
-.doc-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 56px; padding-bottom: clamp(72px, 9vw, 120px); }
+/* docs 页专用：wrap 加宽到 1280（内容更舒展），TOC 收窄 + gap 缩小，缓解正文视觉偏右 */
+main:has(.doc-layout) { --wrap: 1280px; }
+/* 内嵌模式：editor 页的「语法速查」弹窗以 iframe 加载本页。隐藏站点导航、页脚和「文档」大标题，
+   TOC 的 sticky 顶部偏移跟着去掉顶部空白；弹窗本身已有圆角和边框 */
+html.embed .nav, html.embed .footer, html.embed .page-head { display: none; }
+html.embed main { padding-top: 20px; }
+html.embed .toc { top: 16px; max-height: calc(100vh - 32px); }
+.doc-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 44px; padding-bottom: clamp(72px, 9vw, 120px); }
 .toc { position: sticky; top: calc(var(--nav-h) + 24px); align-self: start; max-height: calc(100vh - var(--nav-h) - 48px); overflow: auto; display: grid; gap: 2px; font-size: 14px; padding-right: 8px; }
 .toc a { color: var(--text-3); padding: 6px 12px; border-radius: 10px; transition: background .2s, color .2s; }
 .toc a:hover { color: var(--text); text-decoration: none; background: var(--surface-2); }
