@@ -3,8 +3,9 @@ import { drawSolid, drawRing, drawText } from './shapes.js';
 import { drawLine, drawNote, drawGridEntity, drawTrace } from './annotations.js';
 import { drawMap } from './map.js';
 import { drawGlyph } from './glyphs.js';
-import { toCss, shade } from '../core/util/color.js';
+import { toCss, shade, mix } from '../core/util/color.js';
 import { drawBackground, drawGuide, drawCaption } from './overlay.js';
+import { roundRectPath } from './util.js';
 
 /** 每种图元的绘制入口：由 IR 的 kind 分发 */
 const DRAWERS = {
@@ -23,6 +24,17 @@ const DRAWERS = {
   },
   grid: (ctx, { item }) => drawGridEntity(ctx, item),
   map: (ctx, { item, pr }) => drawMap(ctx, item, pr),
+  particles: (ctx, { item }) => {
+    const two = item.fill2 && item.fill2[3] > 0;
+    for (const p of item.points) {
+      ctx.globalAlpha = Math.min(1, item.alpha * p.a);
+      // 有 fill2 时按寿命在两色间插值，粒子一边飞一边变色
+      ctx.fillStyle = toCss(two ? mix(item.fill, item.fill2, 1 - p.a) : item.fill);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  },
   glyph: (ctx, { item, pr }) => {
     applyXform(ctx, item);
     // 图标有投影和描边：先画一圈同形的深色轮廓当描边（比 stroke 路径更稳），再画本体
@@ -50,6 +62,35 @@ function applyXform(ctx, item) {
   ctx.scale(item.sx, item.sy);
 }
 
+/** 裁剪容器的路径（世界坐标系，描完直接 clip） */
+function clipPath(ctx, c) {
+  ctx.save();
+  ctx.translate(c.x, c.y);
+  ctx.rotate(c.rot || 0);
+  ctx.scale(c.sx || 1, c.sy || 1);
+  ctx.beginPath();
+  const s = Math.max(c.size || 0, 1);
+  switch (c.shape) {
+    case 'circle': ctx.arc(0, 0, s / 2, 0, Math.PI * 2); break;
+    case 'ellipse': ctx.ellipse(0, 0, Math.max(0.5, c.w / 2), Math.max(0.5, c.h / 2), 0, 0, Math.PI * 2); break;
+    case 'rect': {
+      const r = c.radius >= 0 ? c.radius : Math.min(c.w, c.h) * 0.2;
+      roundRectPath(ctx, -c.w / 2, -c.h / 2, c.w, c.h, r);
+      break;
+    }
+    case 'triangle': { const hh = s * 0.4, hw = s * 0.46; ctx.moveTo(0, -hh); ctx.lineTo(hw, hh); ctx.lineTo(-hw, hh); ctx.closePath(); break; }
+    case 'star': {
+      const n = Math.max(3, c.points || 5), R = s * 0.46, rr = R * 0.46;
+      for (let i = 0; i < n * 2; i++) { const a = -Math.PI / 2 + (i * Math.PI) / n, rad = i % 2 ? rr : R; const fn = i ? 'lineTo' : 'moveTo'; ctx[fn](Math.cos(a) * rad, Math.sin(a) * rad); }
+      ctx.closePath();
+      break;
+    }
+    default: ctx.arc(0, 0, s / 2, 0, Math.PI * 2);
+  }
+  ctx.restore();
+  ctx.clip();
+}
+
 function drawShadow(ctx, item) {
   const s = item.shadow;
   if (!s) return;
@@ -62,6 +103,8 @@ function drawShadow(ctx, item) {
   ctx.fill();
   ctx.restore();
 }
+
+const COMPOSITE = { add: 'lighter', screen: 'screen', multiply: 'multiply', overlay: 'overlay', lighten: 'lighten', darken: 'darken', difference: 'difference' };
 
 /**
  * Canvas2D 后端：把 frame 画到 ctx 上。逻辑坐标 = 场景像素，pixelRatio = 画布像素 / 场景像素。
@@ -81,14 +124,27 @@ export function draw(ctx, scene, frame, opts = {}) {
   drawBackground(ctx, ir);
   if (opts.grid) drawGuide(ctx, ir);
 
+  // 镜头：缩放平移整个画面（背景与字幕不受影响）
+  ctx.save();
+  if (ir.camera) {
+    const { z, cx, cy } = ir.camera;
+    ctx.translate(ir.width / 2, ir.height / 2);
+    ctx.scale(z, z);
+    ctx.translate(-cx, -cy);
+  }
+
   for (const item of ir.items) {
     ctx.save();
+    if (item.blur) ctx.filter = `blur(${item.blur * pr}px)`;
+    if (item.blend) ctx.globalCompositeOperation = COMPOSITE[item.blend] || 'source-over';
+    if (item.clip) clipPath(ctx, item.clip);
     drawShadow(ctx, item);
     ctx.globalAlpha = Math.min(1, item.alpha);
     ctx.lineJoin = 'round';
     DRAWERS[item.kind]?.(ctx, { item, pr });
     ctx.restore();
   }
+  ctx.restore();
 
   if (opts.captions !== false) for (const cap of ir.captions) drawCaption(ctx, cap);
   ctx.restore();

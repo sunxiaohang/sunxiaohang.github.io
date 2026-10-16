@@ -69,6 +69,11 @@ export function compileStep(node, ctx) {
   const index = scene.steps.length;
   ctx.curStep = index;
   const t0 = ctx.cursor;
+  // 记录步开始前的状态，步结束后据此找出"这一步新增的东西"，用于 speed 重映射
+  const segFrom = ctx.segs.length, entFrom = scene.entities.length, soundFrom = scene.sounds.length;
+  const deathBefore = new Map(scene.entities.map((e) => [e.index, e.death]));
+  const speed = r.num('speed', 1, { min: 0.1, max: 10 });
+  const mark = r.str('mark', '').trim();
   const dur = r.num('dur', 0.7, { min: 0 });
   const stagger = r.num('stagger', 0, { min: 0 });
   const say = r.str('say', '');
@@ -84,7 +89,16 @@ export function compileStep(node, ctx) {
   const nextBase = () => t0 + k++ * stagger;
 
   for (const ch of node.children) {
-    if (ENTITY_TYPES.includes(ch.tag)) {
+    if (ch.tag === 'camera') {
+      // 镜头是场景里唯一的：步骤里写 <camera> 修改已有镜头，而不是新建一台
+      const cam = scene.entities.find((e) => e.type === 'camera');
+      if (cam) {
+        const e = modifyAll(ch, [cam], ctx, dur, nextBase, false, false);
+        if (e !== null) end = Math.max(end, e);
+      } else {
+        end = Math.max(end, createInStep(ch, ctx, nextBase()));
+      }
+    } else if (ENTITY_TYPES.includes(ch.tag)) {
       end = Math.max(end, createInStep(ch, ctx, nextBase()));
     } else if (ch.tag === 'group') {
       // 步骤内的 <group>：新建一批对象并归为一组
@@ -119,12 +133,35 @@ export function compileStep(node, ctx) {
   }
 
   if (end <= t0 + EPS) end = t0 + 0.3;
+
+  // speed：整步快放 / 慢放。事后把这一步产生的所有时间点按 t' = t0 + (t - t0) / speed 重映射，
+  // 步内相对节奏不变，只有整体快慢变；不动运行时，确定性不受影响。hold（停顿）不受 speed 影响——它是给人读字幕的。
+  if (Math.abs(speed - 1) > 1e-9) {
+    const map = (t) => t0 + (t - t0) / speed;
+    for (let i = segFrom; i < ctx.segs.length; i++) {
+      const s = ctx.segs[i];
+      s.t0 = map(s.t0);
+      s.dur /= speed;
+    }
+    for (const e of scene.entities) {
+      if (e.index >= entFrom && e.birth > t0) e.birth = map(e.birth); // 本步新建的对象
+      if (e.death !== Infinity && e.death !== deathBefore.get(e.index)) e.death = map(e.death); // 本步退场的对象
+    }
+    for (let i = soundFrom; i < scene.sounds.length; i++) scene.sounds[i].at = map(scene.sounds[i].at);
+    end = map(end);
+  }
+
   const t2 = end + hold;
   scene.steps.push({
-    index, t0, t1: end, t2, say,
+    index, t0, t1: end, t2, say, speed,
     freeze: Math.max(t0, Math.min(t2 - 1e-4, Math.max(end, t0 + 0.3))),
     line: node.line, col: node.col,
   });
+  // mark：给这一步命名，供 <audio at="标记名"> 等引用；同名重复报错
+  if (mark) {
+    if (scene.marks.has(mark)) diag.error('E_DUP_ID', `标记 "${mark}" 已存在`, r.at('mark'));
+    else scene.marks.set(mark, { t: t0, step: index });
+  }
   ctx.cursor = t2;
   ctx.curStep = -1;
 }

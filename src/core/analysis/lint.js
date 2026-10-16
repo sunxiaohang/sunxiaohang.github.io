@@ -50,7 +50,7 @@ export function lint(scene, step = 0.1) {
     frames.push({ t, f: evaluate(scene, t) });
   }
   scene.entities.forEach((e, i) => {
-    if (!POSITIONAL.has(e.type)) return;
+    if (!POSITIONAL.has(e.type) || e.type === 'camera' || e.type === 'emitter') return;
     let first = -1;
     for (let k = 0; k < frames.length; k++) {
       const L = frames[k].f.entities[i];
@@ -78,7 +78,7 @@ export function lint(scene, step = 0.1) {
     for (const t of checks) {
       const frame = evaluate(scene, t);
       for (const e of scene.entities) {
-        if (!POSITIONAL.has(e.type)) continue;
+        if (!POSITIONAL.has(e.type) || e.type === 'camera' || e.type === 'emitter') continue;
         const L = frame.entities[e.index];
         if (L.hidden || effAlpha(L) < 0.02) continue;
         const b = aabb(e, L);

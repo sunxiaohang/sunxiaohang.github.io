@@ -195,12 +195,31 @@ player.on('scene', syncPlayBtn);
 // 播放推进时触发跨越时间点的音效；seek / 上一步 / 下一步不触发，避免跳转时噪音
 function triggerSounds(from, to) {
   const list = player.scene?.sounds;
-  if (!list?.length || !sound.enabled) return;
-  for (const s of list) {
-    if (s.at >= from && s.at < to) sound.play(s.name);
-    else if (to < from && (s.at >= from || s.at < to)) sound.play(s.name); // 循环回绕
+  if (list?.length && sound.enabled) {
+    for (const s of list) {
+      if (s.at >= from && s.at < to) sound.play(s.name);
+      else if (to < from && (s.at >= from || s.at < to)) sound.play(s.name); // 循环回绕
+    }
+  }
+  // 外部音频（旁白 / BGM）：同样按跨越时间点触发
+  const audios = player.scene?.audios;
+  if (audios?.length && sound.enabled) {
+    for (const a of audios) {
+      if ((a.at >= from && a.at < to) || (to < from && (a.at >= from || a.at < to))) sound.playAudio(a);
+    }
   }
 }
+
+// 切场景 / 跳转时：预加载外部音频、停掉正在播的，避免错位
+let audioScene = null;
+player.on('scene', (sc) => {
+  sound.stopAllAudio();
+  if (sc && sc.audios?.length && sc !== audioScene) {
+    audioScene = sc;
+    for (const a of sc.audios) sound.loadAudio(a.src, a.data, a.src);
+  }
+});
+player.on('pause', () => sound.stopAllAudio());
 
 let last = performance.now();
 (function loop(now) {

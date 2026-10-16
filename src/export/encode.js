@@ -18,12 +18,34 @@ export function chunkBytes(chunk) {
   return data;
 }
 
-/** 在 OfflineAudioContext 上合成整条音轨（复用内置音色），返回立体声 Float32 PCM */
+/** 在 OfflineAudioContext 上合成整条音轨：内置音色 + 外部音频（<audio>），返回立体声 Float32 PCM */
 async function synthesizePcm(scene, { sampleRate = 48000 } = {}) {
   const dur = scene.duration;
   const ctx = new OfflineAudioContext(2, Math.max(1, Math.ceil(dur * sampleRate)), sampleRate);
   for (const s of scene.sounds || []) {
     (PRESETS[s.name] || PRESETS.pop)(ctx, Math.min(s.at, dur));
+  }
+  // 外部音频：解码后按 at 时间点接入；超出时长的部分由 OfflineAudioContext 自动截断
+  for (const a of scene.audios || []) {
+    if (a.at >= dur) continue;
+    let bytes = a.data;
+    if (!bytes && typeof fetch === 'function') {
+      try { bytes = await (await fetch(a.src)).arrayBuffer(); } catch { bytes = null; }
+    }
+    if (!bytes) continue;
+    try {
+      const buf = await ctx.decodeAudioData(bytes.slice(0));
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.loop = !!a.loop;
+      const g = ctx.createGain();
+      const vol = a.volume ?? 1;
+      if (a.fadein > 0) { g.gain.setValueAtTime(0.0001, a.at); g.gain.linearRampToValueAtTime(vol, a.at + a.fadein); }
+      else g.gain.setValueAtTime(vol, a.at);
+      if (a.fadeout > 0 && !a.loop) { const end = Math.min(dur, a.at + buf.duration); g.gain.setValueAtTime(vol, Math.max(a.at, end - a.fadeout)); g.gain.linearRampToValueAtTime(0.0001, end); }
+      src.connect(g).connect(ctx.destination);
+      src.start(a.at);
+    } catch { /* 单个音频解码失败：跳过，不影响其余音轨 */ }
   }
   const buf = await ctx.startRendering();
   return { sampleRate, frames: [buf.getChannelData(0), buf.getChannelData(1)] };
@@ -126,7 +148,7 @@ export async function exportWebm(scene, {
   }
 
   // ---- 音轨（可选，尽力而为：失败只丢音轨，不影响视频）----
-  if (withAudio && scene.sounds?.length && typeof AudioEncoder !== 'undefined' && typeof AudioData !== 'undefined') {
+  if (withAudio && (scene.sounds?.length || scene.audios?.length) && typeof AudioEncoder !== 'undefined' && typeof AudioData !== 'undefined') {
     try {
       await encodeOpus(await synthesizePcm(scene), mux);
     } catch { /* 音轨编码失败不影响视频导出 */ }

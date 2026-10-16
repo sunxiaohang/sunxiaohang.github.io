@@ -1,21 +1,32 @@
 import { EASE_NAMES } from '../util/ease.js';
 import { FUNCTION_DOCS, CONST_NAMES } from './expr.js';
 
-export const ENTITY_TYPES = ['circle', 'ellipse', 'rect', 'triangle', 'star', 'text', 'icon', 'line', 'arrow', 'ring', 'note', 'grid', 'map'];
+export const ENTITY_TYPES = ['circle', 'ellipse', 'rect', 'triangle', 'star', 'text', 'icon', 'line', 'arrow', 'ring', 'note', 'grid', 'map', 'camera', 'emitter'];
 export const SOLID = new Set(['circle', 'ellipse', 'rect', 'triangle', 'star']);
-export const POSITIONAL = new Set(['circle', 'ellipse', 'rect', 'triangle', 'star', 'text', 'icon', 'ring', 'note']);
+/** 参与位置动画的类型。camera 复用同一套位移机制（at/path/by/arc），但不渲染、不参与 lint */
+export const POSITIONAL = new Set(['circle', 'ellipse', 'rect', 'triangle', 'star', 'text', 'icon', 'ring', 'note', 'camera', 'emitter']);
 export const SEGMENTED = new Set(['line', 'arrow']);
 /** 底板类：不参与位置动画，也不参与重叠 / 越界检查 */
 export const BACKDROP = new Set(['grid', 'map']);
 /** 有 w/h 两个独立尺寸的类型 */
 export const BOXED = new Set(['rect', 'ellipse']);
+/** 能逐字显现 / 数字滚动的文本类 */
+export const TEXTLIKE = new Set(['text', 'icon']);
+/** 支持渐变填充（fill→fill2）的类型 */
+export const GRADABLE = new Set(['circle', 'ellipse', 'rect', 'triangle', 'star', 'text']);
+/** 粒子发射模式 */
+export const EMIT_MODES = ['burst', 'fountain', 'rise', 'fall', 'snow'];
+/** 混合模式：缺省 normal；add/screen 让颜色叠加变亮，用来做光效、发光 */
+export const BLEND_MODES = ['normal', 'add', 'screen', 'multiply', 'overlay', 'lighten', 'darken', 'difference'];
 
 export const TIMING = ['dur', 'delay', 'ease'];
 export const EFFECTS = ['pulse', 'shake', 'jump', 'spin', 'flash', 'wobble', 'do', 'loop', 'yoyo'];
 /** 内置音色（src/audio/sound.js 实现，无音频文件） */
 export const SOUND_NAMES = ['pop', 'tick', 'ding', 'snap', 'whoosh', 'wobble', 'success', 'spring'];
 /** 只能在创建时设置、不能在步骤里动画的属性 */
-export const STATIC_ATTRS = new Set(['projection', 'region', 'highlight', 'names', 'border', 'borderWidth', 'coast', 'coastWidth', 'island', 'islandWidth', 'dash', 'provinces', 'inset', 'inner', 'river', 'ticks', 'frame', 'off', 'id', 'layer', 'group', 'flat', 'in', 'dash', 'head', 'side', 'gap', 'style', 'dots', 'labels', 'radius', 'points', 'after', 'below']);
+export const STATIC_ATTRS = new Set(['projection', 'region', 'highlight', 'names', 'border', 'borderWidth', 'coast', 'coastWidth', 'island', 'islandWidth', 'dash', 'provinces', 'inset', 'inner', 'river', 'ticks', 'frame', 'off', 'id', 'layer', 'group', 'flat', 'in', 'dash', 'head', 'side', 'gap', 'style', 'dots', 'labels', 'radius', 'points', 'after', 'below', 'blend', 'clip', 'gradient', 'fmt']);
+/** <emitter> 的参数都在创建时定死，不参与步骤补间 */
+const EMITTER_STATIC = new Set(['mode', 'count', 'spread', 'life', 'speed', 'gravity', 'wind']);
 
 const B = (doc, def) => ({ doc, ...(def !== undefined && { default: def }) });
 
@@ -41,7 +52,7 @@ export const ATTR = {
   layer: B('所属图层名；图层 z 越大越靠上'),
   group: B('所属分组名；步骤里写组名即可批量修改组内全部对象，如 <红方 pulse/>'),
   flat: B('平面图形：不画落地投影与高光（河流、地面、背景板用；缺省属性）'),
-  in: B('登场动画：pop | fade | drop | draw | none。线条默认 draw，棋盘默认 fade，其余默认 pop'),
+  in: B('登场动画：pop | fade | drop | draw | type | none。line/arrow 默认 draw，grid 默认 fade，其余默认 pop；type 是文字打字机（逐字显现）'),
   label: B('图形中心的文字（文字颜色用 color，字号随图形大小）'),
   text: B('文字内容；note 与 text 通用'),
   from: B('线条起点：格子坐标 "列,行"，或对象 id（绑定连线：自动贴到对象边缘，对象移动时跟着走）'),
@@ -97,10 +108,27 @@ export const ATTR = {
   orbit: B('绕圆心匀速转圈：半径（长度）。配 around="圆心坐标" 与 turns="圈数"，真正的圆（不走折线逼近）'),
   around: B('orbit 的圆心（格子坐标）'),
   turns: B('orbit 的圈数（默认 1，可为小数）'),
+  fill2: B('渐变填充的第二个颜色：写了它，fill → fill2 就是渐变。如 fill="accent" fill2="accent2"；圆/矩形/三角/星形/文字支持'),
+  gradient: B('渐变方式：linear（默认，线性，可写 "linear 135" 指定角度，0=向上、90=向右，默认 135）| radial（从中心向外）。配 fill2 使用'),
+  blur: B('模糊半径（px）。做景深、聚焦、朦胧；也可放进步骤里做"从模糊到清晰"的聚焦动画', 0),
+  blend: B(`混合模式：${BLEND_MODES.join(' / ')}（默认 normal）。add / screen 让颜色叠加变亮，multiply 变暗，用来做光效、发光、叠加`),
+  clip: B('裁剪容器：写一个实心图形（circle/rect/ellipse/triangle/star）的 id，本对象只在它内部可见。如 <rect id="窗" …/> 之后 <text clip="窗" …/>'),
+  reveal: B('文字显现进度 0~1：0 完全隐藏、0.5 显示前一半（逐字打字机）。配 dur + ease="linear"；也可用 in="type" 一步到位', 1),
+  count: B('数字滚动：把文字补间到这个数值，如 count="1280"（从当前数值滚上去）。配 fmt 控制格式'),
+  fmt: B('数字格式，用 # 代表数值（整数自动加千分位）：fmt="# 人" → 1,280 人；fmt="¥#.00" → ¥1,280.00；fmt="#%" → 87%。小数位用 #.0 / #.00 控制'),
+  zoom: B('镜头缩放倍数（1 原始、2 放大一倍、0.5 拉远）；<camera> 专用', 1),
+  follow: B('镜头跟随对象，写对象 id；写 none 停止跟随。可配 zoom 做"跟随 + 推近"；<camera> 专用'),
+  mode: B(`粒子发射方式：${EMIT_MODES.join(' / ')}（burst 向四周爆开、fountain 喷泉、rise 上升、fall 下落、snow 飘雪）；<emitter> 专用`, 'burst'),
+  spread: B('粒子发射源的半径（长度）：粒子从以 at 为中心、半径 spread 的圆内随机出发。0 则都从一点出发', 0),
+  life: B('单颗粒子的存活时长（秒）：出生 → 运动 → 淡出的总时间。loop 时粒子循环复用', 1.4),
+  gravity: B('重力（正数向下、负数向上，单位 格/秒²）：fountain / burst 常配正重力做抛物线回落', 0),
+  wind: B('横向风力（正数向右，单位 格/秒²），给 snow / fall 增加飘移', 0),
 };
 
 const BASE = ['id', 'alpha', 'z', 'layer', 'group', 'in', 'sound', 'after', 'below', 'gap'];
-const SHAPE = [...BASE, 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'stroke', 'width', 'rot', 'label', 'color', 'flat'];
+/** 视觉修饰：所有可见图元通用的渐变 / 模糊 / 混合 / 裁剪 */
+const LOOK = ['fill2', 'gradient', 'blur', 'blend', 'clip'];
+const SHAPE = [...BASE, ...LOOK, 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'stroke', 'width', 'rot', 'label', 'color', 'flat'];
 
 export const ENTITY_ATTRS = {
   circle: SHAPE,
@@ -108,16 +136,18 @@ export const ENTITY_ATTRS = {
   rect: [...SHAPE, 'w', 'h', 'radius'],
   triangle: SHAPE,
   star: [...SHAPE, 'points'],
-  text: [...BASE, 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'rot', 'text', 'w', 'stroke', 'width'],
-  icon: [...BASE, 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'stroke', 'width', 'rot', 'text', 'name'],
-  ring: [...BASE, 'at', 'px', 'city', 'lonlat', 'off', 'size', 'stroke', 'width', 'rot'],
-  line: [...BASE, 'from', 'to', 'stroke', 'width', 'dash'],
-  arrow: [...BASE, 'from', 'to', 'stroke', 'width', 'dash', 'head'],
-  note: [...BASE, 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'color', 'text', 'side', 'gap'],
+  text: [...BASE, ...LOOK, 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'rot', 'text', 'w', 'stroke', 'width', 'reveal', 'count', 'fmt'],
+  icon: [...BASE, 'blur', 'blend', 'clip', 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'stroke', 'width', 'rot', 'text', 'name', 'reveal'],
+  ring: [...BASE, 'blur', 'blend', 'clip', 'at', 'px', 'city', 'lonlat', 'off', 'size', 'stroke', 'width', 'rot'],
+  line: [...BASE, 'blur', 'blend', 'from', 'to', 'stroke', 'width', 'dash'],
+  arrow: [...BASE, 'blur', 'blend', 'from', 'to', 'stroke', 'width', 'dash', 'head'],
+  note: [...BASE, 'blend', 'clip', 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'color', 'text', 'side', 'gap'],
   grid: [...BASE, 'style', 'dots', 'labels', 'inner', 'river', 'ticks', 'frame', 'color', 'fill', 'stroke', 'width', 'radius'],
   map: [...BASE, 'projection', 'region', 'highlight', 'names', 'fill', 'stroke', 'border', 'borderWidth', 'coast', 'coastWidth', 'island', 'islandWidth', 'dash', 'provinces', 'inset', 'color', 'at', 'w', 'h'],
+  camera: [...BASE, 'at', 'px', 'city', 'lonlat', 'off', 'zoom', 'follow'],
+  emitter: [...BASE, 'at', 'px', 'city', 'lonlat', 'off', 'size', 'fill', 'fill2', 'gradient', 'blend', 'mode', 'count', 'spread', 'life', 'speed', 'gravity', 'wind'],
 };
-export const LAYER_ATTRS = ['name', 'id', 'z', 'alpha'];
+export const LAYER_ATTRS = ['name', 'id', 'z', 'alpha', 'blur', 'blend'];
 export const GROUP_ATTRS = ['name', 'layer'];
 
 const ENTITY_DOC = {
@@ -134,15 +164,22 @@ const ENTITY_DOC = {
   note: '带指向的文字气泡，用来做标注',
   grid: '棋盘/参考网格，按 <scene> 的 grid 划分',
   map: '地图：画省界、外轮廓、南海诸岛（内置，离线可用）。之后的对象用 city="成都" / lonlat="104,30" 定位，path="北京 武汉 广州" 走路线',
+  camera: '镜头：推近 / 拉远 / 平移 / 跟随对象，整个画面随它变换，但字幕和背景不动。<camera zoom="2" at="3,3"/> 或 <camera follow="车" zoom="2"/>。一个场景只用一个',
+  emitter: '粒子发射器：一句话生成大量粒子（礼花、火花、气泡、飘雪）。<emitter at="4,3" mode="burst" count="60" fill="accent"/>。整组粒子是一个轻量对象，不是几十个 circle',
 };
 
 /** 步骤里能改的属性：创建属性去掉静态项，再加上位置/效果类 */
 export function modAttrs(type) {
-  if (type === 'layer') return new Set(['alpha', 'z', ...TIMING]);
-  const s = new Set(['alpha', 'z', 'out', ...TIMING]);
-  for (const a of ENTITY_ATTRS[type]) if (!STATIC_ATTRS.has(a)) s.add(a);
-  if (POSITIONAL.has(type)) for (const a of ['by', 'path', 'smooth', 'walk', 'trail', 'orbit', 'around', 'turns', 'heading', 'arc', 'city', 'lonlat', ...EFFECTS]) s.add(a);
-  if (SEGMENTED.has(type)) s.add('draw');
+  if (type === 'layer') return new Set(['alpha', 'z', 'blur', ...TIMING]);
+  const s = new Set(['alpha', 'z', 'out', 'blur', ...TIMING]);
+  const extraStatic = type === 'emitter' ? EMITTER_STATIC : null;
+  for (const a of ENTITY_ATTRS[type]) if (!STATIC_ATTRS.has(a) && !(extraStatic && extraStatic.has(a))) s.add(a);
+  if (POSITIONAL.has(type) && type !== 'emitter') for (const a of ['by', 'path', 'smooth', 'walk', 'trail', 'orbit', 'around', 'turns', 'heading', 'arc', 'city', 'lonlat', ...EFFECTS]) s.add(a);
+  if (type === 'camera') for (const a of ['zoom', 'follow']) s.add(a);
+  if (type === 'emitter') for (const a of ['at', 'px', 'by']) s.add(a); // 发射源可移动
+  if (SEGMENTED.has(type) || TEXTLIKE.has(type)) s.add('draw');
+  if (TEXTLIKE.has(type)) s.add('reveal');
+  if (GRADABLE.has(type)) s.add('fill2');
   return s;
 }
 
@@ -176,9 +213,11 @@ export const SCENE_ATTRS = {
 export const STEP_ATTRS = {
   say: B('字幕：这一步在说明什么。| 或换行表示换行。暂停在任意一步，画面都自带解释'),
   dur: B('这一步里补间动画的默认时长（秒）', 0.7),
-  hold: B('这一步结束后的停顿（秒）；显式写了就不再按字幕长度自动延长'),
+  hold: B('这一步结束后的停顿（秒）；显式写了就不再按字幕长度自动延长。停顿是给人看字幕的，不受 speed 影响'),
   stagger: B('步内子节点依次错开的间隔（秒）', 0),
   sound: B(`这一步开始时的音效：${SOUND_NAMES.join(' / ')}`),
+  speed: B('整步快放 / 慢放：speed="2" 一倍速播放（时长减半），speed="0.5" 慢动作。只改这一步的节奏，后面的步骤自动顺延', 1),
+  mark: B('给这一步起个时间标记名，供 <audio at="标记名"> 等按名字定位；也可在程序里读取 scene.marks'),
 };
 
 export const PROGRAMMING = {
@@ -236,6 +275,11 @@ export function schema() {
           '库文件里放 <def>/<anim>/<theme>；带 as 时给定义加命名空间（dk.棋子）',
         attrs: attrs([]),
       },
+      audio: {
+        doc: '外部音频（旁白 / 背景乐）：<audio src="narration.mp3" at="2" volume=".8"/>。' +
+          'at 写秒数或 <step mark="名字"> 的标记名；volume 0~1；loop 循环；fadein/fadeout 淡入淡出秒数。这是唯一需要外部文件的能力',
+        attrs: attrs([]),
+      },
       data: {
         doc: '数据源：内联 <data name="rows">表头,列2\\n值1,值2</data> 或外部 <data name="rows" src="data.csv" format="csv"/>。' +
           'CSV 第一行是表头（纯数字自动转 number），JSON 用 format="json"。之后 <for var="row" in="{rows}"> 逐行渲染，{row.列名} 取字段',
@@ -249,7 +293,7 @@ export function schema() {
     },
     modify: {
       doc: '步骤里写已有对象的 id（或组名）作标签，写什么就让它变成什么（自动补间）；也可 <change id="…">',
-      attrs: attrs(['at', 'by', 'path', 'smooth', 'walk', 'trail', 'size', 'w', 'h', 'rot', 'alpha', 'fill', 'stroke', 'width', 'color', 'from', 'to', 'draw', 'text', 'label', 'z', 'out', 'dur', 'delay', 'ease']),
+      attrs: attrs(['at', 'by', 'path', 'smooth', 'walk', 'trail', 'size', 'w', 'h', 'rot', 'alpha', 'fill', 'fill2', 'stroke', 'width', 'color', 'from', 'to', 'draw', 'reveal', 'count', 'blur', 'zoom', 'follow', 'text', 'label', 'z', 'out', 'dur', 'delay', 'ease']),
     },
     effects: attrs(['pulse', 'shake', 'jump', 'spin', 'do', 'loop', 'yoyo']),
     programming: PROGRAMMING,

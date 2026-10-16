@@ -11,7 +11,7 @@ const IDENT = /^[\p{L}_][\p{L}\p{N}_]*$/u;
 const NUM = /^\s*-?(?:\d+\.?\d*|\.\d+)\s*$/;
 const RANGE = /^\s*(-?\d+(?:\.\d+)?)\s*\.\.\s*(-?\d+(?:\.\d+)?)\s*$/;
 export const RESERVED_TAGS = new Set([
-  ...ENTITY_TYPES, 'scene', 'step', 'layer', 'group', 'let', 'set', 'for', 'if', 'elseif', 'else', 'def', 'anim', 'change', 'k', 'theme', 'import', 'data', 'row', 'column',
+  ...ENTITY_TYPES, 'scene', 'step', 'layer', 'group', 'let', 'set', 'for', 'if', 'elseif', 'else', 'def', 'anim', 'change', 'k', 'theme', 'import', 'data', 'row', 'column', 'audio',
 ]);
 
 /** 流式布局 gap：格子数（纯数字或带 c 后缀，c 等价于格子） */

@@ -2,6 +2,7 @@ import { Reader, checkAttrs, suggest, parsePos } from '../lang/reader.js';
 import { RESERVED_TAGS } from '../lang/expand.js';
 import {
   ENTITY_ATTRS, LAYER_ATTRS, GROUP_ATTRS, POSITIONAL, SEGMENTED, BOXED, TIMING, EFFECTS, SOUND_NAMES,
+  BLEND_MODES, GRADABLE, EMIT_MODES,
 } from '../lang/schema.js';
 import { clamp } from '../util/ease.js';
 import { linkEndpoints } from '../runtime/links.js';
@@ -33,6 +34,128 @@ function readPlace(r, ctx) {
   return [ctx.scene.width / 2, ctx.scene.height / 2];
 }
 
+/** 渐变方式：gradient="linear" / "linear 135"（角度）/ "radial"。返回 { kind, angle } 或 null */
+function readGradient(r) {
+  if (!r.has('gradient')) return { kind: 'linear', angle: 135 };
+  const toks = r.raw('gradient').trim().toLowerCase().split(/[\s,]+/).filter(Boolean);
+  const kind = toks[0] === 'radial' ? 'radial' : 'linear';
+  const angle = toks.length > 1 && Number.isFinite(Number(toks[1])) ? Number(toks[1]) : 135;
+  return { kind, angle };
+}
+
+/** 读取渐变填充：写了 fill2 才生效，挂到 ent.grad = { angle, radial } 并把第二色放进 init.fill2 */
+function readGradFill(r, ent, init) {
+  if (!GRADABLE.has(ent.type) || !r.has('fill2')) return;
+  const c2 = r.color('fill2', null);
+  if (!c2) return;
+  init.fill2 = c2;
+  const g = readGradient(r);
+  ent.grad = { radial: g.kind === 'radial', angle: g.angle };
+}
+
+/** 通用视觉修饰：blur（可动画，入 init）/ blend（静态，入 ent）/ clip（容器 id，入 ent，稍后解析） */
+function readLook(r, ent, ctx, init) {
+  const { diag } = ctx;
+  if (r.has('blur')) init.blur = r.len('blur', 0, { min: 0 });
+  if (r.has('blend')) {
+    const v = r.raw('blend').trim().toLowerCase();
+    if (BLEND_MODES.includes(v)) { if (v !== 'normal') ent.blend = v; }
+    else { const s = suggest(v, BLEND_MODES); diag.error('E_BAD_VALUE', `未知混合模式 "${v}"`, r.at('blend'), s ? `是不是想写 "${s}"？` : `可用：${BLEND_MODES.join(' / ')}`); }
+  }
+  if (r.has('clip')) ent.clipRef = r.raw('clip').trim(); // 延迟到全部对象建好后解析成 index
+}
+
+/** 文字显现进度：reveal 0~1，或 in="type" 一步到位（从 0 显现）。存进 init.reveal */
+function readReveal(r, init) {
+  if (r.has('reveal')) init.reveal = r.num('reveal', 1, { min: 0, max: 1 });
+}
+
+/**
+ * 数字格式：fmt 用 # 代表数值（避开 {} 插值）。整数部分自动加千分位；
+ * #.0 / #.00 控制小数位。如 fmt="# 人" → "1,280 人"，fmt="¥#.00" → "¥1,280.00"，fmt="#%" → "87%"。
+ * 返回 (val) => 字符串。没写 # 时按整数显示。
+ */
+export function makeFormatter(fmt) {
+  const f = fmt && fmt.includes('#') ? fmt : '#';
+  return (val) => f.replace(/#(\.0+)?/g, (_, dot) => {
+    const digits = dot ? dot.length - 1 : 0;
+    const [int, dec] = Number(val).toFixed(digits).split('.');
+    const g = int.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return dec ? `${g}.${dec}` : g;
+  });
+}
+
+/** 数字滚动：count 目标值 + fmt 格式。记在 ent 上。创建时直接显示目标值，滚动发生在步骤里改 count 时 */
+function readCount(r, ent, init) {
+  const fmt = makeFormatter(r.str('fmt', ''));
+  ent.count = { fmt };
+  if (r.has('count')) {
+    const to = r.num('count', 0);
+    if (Number.isFinite(to)) { init.cv = to; init.text = fmt(to); return; }
+  }
+  // 只写了 fmt、没写 count：把已有的数字 text 套上格式
+  if (r.has('fmt') && Number.isFinite(Number(init.text))) { init.cv = Number(init.text); init.text = fmt(init.cv); }
+}
+
+/** 确定性小随机：mulberry32，种子来自 scene.seed + emitter 序号，保证每次结果一致 */
+function makeRng(seed) {
+  let a = Math.floor(seed) | 0 || 1;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * 粒子发射器：编译期用 seeded RNG 预生成每颗粒子的"出生参数"（相位、角度、初速、尺寸、寿命抖动），
+ * 运行时（渲染合成）按绝对时间算出每颗粒子此刻的位置与透明度。整组粒子是一个 IR 节点，不是 N 个实体。
+ */
+function compileEmitter(r, ctx, init, ent, scene) {
+  const { diag } = ctx;
+  const U = scene.unit;
+  const mode = r.str('mode', 'burst');
+  if (!EMIT_MODES.includes(mode)) {
+    diag.error('E_BAD_VALUE', `mode 只能是 ${EMIT_MODES.join(' / ')}，实际是 "${mode}"`, r.at('mode'));
+    ent.emit = null;
+    return;
+  }
+  const count = Math.round(r.num('count', 40, { min: 1, max: 2000 }));
+  const spread = r.len('spread', 0, { min: 0 });
+  const life = r.num('life', 1.4, { min: 0.1, max: 60 });
+  const speed = r.len('speed', U * 1.2, { min: 0 });     // 初速度（像素/秒）
+  const gravity = r.num('gravity', 0) * U;               // 格/秒² → 像素/秒²
+  const wind = r.num('wind', 0) * U;
+  init.size = r.len('size', Math.max(4, U * 0.12), { min: 0.5 });
+  init.fill = r.color('fill', scene.theme.accent || scene.series[0] || col('#7c6cff'));
+  if (r.has('fill2')) { const c2 = r.color('fill2', null); if (c2) init.fill2 = c2; }
+  // burst 是一次性（粒子一轮后消失）；其余模式连续循环
+  const loop = mode !== 'burst';
+
+  const rng = makeRng(scene.seed * 2654435761 + ent.index * 40503 + 7);
+  const rand = (a, b) => a + (b - a) * rng();
+  const particles = [];
+  for (let i = 0; i < count; i++) {
+    // phase：循环模式下错开出生时间，让粒子流连续；burst 时都从 0 出生（略微抖动避免整齐划一）
+    const phase = loop ? rng() : rand(0, 0.06);
+    const a = rng() * Math.PI * 2;      // 发射角 / 位置角
+    const rr = Math.sqrt(rng());         // 源半径均匀分布
+    let vx = 0, vy = 0, ox = Math.cos(a) * spread * rr, oy = Math.sin(a) * spread * rr;
+    switch (mode) {
+      case 'burst': vx = Math.cos(a) * speed * rand(0.4, 1); vy = Math.sin(a) * speed * rand(0.4, 1); break;
+      case 'fountain': { const dir = -Math.PI / 2 + rand(-0.5, 0.5); const s = speed * rand(0.7, 1); vx = Math.cos(dir) * s; vy = Math.sin(dir) * s; break; }
+      case 'rise': vy = -speed * rand(0.6, 1); vx = rand(-0.2, 0.2) * speed; ox = rand(-spread, spread); oy = rand(-0.3, 0.3) * spread; break;
+      case 'fall': vy = speed * rand(0.6, 1); vx = rand(-0.1, 0.1) * speed; ox = rand(-spread, spread); oy = rand(-spread, spread); break;
+      case 'snow': vy = speed * rand(0.3, 0.7); vx = rand(-0.3, 0.3) * speed; ox = rand(-spread, spread); oy = rand(-spread, spread); break;
+    }
+    particles.push({ phase, ox, oy, vx, vy, s: rand(0.6, 1.3), sway: rand(0, Math.PI * 2) });
+  }
+  ent.emit = { mode, loop, life, gravity, wind, particles };
+  // 发射器自身不参与越界/重叠检查
+  ent.internal = false;
+}
+
 /** 图层：控制绘制先后与整体透明度 */
 export function createLayer(node, ctx) {
   const { scene, diag } = ctx;
@@ -47,8 +170,13 @@ export function createLayer(node, ctx) {
   const ent = {
     index: scene.entities.length, id: name, type: 'layer', line: node.line, col: node.col,
     layer: -1, groups: [], birth: 0, death: Infinity,
-    init: { alpha: clamp(r.num('alpha', 1)), z: r.num('z', 0) },
+    init: { alpha: clamp(r.num('alpha', 1)), z: r.num('z', 0), blur: r.has('blur') ? r.len('blur', 0, { min: 0 }) : 0 },
   };
+  if (r.has('blend')) {
+    const v = r.raw('blend').trim().toLowerCase();
+    if (BLEND_MODES.includes(v)) { if (v !== 'normal') ent.blend = v; }
+    else diag.error('E_BAD_VALUE', `未知混合模式 "${v}"`, r.at('blend'), `可用：${BLEND_MODES.join(' / ')}`);
+  }
   register(ctx, ent);
   return ent;
 }
@@ -109,6 +237,7 @@ export function createEntity(node, ctx, opts = {}) {
   const zero = {
     x: 0, y: 0, size: 0, w: 0, h: 0, rot: 0, fill: NONE, stroke: NONE, width: 0,
     color: [255, 255, 255, 1], draw: 1, x1: 0, y1: 0, x2: 0, y2: 0, text: '', label: '',
+    fill2: NONE, blur: 0, reveal: 1, zoom: 1, fi: -1, cv: 0,
   };
   const init = { ...zero, alpha: clamp(r.num('alpha', 1)), z: r.num('z', 0) };
   const ent = {
@@ -126,6 +255,9 @@ export function createEntity(node, ctx, opts = {}) {
     init.rot = rad(r.num('rot', 0));
   }
 
+  // 通用视觉修饰：模糊（可动画）、混合模式、裁剪容器（都挂在 ent 上，静态）
+  readLook(r, ent, ctx, init);
+
   switch (type) {
     case 'circle': case 'ellipse': case 'rect': case 'triangle': case 'star':
       init.size = r.len('size', defSize, { min: 1 });
@@ -140,6 +272,7 @@ export function createEntity(node, ctx, opts = {}) {
       init.label = r.str('label', '');
       // 套用了配色时，标签文字按填充色自动选深/浅，保证看得清
       init.color = r.color('color', scene.themed && init.fill[3] > 0.5 ? onColor(init.fill) : col('rgba(255,255,255,0.96)'));
+      readGradFill(r, ent, init);
       ent.flat = r.flag('flat');
       if (type === 'rect') ent.radius = r.len('radius', -1);
       if (type === 'star') ent.points = r.num('points', 5, { min: 3, max: 24 });
@@ -151,6 +284,9 @@ export function createEntity(node, ctx, opts = {}) {
       init.stroke = r.color('stroke', NONE);
       init.width = r.len('width', 0, { min: 0 });
       init.text = r.str('text', '');
+      readGradFill(r, ent, init);
+      readReveal(r, init);
+      readCount(r, ent, init);
       break;
     case 'icon':
       init.size = r.len('size', 48, { min: 1 });
@@ -159,6 +295,7 @@ export function createEntity(node, ctx, opts = {}) {
       init.stroke = r.color('stroke', NONE);
       init.width = r.len('width', 0, { min: 0 });
       init.text = r.str('text', '');
+      readReveal(r, init);
       // name：内置矢量图标（交通工具），写了就不再用 text 当 emoji
       if (r.has('name')) {
         const nm = r.raw('name').trim();
@@ -247,6 +384,29 @@ export function createEntity(node, ctx, opts = {}) {
       init.stroke = r.color('stroke', scene.theme.text ? withAlpha(scene.theme.text, 0.28) : col('rgba(255,255,255,0.28)'));
       init.color = r.color('color', scene.theme.text ? withAlpha(scene.theme.text, 0.55) : col('rgba(255,255,255,0.55)'));
       init.width = r.len('width', 1.5, { min: 0 });
+      break;
+    }
+    case 'camera': {
+      // 镜头：位置已由 POSITIONAL 块按 at/px/city 设好；这里读缩放与跟随目标
+      init.zoom = r.num('zoom', 1, { min: 0.05, max: 50 });
+      if (r.has('follow')) {
+        const fid = r.raw('follow').trim();
+        if (fid && fid.toLowerCase() !== 'none') {
+          const t = scene.byId.get(fid);
+          if (t && POSITIONAL.has(t.type) && t.type !== 'camera') init.fi = t.index;
+          else {
+            const cands = [...scene.byId.keys()].filter((k) => { const e = scene.byId.get(k); return POSITIONAL.has(e.type) && e.type !== 'camera'; });
+            const s = suggest(fid, cands);
+            diag.error('E_BAD_VALUE', `镜头找不到要跟随的对象 "${fid}"`, r.at('follow'), s ? `是不是 "${s}"？（跟随目标要先于 <camera> 定义）` : '跟随目标要先于 <camera> 定义');
+          }
+        }
+      }
+      // 场景里有多个 camera 只有第一个生效，提醒一下
+      if (scene.entities.some((e) => e.type === 'camera')) diag.warn('W_DUP_CAMERA', '一个场景只会使用第一个 <camera>，多余的会被忽略', node);
+      break;
+    }
+    case 'emitter': {
+      compileEmitter(r, ctx, init, ent, scene);
       break;
     }
   }

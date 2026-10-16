@@ -93,8 +93,9 @@ export function buildScene(root, diag, themeRaw) {
     read: r.num('read', 0, { min: 0, max: 30 }),
     overlapCheck: r.bool('overlap', true),
     poster: Math.round(r.num('poster', 0, { min: -999, max: 999 })),
+    seed: Math.round(r.num('seed', 1)),
     theme,
-    links: [], entities: [], byId: new Map(), groups: new Map(), segments: [], steps: [], anims: new Map(), sounds: [], duration: 0.1,
+    links: [], entities: [], byId: new Map(), groups: new Map(), segments: [], steps: [], anims: new Map(), sounds: [], marks: new Map(), audios: [], duration: 0.1,
   };
 }
 

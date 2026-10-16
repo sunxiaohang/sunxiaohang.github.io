@@ -1,7 +1,11 @@
 import { evaluate } from '../core/runtime/evaluate.js';
 import { clamp } from '../core/util/ease.js';
 import { draw } from '../render/canvas2d.js';
+import { buildCamera, screenToWorld } from '../render/ir.js';
 import { aabb } from '../core/analysis/lint.js';
+
+/** 不可点选的类型：图层是容器；镜头和发射器没有有意义的包围盒。其余保持原有行为 */
+const NOT_PICKABLE = new Set(['layer', 'camera', 'emitter']);
 
 /** 舞台视图：把 scene + 时间画到 canvas 上，并随容器大小自适应清晰度 */
 export class StageView {
@@ -28,13 +32,14 @@ export class StageView {
 
   setIssues(ids) { this.issues = new Set(ids); }
 
-  /** 命中检测：场景坐标 → 最上层命中的实体 */
-  pick(sx, sy) {
+  /** 命中检测：屏幕上的场景坐标 → 最上层命中的实体（先撤销镜头变换，再和世界坐标的包围盒比对） */
+  pick(sx0, sy0) {
     if (!this.scene) return null;
     const frame = evaluate(this.scene, this.time);
+    const [sx, sy] = screenToWorld(buildCamera(this.scene, frame), this.scene, sx0, sy0);
     let best = null, bestZ = -Infinity;
     this.scene.entities.forEach((e, i) => {
-      if (e.type === 'layer' || e.internal) return;
+      if (e.internal || NOT_PICKABLE.has(e.type)) return;
       const L = frame.entities[i];
       if (L.hidden || L.alpha * L.ma < 0.02) return;
       const b = aabb(e, L);
@@ -87,37 +92,54 @@ export class StageView {
     return frame;
   }
 
-  /** 诊断高亮：超框/重叠/出界的对象画红框 */
-  drawIssues(frame) {
+  /**
+   * 在"世界坐标"里画编辑器覆盖层（选框、问题框）。和 draw() 用同一个镜头变换，所以画面被推近 / 平移后框仍然贴着对象；
+   * fn(k) 的 k 是"屏幕 1px 对应的世界长度"，线宽、虚线、外扩距离都乘它，保证无论怎么缩放，框在屏幕上粗细不变。
+   */
+  withWorld(frame, fn) {
     const pr = this.canvas.width / this.scene.width;
+    const cam = buildCamera(this.scene, frame);
+    const z = cam ? cam.z : 1;
     this.ctx.save();
     this.ctx.setTransform(pr, 0, 0, pr, 0, 0);
-    this.ctx.strokeStyle = 'rgba(255,107,107,.95)';
-    this.ctx.lineWidth = 2.5 / pr;
-    this.ctx.setLineDash([7 / pr, 4 / pr]);
-    for (const e of this.scene.entities) {
-      if (!this.issues.has(e.id)) continue;
-      const L = frame.entities[e.index];
-      if (L.hidden) continue;
-      const b = aabb(e, L);
-      this.ctx.strokeRect(b.l - 3, b.t - 3, b.r - b.l + 6, b.b - b.t + 6);
+    if (cam) {
+      this.ctx.translate(this.scene.width / 2, this.scene.height / 2);
+      this.ctx.scale(z, z);
+      this.ctx.translate(-cam.cx, -cam.cy);
     }
+    fn(1 / (pr * z));
     this.ctx.restore();
   }
 
-  /** 选中框：虚线描出选中对象（场景坐标） */
+  /** 诊断高亮：超框/重叠/出界的对象画红框 */
+  drawIssues(frame) {
+    this.withWorld(frame, (k) => {
+      this.ctx.strokeStyle = 'rgba(255,107,107,.95)';
+      this.ctx.lineWidth = 2.5 * k;
+      this.ctx.setLineDash([7 * k, 4 * k]);
+      for (const e of this.scene.entities) {
+        if (!this.issues.has(e.id)) continue;
+        const L = frame.entities[e.index];
+        if (L.hidden) continue;
+        const b = aabb(e, L);
+        const m = 3 * k;
+        this.ctx.strokeRect(b.l - m, b.t - m, b.r - b.l + 2 * m, b.b - b.t + 2 * m);
+      }
+    });
+  }
+
+  /** 选中框：虚线描出选中对象 */
   drawSelection(frame) {
     const e = this.selection;
     const L = frame.entities[e.index];
     if (L.hidden) return;
     const b = aabb(e, L);
-    const pr = this.canvas.width / this.scene.width;
-    this.ctx.save();
-    this.ctx.setTransform(pr, 0, 0, pr, 0, 0);
-    this.ctx.strokeStyle = '#7fe3d3';
-    this.ctx.lineWidth = 2 / pr;
-    this.ctx.setLineDash([6 / pr, 4 / pr]);
-    this.ctx.strokeRect(b.l - 5, b.t - 5, b.r - b.l + 10, b.b - b.t + 10);
-    this.ctx.restore();
+    this.withWorld(frame, (k) => {
+      this.ctx.strokeStyle = '#7fe3d3';
+      this.ctx.lineWidth = 2 * k;
+      this.ctx.setLineDash([6 * k, 4 * k]);
+      const m = 5 * k;
+      this.ctx.strokeRect(b.l - m, b.t - m, b.r - b.l + 2 * m, b.b - b.t + 2 * m);
+    });
   }
 }

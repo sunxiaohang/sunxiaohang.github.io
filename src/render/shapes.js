@@ -1,6 +1,22 @@
 import { toCss, shade } from '../core/util/color.js';
 import { FONT, roundRectPath } from './util.js';
 
+/** 构造渐变画刷：grad = { c0, c1, radial, angle }，span 为图形外接尺寸 */
+function makeGradient(ctx, grad, span) {
+  if (grad.radial) {
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, span * 0.6);
+    g.addColorStop(0, toCss(grad.c0));
+    g.addColorStop(1, toCss(grad.c1));
+    return g;
+  }
+  const a = ((grad.angle - 90) * Math.PI) / 180; // 0=向上、90=向右
+  const dx = Math.cos(a) * span / 2, dy = Math.sin(a) * span / 2;
+  const g = ctx.createLinearGradient(-dx, -dy, dx, dy);
+  g.addColorStop(0, toCss(grad.c0));
+  g.addColorStop(1, toCss(grad.c1));
+  return g;
+}
+
 /** 实心图形的轮廓路径；返回需要额外描边的"倒角"宽度（让尖角更圆润） */
 function outline(ctx, item) {
   const s = item.size;
@@ -48,7 +64,11 @@ export function drawSolid(ctx, item, pr) {
     ctx.shadowBlur = span * 0.16 * pr;
   }
   if (item.fill[3] > 0) {
-    if (item.flat) {
+    if (item.grad) {
+      const g = makeGradient(ctx, item.grad, span);
+      ctx.fillStyle = g;
+      ctx.strokeStyle = g;
+    } else if (item.flat) {
       ctx.fillStyle = toCss(item.fill);
       ctx.strokeStyle = toCss(item.fill);
     } else {
@@ -112,12 +132,30 @@ export function drawText(ctx, item, pr) {
   ctx.font = `700 ${item.size}px ${FONT}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = toCss(item.fill);
+
+  // reveal：逐字显现（打字机）。按全部行的字符数从左到右切出可见部分
+  let lines = item.lines;
+  const reveal = item.reveal ?? 1;
+  if (reveal < 1) {
+    const total = item.lines.reduce((n, l) => n + [...l].length, 0);
+    let left = Math.round(total * reveal);
+    lines = item.lines.map((l) => { const cs = [...l]; const take = Math.max(0, Math.min(cs.length, left)); left -= cs.length; return cs.slice(0, take).join(''); });
+  }
+
+  if (item.grad) {
+    let maxW = 1;
+    for (const ln of item.lines) maxW = Math.max(maxW, ctx.measureText(ln).width);
+    const span = Math.max(maxW, item.lines.length * item.lineHeight);
+    ctx.fillStyle = makeGradient(ctx, item.grad, span);
+  } else {
+    ctx.fillStyle = toCss(item.fill);
+  }
+
   const hasStroke = item.stroke[3] > 0 && item.strokeWidth > 0;
   if (hasStroke) { ctx.shadowBlur = 0; ctx.shadowColor = 'transparent'; ctx.lineJoin = 'round'; ctx.lineWidth = item.strokeWidth; ctx.strokeStyle = toCss(item.stroke); }
-  item.lines.forEach((ln, i) => {
+  lines.forEach((ln, i) => {
     const y = item.top + i * item.lineHeight;
-    if (hasStroke) ctx.strokeText(ln, 0, y);
-    ctx.fillText(ln, 0, y);
+    if (hasStroke && ln) ctx.strokeText(ln, 0, y);
+    if (ln) ctx.fillText(ln, 0, y);
   });
 }

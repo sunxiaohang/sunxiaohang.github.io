@@ -73,6 +73,8 @@ export class SoundEngine {
   constructor() {
     this.ctx = null;
     this.enabled = true;
+    this.buffers = new Map();   // src → AudioBuffer（解码缓存）
+    this.playing = new Map();   // src → { source, gain }，用于停止 BGM
   }
 
   ensure() {
@@ -90,5 +92,52 @@ export class SoundEngine {
     if (ctx.state === 'suspended') ctx.resume();
     const fn = PRESETS[name] || PRESETS.pop;
     fn(ctx, ctx.currentTime);
+  }
+
+  /**
+   * 加载并缓存一段外部音频。data 为 ArrayBuffer（编译时预加载），或 fetchUrl(src) 懒加载。
+   * 返回 Promise<AudioBuffer|null>；无 AudioContext（Node）时返回 null。
+   */
+  async loadAudio(src, data, fetchUrl) {
+    const ctx = this.ensure();
+    if (!ctx) return null;
+    if (this.buffers.has(src)) return this.buffers.get(src);
+    try {
+      const bytes = data || (fetchUrl ? await (await fetch(fetchUrl)).arrayBuffer() : null);
+      if (!bytes) return null;
+      const buf = await ctx.decodeAudioData(bytes.slice(0));
+      this.buffers.set(src, buf);
+      return buf;
+    } catch { return null; }
+  }
+
+  /** 播放一段外部音频（已 loadAudio 缓存）。cue: { src, volume, loop, fadein, fadeout } */
+  playAudio(cue) {
+    if (!this.enabled) return;
+    const ctx = this.ensure();
+    const buf = ctx && this.buffers.get(cue.src);
+    if (!buf) return;
+    if (ctx.state === 'suspended') ctx.resume();
+    this.stopAudio(cue.src);
+    const source = ctx.createBufferSource();
+    source.buffer = buf;
+    source.loop = !!cue.loop;
+    const gain = ctx.createGain();
+    const t = ctx.currentTime, vol = cue.volume ?? 1;
+    if (cue.fadein > 0) { gain.gain.setValueAtTime(0.0001, t); gain.gain.linearRampToValueAtTime(vol, t + cue.fadein); }
+    else gain.gain.setValueAtTime(vol, t);
+    source.connect(gain).connect(ctx.destination);
+    source.start(t);
+    this.playing.set(cue.src, { source, gain });
+  }
+
+  stopAudio(src) {
+    const p = this.playing.get(src);
+    if (p) { try { p.source.stop(); } catch { /* 已停止 */ } this.playing.delete(src); }
+  }
+
+  /** 停止所有外部音频（seek / 切场景 / 暂停时调用） */
+  stopAllAudio() {
+    for (const src of [...this.playing.keys()]) this.stopAudio(src);
   }
 }

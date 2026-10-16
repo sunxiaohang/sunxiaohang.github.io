@@ -44,7 +44,7 @@ function makeTrail(ctx, ent, node, path, dur, start, ease, r) {
 }
 
 // ---------------- 登场 ----------------
-const INTROS = ['pop', 'fade', 'drop', 'draw', 'none'];
+const INTROS = ['pop', 'fade', 'drop', 'draw', 'type', 'none'];
 const DEFAULT_IN = { line: 'draw', arrow: 'draw', grid: 'fade' };
 
 export function compileIntro(ent, node, r, start, ctx) {
@@ -58,10 +58,15 @@ export function compileIntro(ent, node, r, start, ctx) {
     ctx.diag.warn('W_NOT_APPLICABLE', 'in="draw" 只适用于 line / arrow，已改用 fade', r.at('in'));
     mode = 'fade';
   }
+  if (mode === 'type' && !(ent.type === 'text' || ent.type === 'icon')) {
+    ctx.diag.warn('W_NOT_APPLICABLE', 'in="type"（打字机）只适用于 text / icon，已改用 fade', r.at('in'));
+    mode = 'fade';
+  }
   if (mode === 'none') return start;
-  const dur = r.has('dur') ? r.num('dur', 0.45, { min: 0 }) : mode === 'draw' ? 0.8 : 0.45;
+  const dur = r.has('dur') ? r.num('dur', 0.45, { min: 0 }) : mode === 'draw' ? 0.8 : mode === 'type' ? 0.9 : 0.45;
   const base = { t0: start, dur, kind: 'intro', tag: node.tag, line: node.line, col: node.col, internal: true };
   if (mode === 'draw') seg(ctx, ent, { ...base, props: ['draw'], fn: (L, p) => { L.draw = EASINGS.out(p); } });
+  else if (mode === 'type') seg(ctx, ent, { ...base, props: ['reveal'], fn: (L, p) => { L.reveal = clamp(p); } }); // 逐字匀速显现
   else seg(ctx, ent, { ...base, mode: 'add', fn: FX.introFn(mode, ctx.scene.unit * 1.1) });
   return start + dur;
 }
@@ -165,11 +170,20 @@ export function compileTarget(node, ent, ctx, stepDur, base, viaChange) {
         const turns = r.num('turns', 1);
         const fromAngle = Math.atan2(st.y - acy, st.x - acx);
         const ease = easeOf('orbit');
-        mk('move', ['x', 'y'], (L, p) => {
+        // heading：车头沿圆周切线转。切线方向 = 位置角 ± 90°（顺时针 turns>0 时 +90°）；用累计角度，不会在 ±180° 处跳变
+        const headingOn = r.has('heading');
+        const base = headingOn ? (r.numOr('heading', 0) * Math.PI) / 180 : 0;
+        const rot0 = st.rot;
+        const side = turns >= 0 ? Math.PI / 2 : -Math.PI / 2;
+        const rotAt = (a) => a + side - base;
+        const props = headingOn ? ['x', 'y', 'rot'] : ['x', 'y'];
+        mk('move', props, (L, p) => {
           const a = fromAngle + turns * Math.PI * 2 * ease(p);
           L.x = acx + rad * Math.cos(a);
           L.y = acy + rad * Math.sin(a);
+          if (headingOn) L.rot = shortestAngle(rot0, rotAt(fromAngle)) + (a - fromAngle);
         }, { dur });
+        if (headingOn) st.rot = shortestAngle(rot0, rotAt(fromAngle)) + turns * Math.PI * 2;
         if (r.has('trail')) {
           const arc = {
             length: Math.abs(turns) * Math.PI * 2 * rad,
@@ -297,10 +311,38 @@ export function compileTarget(node, ent, ctx, stepDur, base, viaChange) {
   if (has('alpha')) scalar('alpha', r.num('alpha', 1, { min: 0, max: 1 }), 'style');
   if (has('width')) scalar('width', r.len('width', NaN, { min: 0 }), 'style');
   if (has('draw')) scalar('draw', r.num('draw', 1, { min: 0, max: 1 }), 'style');
-  for (const prop of ['fill', 'stroke', 'color']) {
+  if (has('blur')) scalar('blur', r.len('blur', NaN, { min: 0 }), 'style');
+  if (has('reveal')) scalar('reveal', r.num('reveal', 1, { min: 0, max: 1 }), 'style');
+  if (has('zoom') && ent.type === 'camera') scalar('zoom', r.num('zoom', 1, { min: 0.05, max: 50 }), 'transform');
+  for (const prop of ['fill', 'stroke', 'color', 'fill2']) {
     if (!has(prop)) continue;
     const to = r.color(prop, null);
     if (to) color(prop, to);
+  }
+  // 数字滚动：把 cv 从当前值补间到 count，并用创建时记下的 fmt 实时格式化成 text
+  if (has('count')) {
+    const to = r.num('count', 0);
+    if (Number.isFinite(to)) {
+      const from = st.cv ?? 0, ease = easeOf('count');
+      const fmt = ent.count?.fmt || ((v) => String(Math.round(v)));
+      mk('transform', ['cv', 'text'], (L, p) => { const v = lerp(from, to, ease(p)); L.cv = v; L.text = fmt(v); });
+      st.cv = to;
+      st.text = fmt(to);
+    }
+  }
+  // 镜头跟随：follow="id" 开始跟随，follow="none" 停止；离散切换（不补间目标）
+  if (has('follow') && ent.type === 'camera') {
+    const fid = r.raw('follow').trim();
+    let idx = -1;
+    if (fid && fid.toLowerCase() !== 'none') {
+      const t = scene.byId.get(fid);
+      if (t && POSITIONAL.has(t.type) && t.type !== 'camera') idx = t.index;
+      else diag.error('E_BAD_VALUE', `镜头找不到要跟随的对象 "${fid}"`, r.at('follow'));
+    }
+    if (idx !== -1 || fid.toLowerCase() === 'none' || !fid) {
+      mk('discrete', ['fi'], (L) => { L.fi = idx; }, { dur: 0 });
+      st.fi = idx;
+    }
   }
   for (const prop of ['text', 'label']) {
     if (!has(prop)) continue;

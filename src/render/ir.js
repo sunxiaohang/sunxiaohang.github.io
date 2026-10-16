@@ -33,9 +33,16 @@ function buildText(scene, e, L, alpha, measure) {
     kind: 'text',
     x: L.x, y: L.y, ox: L.ox, oy: L.oy, rot: L.rot, orot: L.orot, sx: L.sx, sy: L.sy,
     alpha, size, fill: L.fill, stroke: L.stroke, strokeWidth: L.width,
-    glow: scene.glow,
+    glow: scene.glow, reveal: L.reveal ?? 1,
+    grad: gradOf(e, L),
     lines, lineHeight: lh, top: -(lines.length - 1) * lh / 2,
   };
+}
+
+/** 渐变描述：写了 fill2 的对象返回 { c0, c1, radial, angle }，否则 null */
+function gradOf(e, L) {
+  if (!e.grad || !L.fill2 || L.fill2[3] <= 0) return null;
+  return { c0: L.fill, c1: L.fill2, radial: e.grad.radial, angle: e.grad.angle };
 }
 
 function buildNote(scene, e, L, alpha, measure) {
@@ -87,7 +94,7 @@ function buildGrid(scene, e, L, alpha) {
   };
 }
 
-function buildItem(scene, e, L, alpha, measure) {
+function buildItem(scene, e, L, alpha, measure, t = 0) {
   switch (e.type) {
     case 'circle': case 'ellipse': case 'rect': case 'triangle': case 'star':
       return {
@@ -96,7 +103,7 @@ function buildItem(scene, e, L, alpha, measure) {
         alpha, size: L.size, w: L.w, h: L.h,
         radius: e.radius, points: e.points, flat: e.flat,
         fill: L.fill, stroke: L.stroke, strokeWidth: L.width,
-        color: L.color, label: L.label, glow: scene.glow,
+        color: L.color, label: L.label, glow: scene.glow, grad: gradOf(e, L),
         labelFs: L.label ? labelFontSize(e.type, L.w, L.h, L.label, (txt, px) => measure(txt, `700 ${px}px ${FONT}`)) : 0,
         shadow: buildShadow(scene, e, L),
       };
@@ -135,8 +142,38 @@ function buildItem(scene, e, L, alpha, measure) {
         provinces: e.provinces, islands: e.islands, style: e.style, inset: e.inset, insetBox: e.insetBox, box: e.mapBox,
         unit: scene.unit,
       };
+    case 'emitter':
+      return buildEmitter(e, L, alpha, t);
   }
   return null;
+}
+
+/**
+ * 发射器 → 粒子帧：按绝对时间算出每颗粒子此刻的位置、半径、透明度。
+ * 单颗粒子的"年龄" age = (t - birth) 减去出生相位，再对寿命取模（循环模式）。alpha 用一条升起-保持-淡出的包络。
+ */
+function buildEmitter(e, L, alpha, t) {
+  const em = e.emit;
+  if (!em) return null;
+  const age0 = t - e.birth;
+  if (age0 < 0) return { kind: 'particles', alpha: 0, size: L.size, fill: L.fill, fill2: L.fill2, points: [] };
+  const ox = L.x + L.ox, oy = L.y + L.oy;
+  const points = [];
+  for (const p of em.particles) {
+    let age = age0 - p.phase * em.life;
+    if (em.loop) { age = ((age % em.life) + em.life) % em.life; }
+    else if (age < 0 || age > em.life) continue;
+    if (age < 0) continue;
+    const u = age / em.life;                       // 0~1 寿命进度
+    // 位置：初速匀速 + 重力/风加速 + snow 模式的横向摇摆
+    let x = ox + p.ox + p.vx * age + 0.5 * em.wind * age * age;
+    let y = oy + p.oy + p.vy * age + 0.5 * em.gravity * age * age;
+    if (em.mode === 'snow') x += Math.sin(p.sway + age * 2.2) * L.size * 1.5;
+    // 透明度包络：快速出现（前 12%）→ 后 45% 线性淡出
+    const fade = u < 0.12 ? u / 0.12 : u > 0.55 ? Math.max(0, 1 - (u - 0.55) / 0.45) : 1;
+    points.push({ x, y, r: Math.max(0.5, L.size * 0.5 * p.s), a: fade });
+  }
+  return { kind: 'particles', alpha, size: L.size, fill: L.fill, fill2: L.fill2, points };
 }
 
 /**
@@ -208,16 +245,20 @@ function buildCaption(scene, c, measure) {
  * 合成一帧 IR。frame 为 evaluate() 的返回值；measure(text, font) => 宽度。
  */
 export function composeFrame(scene, frame, measure) {
+  // ---- 镜头：找到唯一的 camera，算出整画面的变换（缩放中心 = 镜头看向的点）----
+  const camera = buildCamera(scene, frame);
+
   // ---- 可见性 + alpha 合成 + 排序（原 collect）----
   const items = [];
   scene.entities.forEach((e, i) => {
-    if (e.type === 'layer') return;
+    if (e.type === 'layer' || e.type === 'camera') return;
     const L = frame.entities[i];
     if (L.hidden) return;
     const layer = e.layer >= 0 ? frame.entities[e.layer] : null;
+    const layerE = e.layer >= 0 ? scene.entities[e.layer] : null;
     const alpha = L.alpha * L.ma * (layer ? layer.alpha : 1);
     if (alpha <= 0.002) return;
-    items.push({ e, L, alpha, lz: layer ? layer.z : 0, i });
+    items.push({ e, L, alpha, lz: layer ? layer.z : 0, i, layerE, layerL: layer });
   });
   items.sort((p, q) => p.lz - q.lz || p.L.z - q.L.z || p.i - q.i);
 
@@ -225,7 +266,60 @@ export function composeFrame(scene, frame, measure) {
     width: scene.width, height: scene.height,
     background: { inner: scene.bg2, outer: scene.bg },
     guide: { ax: scene.ax, ay: scene.ay, cols: scene.cols, rows: scene.rows, cw: scene.cw, ch: scene.ch, unit: scene.unit, dark: scene.dark !== false },
-    items: items.map(({ e, L, alpha }) => buildItem(scene, e, L, alpha, measure)).filter(Boolean),
+    camera,
+    items: items.map(({ e, L, alpha, layerE, layerL }) => {
+      const item = buildItem(scene, e, L, alpha, measure, frame.t);
+      if (!item) return null;
+      decorate(item, e, L, scene, frame, layerE, layerL);
+      return item;
+    }).filter(Boolean),
     captions: frame.captions.map((c) => buildCaption(scene, c, measure)),
   };
+}
+
+/**
+ * 屏幕点 → 世界点：撤销镜头变换。画面被放大 / 平移后，用户点到的位置要先还原才能和对象的世界坐标比对。
+ * camera 为 buildCamera 的结果（null 表示无变换）。
+ */
+export function screenToWorld(camera, scene, sx, sy) {
+  if (!camera) return [sx, sy];
+  return [(sx - scene.width / 2) / camera.z + camera.cx, (sy - scene.height / 2) / camera.z + camera.cy];
+}
+
+/** 镜头变换：返回 { z, cx, cy } 把世界点 (cx,cy) 以 z 倍缩放后映射到画布中心；无镜头或恒等时返回 null */
+export function buildCamera(scene, frame) {
+  const idx = scene.entities.findIndex((e) => e.type === 'camera');
+  if (idx < 0) return null;
+  const L = frame.entities[idx];
+  if (L.hidden) return null;
+  let cx = L.x + L.ox, cy = L.y + L.oy;
+  // 跟随：中心取被跟随对象此刻的位置
+  if (L.fi >= 0 && scene.entities[L.fi]) {
+    const t = frame.entities[L.fi];
+    cx = t.x + t.ox;
+    cy = t.y + t.oy;
+  }
+  const z = L.zoom || 1;
+  if (Math.abs(z - 1) < 1e-4 && Math.abs(cx - scene.width / 2) < 1e-4 && Math.abs(cy - scene.height / 2) < 1e-4) return null;
+  return { z, cx, cy };
+}
+
+/** 实心图形在当前帧的裁剪几何（供 clip 用） */
+function clipGeom(scene, frame, idx) {
+  const e = scene.entities[idx];
+  if (!e) return null;
+  const L = frame.entities[idx];
+  return {
+    shape: e.type, x: L.x + L.ox, y: L.y + L.oy, rot: L.rot + L.orot, sx: L.sx, sy: L.sy,
+    size: L.size, w: L.w, h: L.h, radius: e.radius, points: e.points,
+  };
+}
+
+/** 给 item 附加通用修饰：模糊 / 混合 / 裁剪，图层级的模糊与混合也并进来 */
+function decorate(item, e, L, scene, frame, layerE, layerL) {
+  const blur = (L.blur || 0) + (layerL?.blur || 0);
+  if (blur > 0.01) item.blur = blur;
+  if (e.blend) item.blend = e.blend;
+  else if (layerE?.blend) item.blend = layerE.blend;
+  if (e.clip >= 0) item.clip = clipGeom(scene, frame, e.clip);
 }

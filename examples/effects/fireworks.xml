@@ -1,0 +1,35 @@
+<scene width="960" height="640" grid="12x8" caption="soft" shadow="false" glow="true" overlap="off" hold="1">
+  <!-- 跨年烟花：集中展示第二梯队能力——
+       粒子 emitter（礼花爆开、喷泉、星尘）、步级 speed（倒计时越数越快）、mark 标记（给烟花时刻命名）。
+       粒子是声明式的，一行一组，不用手写几十个 circle。 -->
+  <theme accent="#ffd166" accent2="#ff6b9d" c1="#ffd166" c2="#ff6b9d" c3="#7c6cff" c4="#4cc9f0" text="#eef0ff" sub="#9aa0c8" bg="#0b0b1e"/>
+
+  <layer name="sky" z="0"/>
+  <layer name="fx" z="5"/>
+  <layer name="ui" z="9"/>
+
+  <!-- 夜空底色的星尘：一直缓慢飘动 -->
+  <emitter at="6,4" mode="snow" count="60" spread="6c" speed=".5c" life="6" size=".06c" fill="#8891c8" layer="sky"/>
+
+  <step say="3" dur=".2" hold=".6" speed="1">
+    <text id="num" at="6,4" size="2.4c" fill="accent" text="3" in="pop"/>
+  </step>
+  <step say="2" dur=".2" hold=".5" speed="1.2"><num text="2" pulse=".3"/></step>
+  <step say="1" dur=".2" hold=".4" speed="1.5"><num text="1" pulse=".3"/></step>
+
+  <step say="新年快乐！" dur=".4" mark="跨年">
+    <num text="新年快乐" size="1.3c" fill="accent2"/>
+    <emitter at="3,3" mode="burst" count="90" spread=".2c" speed="3c" life="1.6" gravity="2.2" fill="#ffd166" fill2="#ff6b9d" blend="screen" layer="fx"/>
+    <emitter at="9,2.6" mode="burst" count="90" spread=".2c" speed="3c" life="1.8" gravity="2" fill="#7c6cff" fill2="#4cc9f0" blend="screen" layer="fx"/>
+  </step>
+
+  <step say="礼花此起彼伏" dur=".4">
+    <emitter at="6,2.2" mode="burst" count="110" spread=".2c" speed="3.4c" life="2" gravity="2.4" fill="#4cc9f0" fill2="#ffd166" blend="screen" layer="fx"/>
+    <emitter at="6,6.4" mode="fountain" count="80" speed="3c" life="1.8" gravity="2.6" fill="#ffd166" fill2="#ff6b9d" blend="screen" layer="fx"/>
+  </step>
+
+  <step say="镜头推近，收在祝福上" dur="1.2">
+    <camera zoom="1.5" at="6,4"/>
+    <text id="bless" at="6,5.4" size=".4c" fill="sub" text="愿新的一年闪闪发光" in="type" dur="1" layer="ui"/>
+  </step>
+</scene>

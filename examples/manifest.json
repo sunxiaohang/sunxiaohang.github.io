@@ -27,6 +27,7 @@
     { "id": "easing-gallery", "category": "effects", "file": "effects/easing-gallery.xml", "name": "缓动展览", "covers": ["ease", "cubic", "per-prop-ease", "label"] },
     { "id": "orbits", "category": "effects", "file": "effects/orbits.xml", "name": "轨道", "covers": ["expr", "path", "smooth", "ring", "wildcard"] },
     { "id": "palette-demo", "category": "effects", "file": "effects/palette-demo.xml", "name": "配色模板", "covers": ["palette", "theme", "semantic-color", "for", "expr"] },
+    { "id": "fireworks", "category": "effects", "file": "effects/fireworks.xml", "name": "跨年烟花", "covers": ["emitter", "speed", "mark", "camera", "blend", "type"] },
 
     { "id": "bubble-sort", "category": "algo", "file": "algo/bubble-sort.xml", "name": "冒泡排序", "covers": ["let", "nested-array", "for", "index", "label", "change"] },
     { "id": "binary-search", "category": "algo", "file": "algo/binary-search.xml", "name": "二分查找", "covers": ["for", "index", "ring", "alpha-fade", "wildcard"] },
@@ -38,6 +39,7 @@
     { "id": "request-flow", "category": "product", "file": "product/request-flow.xml", "name": "请求流程图", "covers": ["arrow", "path", "trail", "for", "pal"] },
     { "id": "roadmap", "category": "product", "file": "product/roadmap.xml", "name": "产品路线图", "covers": ["line", "for", "index", "ternary", "text"] },
     { "id": "loaders", "category": "product", "file": "product/loaders.xml", "name": "加载动效", "covers": ["orbit", "jump", "bounce", "trail", "ease"] },
+    { "id": "annual-report", "category": "product", "file": "product/annual-report.xml", "name": "年度战报", "covers": ["camera", "count", "gradient", "type", "blur", "blend"] },
 
     { "id": "china-tour", "category": "travel", "file": "travel/china-tour.xml", "name": "国内旅行路线", "covers": ["map", "city", "data", "path", "arc", "heading", "icon", "trail"] },
     { "id": "southwest-drive", "category": "travel", "file": "travel/southwest-drive.xml", "name": "西南自驾", "covers": ["map", "region", "highlight", "dash", "city", "arc", "heading", "icon"] },

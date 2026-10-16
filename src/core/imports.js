@@ -69,5 +69,16 @@ export async function compileWithImports(src, loader) {
   }
   root.children = children;
 
-  return compileRoot(root, diag, dataSources);
+  // 预加载 <audio src>：loader 若能返回二进制（ArrayBuffer）就按 src 存一张表，供导出混音直接解码；
+  // 失败不阻断编译——宿主（浏览器播放）仍可按 src 自行加载。用表传入，避免 expand 克隆节点时丢失数据。
+  const audioData = {};
+  for (const n of root.children) {
+    if (n.tag !== 'audio' || !n.attrs.src) continue;
+    try {
+      const d = await loader(n.attrs.src, { binary: true });
+      if (d) audioData[n.attrs.src] = d;
+    } catch { /* 加载失败：保留 src，交给宿主 */ }
+  }
+
+  return compileRoot(root, diag, dataSources, audioData);
 }
